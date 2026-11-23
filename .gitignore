@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+*.log
+.DS_Store
+
+# Helyi Claude Code beállítások
+.claude/settings.local.json
+
+# Helyi titkok és környezeti változók
+.env
+.env.*
+!.env.example
+
+# Kitöltésekből exportált válaszok: valódi adat sosem kerülhet a repóba
+exports/
+*.response.json

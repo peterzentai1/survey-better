@@ -1,0 +1,238 @@
+# MINTA ÉS SÉMA-REFERENCIA, v0.1. Ez a fájl a kártyaséma befagyasztott leírása.
+# Minden kártyatípusból van benne egy példa. A motor tesztjei erre épülhetnek;
+# a valódi tartalom a `kerdesbank.hu.yaml`-ban lesz, ugyanebben a sémában.
+#
+# Ha a motornak sémaváltozás kell, NE itt változtasd meg csendben:
+# írd le a platform/SCHEMA_CHANGES.md-be, indokkal.
+
+version: "0.1.0-sample"
+locale: hu
+
+# Alapértelmezések minden kártyára
+defaults:
+  skip: true                        # minden válaszolható kártyán látszik a „Nem tudom / kihagyom”
+  skipLabel: "Nem tudom / kihagyom"
+  scale6:
+    left: "Egyáltalán nem"
+    right: "Teljes mértékben"
+    labels:                         # a kiválasztott pont alatt megjelenő szóbeli címke
+      - "Egyáltalán nem"
+      - "Nagyrészt nem"
+      - "Inkább nem"
+      - "Inkább igen"
+      - "Nagyrészt igen"
+      - "Teljes mértékben"
+
+# Blokkok: sorrend = megjelenési sorrend. A `title` a haladásjelzőn és az összegzőn látszik.
+blocks:
+  - { id: nyitas,  title: "Kezdés" }
+  - { id: alapok,  title: "Az Ön háztartása" }
+  - { id: eszkozok, title: "Eszközök" }
+  - { id: indokok, title: "Mikor igazodna?" }
+  - { id: modulok, title: "Az Ön eszközei" }
+  - { id: zaras,   title: "Összegzés" }
+
+cards:
+  # ── info: csak szöveg és egy gomb. Nincs válasz. ─────────────────────────────
+  - id: N01
+    block: nyitas
+    type: info
+    title: "Üdvözöljük!"
+    text: |
+      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak,
+      ezért a kitöltés kb. 10 perc.
+    cta: "Kezdjük"
+
+  # ── consent: tájékoztatás + kötelező részvételi jelölő + opcionális paraadat-jelölő.
+  #    Részvételi hozzájárulás nélkül nem lehet továbblépni.
+  - id: N02
+    block: nyitas
+    type: consent
+    title: "Tájékoztatás"
+    text: |
+      Adatkezelő: [ADATKEZELŐ]. … (helyőrző szöveg)
+    participationLabel: "Elolvastam, és részt veszek a kérdőívben."
+    paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait (pl. kártyánként eltöltött idő) is rögzítsék."
+
+  # ── single: egy választás. layout: list (alapértelmezett) | chips (rövid, számszerű opciók)
+  - id: A01
+    block: alapok
+    type: single
+    text: "Melyik településen él?"
+    options:
+      - { value: morahalom, label: "Mórahalom (belterület)" }
+      - { value: morahalom_kulterulet, label: "Mórahalom külterülete, tanya" }
+      - { value: mas_csongrad, label: "Más település Csongrád-Csanád vármegyében" }
+      - { value: mas, label: "Máshol Magyarországon" }
+    skip: false                     # felülírja az alapértelmezést
+
+  - id: A02
+    block: alapok
+    type: single
+    layout: chips
+    text: "Hányan élnek a háztartásban, Önnel együtt?"
+    options:
+      - { value: "1", label: "1" }
+      - { value: "2", label: "2" }
+      - { value: "3", label: "3" }
+      - { value: "4", label: "4" }
+      - { value: "5+", label: "5 vagy több" }
+
+  - id: A06
+    block: alapok
+    type: single
+    text: "Mivel fűtik elsősorban a lakást?"
+    options:
+      - { value: gaz, label: "Gáz" }
+      - { value: hoszivattyu, label: "Hőszivattyú" }
+      - { value: klima, label: "Klíma" }
+      - { value: egyeb, label: "Egyéb" }
+
+  # ── multi_tiles: piktogramos csempék, több választás.
+  #    devicePicker: true → ennek a válasza adja az `owns` feltételek alapját (egy ilyen kártya lehet).
+  #    exclusive: ezek kiválasztása törli a többit, és fordítva.
+  #    option.impliedBy: első megjelenéskor előre bejelöli, ha a feltétel igaz (a kitöltő levehet).
+  #    option.showIf: az opció csak akkor jelenik meg, ha igaz.
+  #    max: legfeljebb ennyi választható (elhagyható).
+  - id: E01
+    block: eszkozok
+    type: multi_tiles
+    devicePicker: true
+    text: "Mi van a háztartásában? Jelöljön meg mindent, ami van."
+    help: "A fűtésnél megadott eszközt már bejelöltük."
+    options:
+      - { value: hoszivattyu, label: "Hőszivattyú (fűtés)", icon: hoszivattyu,
+          impliedBy: { answer: A06, in: [hoszivattyu] } }
+      - { value: klima, label: "Klíma", icon: klima, impliedBy: { answer: A06, in: [klima] } }
+      - { value: villanybojler, label: "Villanybojler", icon: bojler }
+      - { value: villanyauto, label: "Villanyautó vagy konnektoros hibrid", icon: auto }
+      - { value: mosogep, label: "Mosógép", icon: mosogep }
+      - { value: egyik_sem, label: "Egyik sem", icon: nincs }
+    exclusive: [egyik_sem]
+
+  # ── yesno: Igen / Nem (+ kihagyás). Érintésen húzással is: jobbra = igen, balra = nem.
+  #    yesLabel / noLabel: opcionális felirat-felülírás. Az érték mindig "igen" vagy "nem".
+  - id: E03
+    block: eszkozok
+    type: yesno
+    text: "Fűt is a klímával a fűtési idényben?"
+    showIf: { owns: klima }
+
+  # ── scale6: 1–6 skála. randomizeGroup: az azonos csoport kártyái blokkon belül
+  #    kitöltőnként véletlen sorrendben jönnek (a sorrendet rögzíteni kell).
+  #    textVariants: az első teljesülő `when` szövege lép a `text` helyére (a változat indexét rögzíteni kell).
+  #    reversed: elemzési jelölés (fordított irányú tétel); a megjelenítést nem befolyásolja.
+  - id: I01
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: "Egy előre jelzett esti, kétórás időszakban egy halasztható használatot (pl. mosás) egy órával későbbre tenne…"
+    text: "…ha ezzel csökkenne a helyi elosztóhálózat túlterhelésének kockázata."
+    textVariants:
+      - when: { answer: A01, in: [morahalom, morahalom_kulterulet] }
+        text: "…ha ezzel csökkenne a mórahalmi elosztóhálózat túlterhelésének kockázata."
+    scale: { left: "Biztosan nem tenné", right: "Biztosan megtenné" }   # a labels öröklődik a defaults-ból, ha nincs megadva
+    source: "Aug-mag #2; kritika L101–112"
+
+  - id: I02
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: "Egy előre jelzett esti, kétórás időszakban egy halasztható használatot (pl. mosás) egy órával későbbre tenne…"
+    text: "…ha ettől közvetlenül alacsonyabb lenne a saját villanyszámlája."
+    scale: { left: "Biztosan nem tenné", right: "Biztosan megtenné" }
+    source: "Aug-mag #4"
+
+  # ── modulkártyák: module = az eszkozok.yaml egyik modul-id-ja; priority: modulon belüli sorrend
+  #    (1 = elsőként jön, és a keret csökkentésekor utoljára esik ki).
+  #    A modul kártyái csak akkor jönnek, ha a modul aktív (a kitöltő rendelkezik valamelyik eszközével),
+  #    és legfeljebb a modulra kiosztott keretig. Ha egy modulkártya showIf-je hamis, nem fogyaszt keretet.
+  - id: M_BOJ_01
+    block: modulok
+    type: yesno
+    module: villanybojler
+    priority: 1
+    lead: "Elképzelt ajánlat (a számok csak példák):"
+    text: |
+      A bojlere akkor fűt, amikor olcsó vagy bőséges az áram, akár napközben is.
+      Két zuhanyzásnyi meleg víz mindig garantált. Ezért havonta 500 Ft jóváírást kap.
+      Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+
+  - id: M_BOJ_02
+    block: modulok
+    type: timeline
+    module: villanybojler
+    priority: 2
+    text: "Mikor szokott a háztartásban a legtöbb meleg víz fogyni? Jelölje meg az órákat."
+    max: 8                          # legfeljebb ennyi óra jelölhető (elhagyható)
+
+  - id: M_BOJ_03
+    block: modulok
+    type: single
+    layout: chips
+    module: villanybojler
+    priority: 3
+    text: "Legfeljebb mennyivel lehetne langyosabb a víz egy ilyen időszak végén?"
+    options:
+      - { value: "0", label: "Semennyivel" }
+      - { value: "2", label: "2 °C" }
+      - { value: "5", label: "5 °C" }
+      - { value: "10", label: "10 °C" }
+
+  - id: M_AUTO_01
+    block: modulok
+    type: single
+    layout: chips
+    module: villanyauto
+    priority: 1
+    text: "Hány százalékra kell feltöltve lennie az autónak reggel indulásig, hogy nyugodt legyen?"
+    options:
+      - { value: "50", label: "50%" }
+      - { value: "70", label: "70%" }
+      - { value: "80", label: "80%" }
+      - { value: "90", label: "90%" }
+      - { value: "100", label: "100%" }
+
+  # ── free_text: szabad szöveg. maxLength kötelező. A `privacyNote` mindig látszik a mező alatt.
+  - id: Z01
+    block: zaras
+    type: free_text
+    text: "Van még valami, amit fontosnak tart?"
+    maxLength: 500
+    privacyNote: "Kérjük, ne írjon nevet, címet, telefonszámot vagy más azonosító adatot."
+
+  # ── summary_highlight: az összegző kártya (kártyánként egy ilyen van, a végén).
+  #    1) blokkonként: hány válasz, hány kihagyás; a kihagyott kártyákra vissza lehet ugrani,
+  #       majd onnan egy gombbal vissza az összegzőhöz;
+  #    2) legfeljebb `max` téma kiemelése (⭐); témánként egy kész állítás VAGY saját szöveg (vagy mindkettő);
+  #    3) „Beküldés” gomb.
+  - id: Z02
+    block: zaras
+    type: summary_highlight
+    text: "Van olyan téma, amit különösen fontosnak tart? Legfeljebb kettőt emelhet ki."
+    max: 2
+    maxLength: 300
+    privacyNote: "Kérjük, ne írjon nevet, címet, telefonszámot vagy más azonosító adatot."
+    topics:
+      - id: kontrol
+        label: "Ki dönthet az eszközeimről"
+        statements:
+          - "Csak én dönthetek, mindig felülbírálhatom."
+          - "Elfogadom az automatikát, ha bármikor kiléphetek."
+      - id: meltanyossag
+        label: "Igazságos-e mindenkinek"
+        statements:
+          - "Akinek nincs ilyen eszköze, ne fizessen többet."
+          - "Aki többet tesz, kapjon többet."
+
+# ── Feltételnyelv (showIf, impliedBy, textVariants.when, tierUpgrade.when) ──────
+#   { all: [c, …] }   { any: [c, …] }   { not: c }
+#   { owns: <eszköz-id> }               a devicePicker kártya válaszában szerepel
+#   { ownsAny: [<eszköz-id>, …] }
+#   { answer: <kártya-id>, in: [v, …] } single/yesno: az érték benne van; multi_tiles/timeline: van közös elem
+#   { answer: <kártya-id>, gte: n }     scale6 vagy számszerű érték ≥ n (lte is)
+#   { answer: <kártya-id>, answered: true }   van érdemi válasz (nem kihagyott, nem kimaradt)
+#   { answer: <kártya-id>, skipped: true }
+# Ha a hivatkozott kártya nem jelent meg vagy kihagyták, az `in`/`gte`/`lte` hamis.

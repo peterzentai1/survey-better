@@ -1,0 +1,891 @@
+# Kérdésbank v0.1: háztartási áramfelhasználás, rugalmasság és méltányosság.
+#
+# Séma: lásd content/sample.yaml (a fájl végén a feltételnyelv).
+# Tételenkénti források és a változtatások indoka: content/KERDESBANK_v0.1.md.
+#
+# FONTOS
+# - A kártyákon szereplő összegek, darabszámok és időtartamok TESZTÉRTÉKEK, nem valós ajánlatok.
+#   Kivétel a D árszabás kártyája (F01): az egy valós tarifa leírása (MVM, a 2026-10-25-i oldal alapján).
+# - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
+# - A `source` mező csak dokumentáció, a kitöltő nem látja.
+
+version: "0.1.0"
+locale: hu
+
+defaults:
+  skip: true
+  skipLabel: "Nem tudom / kihagyom"
+  scale6:
+    left: "Egyáltalán nem"
+    right: "Teljes mértékben"
+    labels: ["Egyáltalán nem", "Nagyrészt nem", "Inkább nem", "Inkább igen", "Nagyrészt igen", "Teljes mértékben"]
+
+blocks:
+  - { id: nyitas,       title: "Kezdés" }
+  - { id: alapok,       title: "Az Ön háztartása" }
+  - { id: eszkozok,     title: "Eszközök" }
+  - { id: tarifa,       title: "Számla és tarifa" }
+  - { id: indokok,      title: "Mikor igazodna?" }
+  - { id: modulok,      title: "Az Ön eszközei" }
+  - { id: tervek,       title: "Tervek" }
+  - { id: meltanyossag, title: "Igazságosság" }
+  - { id: bizalom,      title: "Bizalom és kontroll" }
+  - { id: demografia,   title: "Önről" }
+  - { id: zaras,        title: "Összegzés" }
+
+cards:
+  # ════════════════════════════════════════════════════════════════════════
+  # 0. NYITÁS
+  # ════════════════════════════════════════════════════════════════════════
+  - id: N01
+    block: nyitas
+    type: info
+    title: "Mikor használjuk az áramot?"
+    text: |
+      Ez a kérdőív arról szól, mennyire tudnák és akarnák a háztartások máskor használni az áramot, például ha este kevés, délben pedig sok és olcsó van belőle, és mi lenne ebben igazságos azoknak is, akiknek nincs erre alkalmas eszközük.
+
+      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak, ezért a kitöltés kb. 10 perc. Ha egy kérdésre nincs kialakult válasza, válassza a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti, ami Önnek a legfontosabb.
+
+      Nincs jó vagy rossz válasz. A kérdésekben szereplő ajánlatok elképzeltek, a bennük lévő összegek csak példák.
+    cta: "Kezdjük"
+    source: "Saját. A nyitószöveg a jóváhagyott terv szerinti."
+
+  - id: N02
+    block: nyitas
+    type: consent
+    title: "Tájékoztatás"
+    text: |
+      A kutatást [KUTATÓ], a(z) [INTÉZMÉNY] hallgatója végzi szakdolgozati kutatásként. Adatkezelő: [ADATKEZELŐ]. Jogalap: [JOGALAP].
+
+      A kérdőív névtelen: nem kérünk nevet, címet vagy elérhetőséget. A válaszokat [MEGŐRZÉSI IDŐ] ideig őrizzük, és csak összesítve közöljük. Bármelyik kérdést kihagyhatja, és bármikor abbahagyhatja.
+
+      Kérdés esetén: [ELÉRHETŐSÉG].
+    participationLabel: "Elolvastam, és részt veszek a kérdőívben."
+    paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait is rögzítsék (pl. kártyánként eltöltött idő, koppintás vagy billentyű). Ez segít a kérdőív javításában; nélküle is kitölthető."
+    source: "Saját; a helyőrzők a konzulensi válasz után tölthetők ki (adatkezelő, jogalap, megőrzés)."
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 1. ALAPOK
+  # ════════════════════════════════════════════════════════════════════════
+  - id: A01
+    block: alapok
+    type: single
+    text: "Hol él?"
+    options:
+      - { value: morahalom,            label: "Mórahalom, belterület" }
+      - { value: morahalom_kulterulet, label: "Mórahalom külterülete, tanya" }
+      - { value: csongrad_csanad,      label: "Más település Csongrád-Csanád vármegyében" }
+      - { value: mas,                  label: "Máshol Magyarországon" }
+    skip: false
+    source: "S16 (szűrő) általánosítva; a Mórahalomra vonatkozó szövegváltozatok kapuja."
+
+  - id: A02
+    block: alapok
+    type: single
+    text: "Milyen lakásban él?"
+    options:
+      - { value: csaladi_haz, label: "Családi ház" }
+      - { value: iker_sor,    label: "Ikerház vagy sorház" }
+      - { value: tarsashaz,   label: "Társasházi lakás" }
+      - { value: tanya,       label: "Tanya" }
+      - { value: egyeb,       label: "Egyéb" }
+    source: "S3; NLM Q5.5"
+
+  - id: A03
+    block: alapok
+    type: single
+    text: "Kié a lakás, és ki dönt például a fűtés cseréjéről vagy a villanyszerződésről?"
+    options:
+      - { value: sajat_en,      label: "Saját vagy családi, én (is) döntök" }
+      - { value: sajat_mas,     label: "Saját vagy családi, de más dönt" }
+      - { value: berelt_berbeado, label: "Bérelt, a bérbeadó dönt" }
+      - { value: berelt_en,     label: "Bérelt, de én dönthetek" }
+      - { value: egyeb,         label: "Egyéb" }
+    source: "S4 (tulajdon és döntési jog egy kérdésben); kritika: hiányzó tulajdon/döntési jog"
+
+  - id: A04
+    block: alapok
+    type: single
+    layout: chips
+    text: "Hányan élnek a háztartásban, Önnel együtt?"
+    options:
+      - { value: "1",  label: "1" }
+      - { value: "2",  label: "2" }
+      - { value: "3",  label: "3" }
+      - { value: "4",  label: "4" }
+      - { value: "5+", label: "5 vagy több" }
+    source: "S2; NLM Q5.4"
+
+  - id: A05
+    block: alapok
+    type: single
+    text: "Hétköznap napközben jellemzően van otthon valaki?"
+    options:
+      - { value: szinte_mindig, label: "Igen, szinte mindig" }
+      - { value: nehany_nap,    label: "Néhány napon" }
+      - { value: ritkan,        label: "Ritkán, mindenki dolgozik vagy tanul" }
+      - { value: valtozo,       label: "Változó, például műszakos munka miatt" }
+    source: "S13 munkarend, időzítési lehetőségre fordítva (H5)"
+
+  - id: A06
+    block: alapok
+    type: single
+    text: "Mivel fűtik elsősorban a lakást?"
+    options:
+      - { value: gaz,         label: "Gázzal" }
+      - { value: fa_vegyes,   label: "Fával vagy vegyes tüzeléssel" }
+      - { value: hoszivattyu, label: "Hőszivattyúval (pl. levegő–víz)" }
+      - { value: klima,       label: "Klímával (levegő–levegő)" }
+      - { value: elektromos,  label: "Elektromos fűtéssel (panel, hőtárolós kályha)" }
+      - { value: tavfutes,    label: "Távfűtéssel" }
+      - { value: egyeb,       label: "Egyéb módon" }
+    source: "S5; kritika: hiányzó fűtés. Az eszközcsempék előtt áll, mert előre bejelöli a fűtőeszközt."
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 2. ESZKÖZÖK
+  # ════════════════════════════════════════════════════════════════════════
+  - id: E01
+    block: eszkozok
+    type: multi_tiles
+    devicePicker: true
+    text: "Mi van a háztartásában? Jelöljön meg mindent, ami van."
+    help: "Ha a fűtésnél már megadta, azt előre bejelöltük. Ha mégsem jó, vegye ki."
+    options:
+      - { value: hoszivattyu,      label: "Hőszivattyú (fűtés)",            icon: hoszivattyu, impliedBy: { answer: A06, in: [hoszivattyu] } }
+      - { value: klima,            label: "Klíma",                          icon: klima,       impliedBy: { answer: A06, in: [klima] } }
+      - { value: villanybojler,    label: "Villanybojler",                  icon: bojler }
+      - { value: elektromos_futes, label: "Elektromos fűtés",               icon: futes,       impliedBy: { answer: A06, in: [elektromos] } }
+      - { value: villanyauto,      label: "Villanyautó vagy konnektoros hibrid", icon: auto }
+      - { value: napelem,          label: "Napelem",                        icon: napelem }
+      - { value: akkumulator,      label: "Otthoni akkumulátor",            icon: akkumulator }
+      - { value: mosogep,          label: "Mosógép",                        icon: mosogep }
+      - { value: mosogatogep,      label: "Mosogatógép",                    icon: mosogatogep }
+      - { value: szarito,          label: "Szárítógép",                     icon: szarito }
+      - { value: elektromos_fozes, label: "Elektromos főzőlap vagy sütő",   icon: fozes }
+      - { value: szivattyu,        label: "Medence- vagy öntözőszivattyú",  icon: szivattyu }
+      - { value: egyik_sem,        label: "Egyik sem",                      icon: nincs }
+    exclusive: [egyik_sem]
+    source: "NLM Q5.1, Aug. technikai blokk, S5–S11; eszközjegyzet: tulajdon és használat külön (a használat a modulokban)"
+
+  - id: E02
+    block: eszkozok
+    type: single
+    showIf: { owns: napelem }
+    text: "Hogyan számolják el a napelemet?"
+    options:
+      - { value: szaldo, label: "Éves szaldóval (a visszatáplált áramot levonják a vételezettből)" }
+      - { value: brutto, label: "Bruttó elszámolással (a visszatáplált áramot külön, alacsonyabb áron veszik át)" }
+      - { value: nem_tudom, label: "Nem tudom" }
+    skip: false
+    source: "S9. A D árszabás (F01) szaldóval jelenleg nem választható: ez méltányossági elemzéshez is kell."
+
+  - id: E03
+    block: eszkozok
+    type: yesno
+    showIf: { all: [ { owns: klima }, { not: { answer: A06, in: [klima] } } ] }
+    text: "Fűtenek is a klímával a fűtési idényben, legalább kiegészítésként?"
+    source: "S8; a fűtő klíma levegő–levegő hőszivattyú, ezért a klíma modulja ilyenkor nagyobb keretet kap."
+
+  - id: E04
+    block: eszkozok
+    type: single
+    showIf: { owns: villanyauto }
+    text: "Hol töltik jellemzően az autót?"
+    options:
+      - { value: otthon,    label: "Otthon" }
+      - { value: vegyes,    label: "Otthon is, máshol is" }
+      - { value: munkahely, label: "Főleg a munkahelyen" }
+      - { value: nyilvanos, label: "Főleg nyilvános töltőn" }
+    source: "S11; forgatókönyvek EV01–EV08. Az autós modul csak otthoni töltésnél jön."
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 3. SZÁMLA ÉS TARIFA
+  # ════════════════════════════════════════════════════════════════════════
+  - id: T01
+    block: tarifa
+    type: single
+    text: "Az elmúlt egy évben okozott-e nehézséget a rezsiszámlák kifizetése?"
+    options:
+      - { value: nem,      label: "Nem" }
+      - { value: neha,     label: "Néha" }
+      - { value: gyakran,  label: "Gyakran" }
+      - { value: nem_kivan, label: "Nem kívánok válaszolni" }
+    source: "S14; energiaszegénységi moderátor (H5)"
+
+  - id: T02
+    block: tarifa
+    type: single
+    text: "Van külön, vezérelt („éjszakai”) áramköre vagy mérője, például a bojlerhez vagy a hőszivattyúhoz?"
+    options:
+      - { value: igen,      label: "Igen" }
+      - { value: nem,       label: "Nem" }
+      - { value: nem_tudom, label: "Nem tudom" }
+    skip: false
+    source: "S7. A vezérelt körre a D árszabás nem vonatkozik."
+
+  - id: T03
+    block: tarifa
+    type: single
+    text: "Okos, távolról leolvasható villanyórája van?"
+    options:
+      - { value: igen,      label: "Igen" }
+      - { value: nem,       label: "Nem" }
+      - { value: nem_tudom, label: "Nem tudom" }
+    skip: false
+    source: "S12; NLM Q5.2 (kritika: kell „nem tudom”)"
+
+  - id: T04
+    block: tarifa
+    type: single
+    text: "A kedvezményes árú sáv évi 2523 kWh, ez havonta kb. 210 kWh. A háztartása ehhez képest mennyit fogyaszt?"
+    options:
+      - { value: kevesebb,  label: "Kevesebbet" }
+      - { value: annyi,     label: "Nagyjából annyit" }
+      - { value: tobb,      label: "Többet" }
+      - { value: nem_tudom, label: "Nem tudom" }
+    skip: false
+    source: "Saját. A 2523 kWh az MVM D árszabás oldaláról (mentve 2026-10-25); a D tarifa csak a sáv fölött ad árjelzést."
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 4. INDOKMAG: rögzített cselekvés, csak az indok változik (véletlen sorrend)
+  # ════════════════════════════════════════════════════════════════════════
+  - id: I01
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: &indok_lead "Képzelje el: előző nap jelzést kap, hogy holnap este 17 és 19 óra között jó lenne kevesebb áramot használni. Egy halasztható dolgot (pl. mosást, mosogatást) egy-két órával későbbre tenne…"
+    text: "…ha ezzel segítene elkerülni, hogy az országban átmenetileg ne legyen elég áram."
+    scale: &valoszinu
+      left: "Biztosan nem"
+      right: "Biztosan igen"
+      labels: ["Biztosan nem", "Valószínűleg nem", "Inkább nem", "Inkább igen", "Valószínűleg igen", "Biztosan igen"]
+    source: "Aug-mag #1 (és #3 összevonva); kritika L121–127: „veszélyhelyzet” helyett semleges"
+
+  - id: I02
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: *indok_lead
+    text: "…ha ezzel csökkenne annak a kockázata, hogy a helyi áramhálózat túlterhelődik, és kimarad az áram."
+    textVariants:
+      - when: { answer: A01, in: [morahalom, morahalom_kulterulet] }
+        text: "…ha ezzel csökkenne annak a kockázata, hogy a mórahalmi áramhálózat túlterhelődik, és kimarad az áram."
+    scale: *valoszinu
+    source: "Aug-mag #2"
+
+  - id: I03
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: *indok_lead
+    text: "…ha ettől közvetlenül alacsonyabb lenne a villanyszámlája."
+    scale: *valoszinu
+    source: "Aug-mag #4"
+
+  - id: I04
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: *indok_lead
+    text: "…ha egy hiteles, nyilvános számítás szerint ezzel csökkenne az ország áramimportja."
+    scale: *valoszinu
+    source: "Aug-mag #8"
+
+  - id: I05
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: *indok_lead
+    text: "…ha az ebből származó megtakarítás egy előre rögzített része átlátható helyi közösségi alapba kerülne."
+    textVariants:
+      - when: { answer: A01, in: [morahalom, morahalom_kulterulet] }
+        text: "…ha az ebből származó megtakarítás egy előre rögzített része átlátható mórahalmi közösségi alapba kerülne."
+    scale: *valoszinu
+    source: "Aug-mag #10 (H4)"
+
+  - id: I06
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: *indok_lead
+    text: "…ha tudná, hogy a hasonló helyzetű háztartások többsége is így tesz."
+    scale: *valoszinu
+    source: "Aug-mag #11 (leíró norma)"
+
+  - id: I07
+    block: indokok
+    type: scale6
+    randomizeGroup: indokmag
+    lead: *indok_lead
+    text: "…külön indok és ellentételezés nélkül, egyszerűen önkéntesen."
+    scale: *valoszinu
+    source: "Aug-mag #12 (alaphelyzet, H1 viszonyítási pontja)"
+
+  # Ellentétes irányú helyzet: napközbeni napenergia-többlet, a fogyasztás ELŐREHOZÁSA (kritika L114–119).
+  - id: I08
+    block: indokok
+    type: scale6
+    lead: "Most egy másik helyzet: előző nap jelzést kap, hogy holnap délben sok lesz a napenergia, és bőséges, olcsó lesz az áram."
+    text: "Mennyire valószínű, hogy egy halasztható dolgot (pl. mosást, mosogatást) délre hozna előre?"
+    scale: *valoszinu
+    source: "Aug-mag #9 iránya javítva (előrehozás); kritika L114–119"
+
+  # Közös ajánlat mindenkinek, eszköztől függetlenül (K1).
+  - id: I09
+    block: indokok
+    type: yesno
+    lead: "Elképzelt ajánlat (a számok csak példák):"
+    text: |
+      Előző nap értesítést kap (SMS-ben, levélben vagy telefonon): holnap este 17 és 19 óra között, ha teheti, használjon kevesebb áramot, vagy tegye későbbre, amit tud. Önkéntes, nincs büntetés.
+      Évente legfeljebb 10 ilyen nap lenne, és minden teljesített alkalom után 500 Ft jóváírást kap.
+      Részt venne benne?
+    yesLabel: "Részt vennék"
+    noLabel: "Nem vennék részt"
+    source: "K1 helyzetkártya; Aug. kontrollvignetta 1 (önkéntes értesítés, kézi reagálás)"
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 5. ESZKÖZMODULOK (kapuzva, a keretet az eszkozok.yaml osztja ki)
+  #    priority 1 = ajánlat elfogadása, 2 = szolgáltatási határ, 3 = használat vagy felülbírálás
+  # ════════════════════════════════════════════════════════════════════════
+
+  # ── Hőszivattyú ──
+  - id: M_HP_1
+    block: modulok
+    type: yesno
+    module: hoszivattyu
+    priority: 1
+    lead: &ajanlat "Elképzelt ajánlat (a számok csak példák):"
+    text: |
+      A hőszivattyúja egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz, előtte esetleg kicsit előfűt. A lakás hőmérséklete legfeljebb 1 fokkal tér el a beállítottól, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja, büntetés nélkül.
+      Ezért havonta 1000 Ft jóváírást kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K2 helyzetkártya; eszközjegyzet szolgáltatási szintjei (±0,5/1/2 °C, 15–120 perc)"
+
+  - id: M_HP_2
+    block: modulok
+    type: single
+    layout: chips
+    module: hoszivattyu
+    priority: 2
+    text: "Egy ilyen esti időszakban legfeljebb hány fokkal lehetne hűvösebb a lakásban?"
+    options: &fok_opciok
+      - { value: "0",   label: "Semennyivel" }
+      - { value: "0.5", label: "Fél fokkal" }
+      - { value: "1",   label: "1 fokkal" }
+      - { value: "2",   label: "2 fokkal" }
+      - { value: "3",   label: "3 vagy több fokkal" }
+    source: "K2 szonda (1 helyett 2 fok?) skálává alakítva; eszközjegyzet L163–169"
+
+  - id: M_HP_3
+    block: modulok
+    type: yesno
+    module: hoszivattyu
+    priority: 3
+    text: "És ha az időszakot nem lehetne egy gombnyomással felülbírálni, csak a hónap elején lemondani, akkor is elfogadná az ajánlatot?"
+    yesLabel: "Akkor is elfogadnám"
+    noLabel: "Akkor nem"
+    source: "K2 szonda (felülbírálás nélkül?); H3"
+
+  # ── Klíma ──
+  - id: M_KL_1
+    block: modulok
+    type: yesno
+    module: klima
+    priority: 1
+    lead: *ajanlat
+    text: |
+      Kánikulai délutánokon a klímája legfeljebb 60 percre kicsit visszavesz, előtte kicsit előhűt. A lakás legfeljebb 1 fokkal lesz melegebb a beállítottnál, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja.
+      Ezért a nyári hónapokban havonta 1000 Ft jóváírást kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K2 nyári változata; forgatókönyv H03 (előhűtés)"
+
+  - id: M_KL_2
+    block: modulok
+    type: yesno
+    module: klima
+    priority: 2
+    showIf: { any: [ { answer: E03, in: [igen] }, { answer: A06, in: [klima] } ] }
+    lead: *ajanlat
+    text: |
+      Télen, egy előre megbeszélt esti időszakban a klímája legfeljebb 60 percre kicsit visszavesz a fűtésből, előtte kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, bármikor felülbírálhatja.
+      Ezért a fűtési idényben havonta 1000 Ft jóváírást kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K2 téli változata fűtő klímára (levegő–levegő hőszivattyú)"
+
+  - id: M_KL_3
+    block: modulok
+    type: single
+    layout: chips
+    module: klima
+    priority: 3
+    text: "Egy ilyen nyári időszakban legfeljebb hány fokkal lehetne melegebb a lakásban?"
+    options: *fok_opciok
+    source: "K2 szonda; eszközjegyzet szolgáltatási szintjei"
+
+  # ── Villanybojler ──
+  - id: M_BO_1
+    block: modulok
+    type: yesno
+    module: villanybojler
+    priority: 1
+    lead: *ajanlat
+    text: |
+      A bojlere nem fix időben fűt, hanem akkor, amikor a hálózatban sok és olcsó az áram, akár napközben is. Mindig marad elég meleg víz, és a víz rendszeresen eléri a fertőtlenítéshez szükséges hőfokot.
+      Ezért havonta 500 Ft jóváírást kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K3 helyzetkártya; forgatókönyv H01"
+
+  - id: M_BO_2
+    block: modulok
+    type: single
+    layout: chips
+    module: villanybojler
+    priority: 2
+    text: "Legkevesebb hány zuhanyzásnyi meleg víznek kellene mindig maradnia a bojlerben?"
+    options:
+      - { value: "1",  label: "1" }
+      - { value: "2",  label: "2" }
+      - { value: "3",  label: "3" }
+      - { value: "4+", label: "4 vagy több" }
+    source: "K3 garancia („2 zuhanyra”) a kitöltő saját határaként; eszközjegyzet: minimális melegvíz"
+
+  - id: M_BO_3
+    block: modulok
+    type: timeline
+    module: villanybojler
+    priority: 3
+    text: "Mikor fogy jellemzően a legtöbb meleg víz? Jelölje meg az órákat (legfeljebb 8-at)."
+    max: 8
+    source: "Saját; dimenziótábla: rutin és kiszámíthatóság"
+
+  # ── Villanyautó (csak otthoni töltésnél) ──
+  - id: M_EV_1
+    block: modulok
+    type: yesno
+    module: villanyauto
+    priority: 1
+    showIf: { answer: E04, in: [otthon, vegyes] }
+    lead: *ajanlat
+    text: |
+      Hazaérve bedugja az autót, és megadja, mikorra és mennyire kell feltöltve lennie (pl. reggel 7-re 80%). A töltés idejét egy rendszer intézi, a hálózat terheléséhez igazítva. A kért időre a kért töltöttség megvan, és egy „Azonnal töltsd” gombbal bármikor felülbírálhatja.
+      Ezért a töltési áram 10%-kal olcsóbb. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K4 helyzetkártya; forgatókönyv EV01"
+
+  - id: M_EV_2
+    block: modulok
+    type: single
+    layout: chips
+    module: villanyauto
+    priority: 2
+    showIf: { answer: E04, in: [otthon, vegyes] }
+    text: "Hány százalékra kell feltöltve lennie az autónak reggel indulásig, hogy nyugodt legyen?"
+    options:
+      - { value: "50",  label: "50%" }
+      - { value: "60",  label: "60%" }
+      - { value: "70",  label: "70%" }
+      - { value: "80",  label: "80%" }
+      - { value: "90",  label: "90%" }
+      - { value: "100", label: "100%" }
+    source: "K4 garancia; eszközjegyzet: EV 50/70/90% indulásig"
+
+  - id: M_EV_3
+    block: modulok
+    type: timeline
+    module: villanyauto
+    priority: 3
+    showIf: { answer: E04, in: [otthon, vegyes] }
+    text: "Hétköznap mikor áll jellemzően otthon az autó, tölthető állapotban? Jelölje meg az órákat."
+    source: "Saját; forgatókönyvek EV01, EV07 (időablak)"
+
+  # ── Otthoni akkumulátor ──
+  - id: M_AK_1
+    block: modulok
+    type: yesno
+    module: akkumulator
+    priority: 1
+    lead: *ajanlat
+    text: |
+      Az otthoni akkumulátorát évente legfeljebb 20 alkalommal egy szolgáltató a hálózat kiegyensúlyozására is használhatja (töltheti vagy kisütheti). Mindig marad benne legalább 30% tartalék Önnek, az alkalmakról előre értesítést kap, és felülbírálhatja.
+      Ezért évente 20 000 Ft-ot kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K5 helyzetkártya; forgatókönyv H04"
+
+  - id: M_AK_2
+    block: modulok
+    type: single
+    layout: chips
+    module: akkumulator
+    priority: 2
+    text: "Legalább hány százalék tartaléknak kellene mindig maradnia az akkumulátorban az Ön számára?"
+    options:
+      - { value: "10",  label: "10%" }
+      - { value: "30",  label: "30%" }
+      - { value: "50",  label: "50%" }
+      - { value: "70",  label: "70%" }
+      - { value: "100", label: "Ne használják" }
+    source: "K5 garancia a kitöltő saját határaként"
+
+  - id: M_AK_3
+    block: modulok
+    type: yesno
+    module: akkumulator
+    priority: 3
+    text: "A 2026-os otthoni energiatároló-pályázatban (OETP) támogatott akkumulátornak műszakilag támogatnia kell a távoli vezérlést. Ez képesség, nem azt jelenti, hogy bárki vezérli is. Tudott erről?"
+    yesLabel: "Tudtam"
+    noLabel: "Nem tudtam"
+    source: "OETP felhívás, módosított változat (2026-09-28), 6. pont. Csak a módosított felhívásban szerepel."
+
+  # ── Elektromos fűtés ──
+  - id: M_EF_1
+    block: modulok
+    type: yesno
+    module: elektromos_futes
+    priority: 1
+    lead: *ajanlat
+    text: |
+      Az elektromos fűtése egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz, előtte esetleg kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, és bármikor felülbírálhatja.
+      Ezért havonta 1000 Ft jóváírást kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "K2 elektromos fűtésre; eszközjegyzet: ellenállásfűtés, energiaszegénységi kockázat"
+
+  - id: M_EF_2
+    block: modulok
+    type: single
+    layout: chips
+    module: elektromos_futes
+    priority: 2
+    text: "Egy ilyen esti időszakban legfeljebb hány fokkal lehetne hűvösebb a lakásban?"
+    options: *fok_opciok
+    source: "K2 szonda"
+
+  - id: M_EF_3
+    block: modulok
+    type: single
+    module: elektromos_futes
+    priority: 3
+    text: "Milyen az elektromos fűtése?"
+    options:
+      - { value: hotarolos, label: "Hőtárolós kályha, amely éjjel tölt" }
+      - { value: kozvetlen, label: "Közvetlen fűtés (panel, infrapanel, hősugárzó)" }
+      - { value: mindketto, label: "Mindkettő" }
+    source: "S5; eszközjegyzet: tároló és közvetlen ellenállásfűtés eltérő rugalmassága"
+
+  # ── Napelem ──
+  - id: M_PV_1
+    block: modulok
+    type: yesno
+    module: napelem
+    priority: 1
+    lead: *ajanlat
+    text: |
+      Nagy termelésű, napos napokon a hálózat évente legfeljebb 10 alkalommal, néhány órára korlátozhatja, hogy a napeleme áramot tápláljon vissza. A saját fogyasztására termelt áramot ez nem érinti.
+      Ezért évente 5000 Ft-ot kap. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "Saját; forgatókönyv H04, a déli többlet iránya"
+
+  - id: M_PV_2
+    block: modulok
+    type: scale6
+    module: napelem
+    priority: 2
+    text: "Mennyire figyel arra, hogy akkor használjon áramot (pl. mosás), amikor a napelem termel?"
+    scale:
+      left: "Egyáltalán nem"
+      right: "Nagyon figyelek"
+      labels: ["Egyáltalán nem", "Alig", "Kicsit", "Inkább igen", "Eléggé", "Nagyon figyelek"]
+    source: "Saját; a szaldós elszámolás ezt nem jutalmazza (E02-vel együtt elemzendő)"
+
+  # ── Szivattyú ──
+  - id: M_SZ_1
+    block: modulok
+    type: yesno
+    module: szivattyu
+    priority: 1
+    lead: *ajanlat
+    text: |
+      A medence- vagy öntözőszivattyú akkor menne, amikor sok és olcsó az áram (pl. délben), és nem az esti csúcsban. Ugyanannyit menne, csak máskor.
+      Ezért havonta 300 Ft jóváírást kap a szezonban. Elfogadná?
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "Saját; forgatókönyv B04 (öntözés) háztartási léptékben"
+
+  - id: M_SZ_2
+    block: modulok
+    type: timeline
+    module: szivattyu
+    priority: 2
+    text: "Mikor megy most jellemzően a szivattyú a szezonban? Jelölje meg az órákat."
+    source: "Saját"
+
+  # ── Mosó-, mosogató- és szárítógép ──
+  - id: M_GE_1
+    block: modulok
+    type: yesno
+    module: haztartasi_gepek
+    priority: 1
+    text: "Elfogadná, hogy a mosógép, mosogatógép vagy szárító egy Ön által megadott időablakon belül akkor induljon el, amikor bőséges és olcsó az áram, ha a megadott időre kész van?"
+    yesLabel: "Elfogadnám"
+    noLabel: "Nem fogadnám el"
+    source: "Forgatókönyv H05; eszközjegyzet: kontrollként, kis rugalmasság"
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 6. TERVEK (és az eszköz nélküli háztartások saját ága)
+  # ════════════════════════════════════════════════════════════════════════
+  - id: J01
+    block: tervek
+    type: multi_tiles
+    showIf:
+      not: { all: [ { owns: hoszivattyu }, { owns: klima }, { owns: villanyauto }, { owns: napelem }, { owns: akkumulator } ] }
+    text: "Tervezi, hogy a következő öt évben beszerez valamit ezek közül?"
+    options:
+      - { value: hoszivattyu, label: "Hőszivattyú",          icon: hoszivattyu, showIf: { not: { owns: hoszivattyu } } }
+      - { value: klima,       label: "Klíma",                icon: klima,       showIf: { not: { owns: klima } } }
+      - { value: villanyauto, label: "Villanyautó",          icon: auto,        showIf: { not: { owns: villanyauto } } }
+      - { value: napelem,     label: "Napelem",              icon: napelem,     showIf: { not: { owns: napelem } } }
+      - { value: akkumulator, label: "Otthoni akkumulátor",  icon: akkumulator, showIf: { not: { owns: akkumulator } } }
+      - { value: semmit,      label: "Egyiket sem tervezem", icon: nincs }
+      - { value: nem_tudja,   label: "Még nem tudom",        icon: nemtudom }
+    exclusive: [semmit, nem_tudja]
+    source: "Saját; teljes körű minta: a villamosítás iránya és üteme"
+
+  - id: J02
+    block: tervek
+    type: multi_tiles
+    showIf: { not: { ownsAny: [hoszivattyu, villanyauto, akkumulator] } }
+    text: "Mi az oka, hogy nincs a háztartásban hőszivattyú, villanyautó vagy otthoni akkumulátor? Legfeljebb hármat jelöljön."
+    max: 3
+    options:
+      - { value: draga,       label: "Túl drága",                       icon: penz }
+      - { value: nem_dontok,  label: "Bérlő vagyok, vagy nem én döntök", icon: berlet }
+      - { value: tarsashaz,   label: "A lakás vagy a ház nem alkalmas rá", icon: epulet }
+      - { value: nem_eri_meg, label: "Nem érné meg",                    icon: penz }
+      - { value: nincs_szukseg, label: "Nincs rá szükségem",            icon: nincs }
+      - { value: bizalom,     label: "Nem bízom bennük",                icon: pajzs }
+      - { value: info,        label: "Nincs elég információm",          icon: nemtudom }
+      - { value: egyeb,       label: "Egyéb",                           icon: egyeb }
+    source: "Saját; méltányossági blokk: kizáródás okai (tananyag L724–734; forgatókönyv H06)"
+
+  - id: J03
+    block: tervek
+    type: scale6
+    showIf: { not: { owns: napelem } }
+    text: "Érdekelné egy közösségi napelempark vagy közös akkumulátor részesedése, amelynek a haszna a saját villanyszámláján jelenne meg?"
+    scale:
+      left: "Egyáltalán nem érdekelne"
+      right: "Nagyon érdekelne"
+      labels: ["Egyáltalán nem", "Nagyrészt nem", "Inkább nem", "Inkább igen", "Nagyrészt igen", "Nagyon érdekelne"]
+    source: "Forgatókönyvek W03, C01–C03; eszköz nélküli hozzáférés"
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 7. IGAZSÁGOSSÁG ÉS TARIFÁK
+  # ════════════════════════════════════════════════════════════════════════
+  - id: F01
+    block: meltanyossag
+    type: yesno
+    lead: "Valós tarifa: az MVM-nél 2027-től alkalmazható „D árszabás”."
+    text: |
+      Évi 2523 kWh-ig (naponta kb. 6,9 kWh) az áram ára ugyanaz, mint most. Az e fölötti fogyasztás ára negyedóránként változik a nagykereskedelmi árak és az euró árfolyama szerint: van, amikor olcsóbb, és van, amikor drágább a mostaninál.
+      Okosmérő kell hozzá, és önkéntes. Aki 12 hónapon belül visszalép, ugyanott 12 hónapig nem választhatja újra.
+      Választaná?
+    help: "Csak a normál mérőre vonatkozik, a vezérelt (pl. „éjszakai”) áramkörre nem. Szaldós napelemmel, előrefizetős mérővel vagy lejárt tartozással jelenleg nem választható."
+    yesLabel: "Választanám"
+    noLabel: "Nem választanám"
+    source: "K6; MVM Next D árszabás oldal (mentve 2026-10-25): sáv, negyedórás HUPX-ár, EUR, 12 hónapos szabály, kizárások. Élesítés előtt újraellenőrizendő."
+
+  - id: F02
+    block: meltanyossag
+    type: multi_tiles
+    showIf: { answer: F01, in: [nem] }
+    text: "Mi tartaná vissza leginkább? Legfeljebb kettőt jelöljön."
+    max: 2
+    options:
+      - { value: kiszamithatatlan, label: "Kiszámíthatatlan ár",               icon: penz }
+      - { value: nem_tud_idozit,   label: "Nem tudom máskorra tenni a fogyasztást", icon: ora }
+      - { value: kovetes,          label: "Nehéz lenne követni az árakat",     icon: telefon }
+      - { value: kotottseg,        label: "A 12 hónapos kötöttség",            icon: naptar }
+      - { value: sav_alatt,        label: "A sáv alatt fogyasztok, nem érintene", icon: villam }
+      - { value: euro,             label: "Az euró árfolyama",                 icon: penz }
+      - { value: egyeb,            label: "Egyéb",                             icon: egyeb }
+    source: "K6 szondák (mi tartaná vissza, 12 hónapos szabály)"
+
+  - id: F03
+    block: meltanyossag
+    type: scale6
+    text: "Akinek nincs időzíthető eszköze vagy lehetősége, annak az új tarifák és programok miatt nem szabadna többet fizetnie az áramért."
+    scale: &egyetert
+      left: "Egyáltalán nem ért egyet"
+      right: "Teljesen egyetért"
+      labels: ["Egyáltalán nem ért egyet", "Nagyrészt nem ért egyet", "Inkább nem ért egyet", "Inkább egyetért", "Nagyrészt egyetért", "Teljesen egyetért"]
+    source: "Aug. méltányossági blokk; eszközjegyzet L207; tananyag L666–681"
+
+  - id: F04
+    block: meltanyossag
+    type: scale6
+    reversed: true
+    text: "Rendben van, hogy akinek napeleme, akkumulátora vagy villanyautója van, többet nyerhet az ilyen programokon."
+    scale: *egyetert
+    source: "Interjúvezető G2; fordított irányú tétel az F03-hoz képest"
+
+  - id: F05
+    block: meltanyossag
+    type: scale6
+    text: "Fontos, hogy az ilyen programokhoz okostelefon nélkül, például telefonon vagy levélben is csatlakozni lehessen."
+    scale: *egyetert
+    source: "Dimenziótábla: méltányosság és hozzáférés (nem digitális csatorna)"
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 8. BIZALOM ÉS KONTROLL
+  # ════════════════════════════════════════════════════════════════════════
+  - id: B01
+    block: bizalom
+    type: multi_tiles
+    text: "Kire bízná, hogy az Ön által megadott határokon belül időzítse valamelyik eszközét? Bármennyit jelölhet."
+    options:
+      - { value: eloszto,      label: "A helyi áramhálózat üzemeltetőjére", icon: villam }
+      - { value: kereskedo,    label: "Az áramszolgáltatóra (kereskedőre)", icon: penz }
+      - { value: fuggetlen,    label: "Egy erre szakosodott független cégre", icon: epulet }
+      - { value: onkormanyzat, label: "Az önkormányzatra",                  icon: haz }
+      - { value: kozosseg,     label: "Egy helyi energiaközösségre vagy szövetkezetre", icon: kozosseg }
+      - { value: gyarto,       label: "Az eszköz gyártójára",               icon: egyeb }
+      - { value: senki,        label: "Senkire, csak magam időzítenék",     icon: lakat }
+    exclusive: [senki]
+    source: "Aug. bizalmi blokk (szereplőnként); NLM Q3.3 kettős állításának szétbontása"
+
+  - id: B02
+    block: bizalom
+    type: scale6
+    text: "Mennyire fontos Önnek, hogy egy automatikus időzítést bármikor, egy gombnyomással felülbírálhasson?"
+    scale:
+      left: "Egyáltalán nem fontos"
+      right: "Nagyon fontos"
+      labels: ["Egyáltalán nem fontos", "Nagyrészt nem fontos", "Inkább nem fontos", "Inkább fontos", "Nagyrészt fontos", "Nagyon fontos"]
+    source: "NLM Q3.1 (abszolút megfogalmazás nélkül); Fell 2015: kontroll; H3"
+
+  - id: B03
+    block: bizalom
+    type: scale6
+    text: "Aggódom, hogy egy távolról vezérelhető eszközt illetéktelenek (pl. hackerek) is irányíthatnak."
+    scale: *egyetert
+    source: "NLM Q3.2 kettős állításának kiberbiztonsági fele; Skoczkowski D-blokk"
+
+  - id: B04
+    block: bizalom
+    type: scale6
+    text: "Jobban megbíznék egy ilyen programban, ha egy független szervezet rendszeresen ellenőrizné, és nyilvánosan beszámolna róla."
+    scale: *egyetert
+    source: "Aug. feltételtételek: független audit (H3)"
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 9. DEMOGRÁFIA
+  # ════════════════════════════════════════════════════════════════════════
+  - id: D01
+    block: demografia
+    type: single
+    layout: chips
+    text: "Hány éves?"
+    options:
+      - { value: "18-29", label: "18–29" }
+      - { value: "30-39", label: "30–39" }
+      - { value: "40-49", label: "40–49" }
+      - { value: "50-59", label: "50–59" }
+      - { value: "60-69", label: "60–69" }
+      - { value: "70-79", label: "70–79" }
+      - { value: "80+",   label: "80 vagy több" }
+    source: "S1 finomabb sávokkal (kritika: túl széles korsávok)"
+
+  - id: D02
+    block: demografia
+    type: single
+    text: "Mi a neme?"
+    options:
+      - { value: no,        label: "Nő" }
+      - { value: ferfi,     label: "Férfi" }
+      - { value: mas,       label: "Más" }
+      - { value: nem_kivan, label: "Nem kívánok válaszolni" }
+    source: "Aug. demográfiai blokk"
+
+  - id: D03
+    block: demografia
+    type: single
+    text: "Mi a legmagasabb iskolai végzettsége?"
+    options:
+      - { value: alap,      label: "Legfeljebb 8 általános" }
+      - { value: szakmunka, label: "Szakmunkásképző vagy szakiskola" }
+      - { value: erettsegi, label: "Érettségi" }
+      - { value: felsofoku, label: "Főiskola vagy egyetem" }
+    source: "Aug. demográfiai blokk"
+
+  - id: D04
+    block: demografia
+    type: single
+    text: "Hogyan jönnek ki a háztartás jövedelméből?"
+    options:
+      - { value: kenyelmesen, label: "Kényelmesen élnek belőle" }
+      - { value: beosztassal, label: "Beosztással kijönnek" }
+      - { value: nehezen,     label: "Nehezen jönnek ki" }
+      - { value: nagyon_nehezen, label: "Nagyon nehezen jönnek ki" }
+      - { value: nem_kivan,   label: "Nem kívánok válaszolni" }
+    source: "Szubjektív jövedelmi helyzet (az ESS-ben használt kérdés mintájára, emlékezetből; ellenőrizendő); NLM Q5.6 helyett"
+
+  # ════════════════════════════════════════════════════════════════════════
+  # 10. ÖSSZEGZÉS ÉS KIEMELÉS
+  # ════════════════════════════════════════════════════════════════════════
+  - id: Z01
+    block: zaras
+    type: summary_highlight
+    text: "Van olyan téma, amit különösen fontosnak tart? Legfeljebb kettőt emelhet ki, és megírhatja a saját véleményét is."
+    max: 2
+    maxLength: 400
+    privacyNote: "Kérjük, ne írjon nevet, címet, telefonszámot vagy más azonosító adatot."
+    topics:
+      - id: miert
+        label: "Miért igazodnék az időzítéssel"
+        statements:
+          - "Ha az ország vagy a környék áramellátását segíti."
+          - "Ha a saját számlámon is látszik."
+          - "Ha a közösség is nyer vele."
+      - id: kontroll
+        label: "Ki dönthet az eszközeimről"
+        statements:
+          - "Csak én dönthetek, és mindig felülbírálhatom."
+          - "Elfogadom az automatikát, ha bármikor kiléphetek."
+          - "Senki ne vezérelje távolról az eszközeimet."
+      - id: kenyelem
+        label: "Kényelem és szolgáltatás"
+        statements:
+          - "A meleg víz és a lakás hőmérséklete nem sérülhet."
+          - "Kis kényelmetlenség belefér, ha előre tudom."
+      - id: penz
+        label: "Ellentételezés"
+        statements:
+          - "A jóváírás összege a legfontosabb."
+          - "Az összegnél fontosabb, hogy kiszámítható legyen."
+      - id: meltanyossag
+        label: "Igazságos-e mindenkinek"
+        statements:
+          - "Akinek nincs ilyen eszköze, ne fizessen többet."
+          - "Aki többet tesz, kapjon többet."
+          - "A bérlők és az idősek se maradjanak ki."
+      - id: adat
+        label: "Adatok és biztonság"
+        statements:
+          - "Aggódom az adataim miatt."
+          - "Aggódom a hackertámadások miatt."
+      - id: tarifa
+        label: "Új tarifák (pl. D árszabás)"
+        statements:
+          - "A változó ár túl kockázatos."
+          - "Jó, hogy van választási lehetőség."
+      - id: egyeb
+        label: "Valami más"
+        statements: []
+    source: "A felhasználó kérése: a kiemelés („szuperlájk”) a végén, témaválasztással, kész állítással vagy saját szöveggel."

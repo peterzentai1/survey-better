@@ -1,0 +1,52 @@
+# Eszközök és modulok: a kérdéskeret elosztásának bemenete.
+#
+# A szintek (A/B/C) SAJÁT, SORRENDI FELTEVÉSEK. Nem mért adatok.
+# Alapjuk egy EU-s éves kWh-tábla (MI-írta kutatási jegyzet, elsődleges forrás helyben nincs)
+# és egy minőségi prioritási sorrend: nagy, időben eltolható fogyasztók (hőszivattyú, villanyautó,
+# villanybojler, akkumulátor) > klíma, napelem, szivattyú > mosó- és mosogatógép.
+# Készülékenként áthelyezhető kWh-ra elsődleges forrást nem találtunk.
+#
+# Csak arra valók, hogy egy eszközről hány kérdés jöhessen. A kitöltő nem látja őket,
+# és eredményként sem szabad őket közölni.
+
+version: "w0.1"
+
+tierCaps: { A: 3, B: 2, C: 1 }     # egy modul legfeljebb ennyi kártyát kaphat
+tierFloors: { A: 1, B: 0, C: 0 }   # csökkentéskor eddig mehet le
+globalModuleCap: 9                 # az összes modulkártya együtt legfeljebb ennyi
+
+# Csempék sorrendje az eszközválasztón. Az `icon` szemantikus kulcs, a motor képezi le ikonra.
+appliances:
+  - { id: hoszivattyu,      label: "Hőszivattyú (fűtés)",                       icon: hoszivattyu }
+  - { id: klima,            label: "Klíma",                                     icon: klima }
+  - { id: villanybojler,    label: "Villanybojler",                             icon: bojler }
+  - { id: elektromos_futes, label: "Elektromos fűtés (panel, hőtárolós kályha)", icon: futes }
+  - { id: villanyauto,      label: "Villanyautó vagy konnektoros hibrid",       icon: auto }
+  - { id: napelem,          label: "Napelem",                                   icon: napelem }
+  - { id: akkumulator,      label: "Otthoni akkumulátor",                       icon: akkumulator }
+  - { id: mosogep,          label: "Mosógép",                                   icon: mosogep }
+  - { id: mosogatogep,      label: "Mosogatógép",                               icon: mosogatogep }
+  - { id: szarito,          label: "Szárítógép",                                icon: szarito }
+  - { id: elektromos_fozes, label: "Elektromos főzőlap vagy sütő",              icon: fozes }
+  - { id: szivattyu,        label: "Medence- vagy öntözőszivattyú",             icon: szivattyu }
+
+# Modulok: a modul aktív, ha a kitöltő a felsorolt eszközök bármelyikével rendelkezik.
+# A sorrend számít: a modulkártyák ebben a sorrendben jönnek, és csökkentéskor egy szinten belül,
+# azonos keretnél a lista végén álló modul veszít előbb.
+# Prioritás: a fűtésre használt hőszivattyú és klíma, valamint a bojler elöl, az autó és az akkumulátor utánuk.
+modules:
+  - { id: hoszivattyu, tier: A, appliances: [hoszivattyu] }
+  - id: klima
+    tier: B
+    appliances: [klima]
+    # A fűtésre is használt klíma valójában levegő–levegő hőszivattyú, ezért A szintre lép.
+    tierUpgrade:
+      when: { any: [ { answer: E03, in: [igen] }, { answer: A06, in: [klima] } ] }
+      tier: A
+  - { id: villanybojler,    tier: A, appliances: [villanybojler] }
+  - { id: villanyauto,      tier: A, appliances: [villanyauto] }
+  - { id: akkumulator,      tier: A, appliances: [akkumulator] }
+  - { id: elektromos_futes, tier: A, appliances: [elektromos_futes] }
+  - { id: napelem,          tier: B, appliances: [napelem] }
+  - { id: szivattyu,        tier: B, appliances: [szivattyu] }
+  - { id: haztartasi_gepek, tier: C, appliances: [mosogep, mosogatogep, szarito] }
