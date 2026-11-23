@@ -357,7 +357,8 @@ cards:
     lead: &ajanlat "Elképzelt ajánlat (a számok csak példák):"
     text: |
       A hőszivattyúja egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz, előtte esetleg kicsit előfűt. A lakás hőmérséklete legfeljebb 1 fokkal tér el a beállítottól, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja, büntetés nélkül.
-      Ezért havonta 1000 Ft jóváírást kap. Elfogadná?
+      Ezért havonta 1000 Ft jóváírást kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K2 helyzetkártya; eszközjegyzet szolgáltatási szintjei (±0,5/1/2 °C, 15–120 perc)"
@@ -396,7 +397,8 @@ cards:
     lead: *ajanlat
     text: |
       Kánikulai délutánokon a klímája legfeljebb 60 percre kicsit visszavesz, előtte kicsit előhűt. A lakás legfeljebb 1 fokkal lesz melegebb a beállítottnál, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja.
-      Ezért a nyári hónapokban havonta 1000 Ft jóváírást kap. Elfogadná?
+      Ezért a nyári hónapokban havonta 1000 Ft jóváírást kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K2 nyári változata; forgatókönyv H03 (előhűtés)"
@@ -410,7 +412,8 @@ cards:
     lead: *ajanlat
     text: |
       Télen, egy előre megbeszélt esti időszakban a klímája legfeljebb 60 percre kicsit visszavesz a fűtésből, előtte kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, bármikor felülbírálhatja.
-      Ezért a fűtési idényben havonta 1000 Ft jóváírást kap. Elfogadná?
+      Ezért a fűtési idényben havonta 1000 Ft jóváírást kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K2 téli változata fűtő klímára (levegő–levegő hőszivattyú)"
@@ -434,7 +437,8 @@ cards:
     lead: *ajanlat
     text: |
       A bojlere nem fix időben fűt, hanem akkor, amikor a hálózatban sok és olcsó az áram, akár napközben is. Mindig marad elég meleg víz, és a víz rendszeresen eléri a fertőtlenítéshez szükséges hőfokot.
-      Ezért havonta 500 Ft jóváírást kap. Elfogadná?
+      Ezért havonta 500 Ft jóváírást kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K3 helyzetkártya; forgatókönyv H01"
@@ -472,7 +476,8 @@ cards:
     lead: *ajanlat
     text: |
       Hazaérve bedugja az autót, és megadja, mikorra és mennyire kell feltöltve lennie (pl. reggel 7-re 80%). A töltés idejét egy rendszer intézi, a hálózat terheléséhez igazítva. A kért időre a kért töltöttség megvan, és egy „Azonnal töltsd” gombbal bármikor felülbírálhatja.
-      Ezért a töltési áram 10%-kal olcsóbb. Elfogadná?
+      Ezért a töltési áram 10%-kal olcsóbb.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K4 helyzetkártya; forgatókönyv EV01"
@@ -512,7 +517,8 @@ cards:
     lead: *ajanlat
     text: |
       Az otthoni akkumulátorát évente legfeljebb 20 alkalommal egy szolgáltató a hálózat kiegyensúlyozására is használhatja (töltheti vagy kisütheti). Mindig marad benne legalább 30% tartalék Önnek, az alkalmakról előre értesítést kap, és felülbírálhatja.
-      Ezért évente 20 000 Ft-ot kap. Elfogadná?
+      Ezért évente 20 000 Ft-ot kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K5 helyzetkártya; forgatókönyv H04"
@@ -551,7 +557,8 @@ cards:
     lead: *ajanlat
     text: |
       Az elektromos fűtése egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz, előtte esetleg kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, és bármikor felülbírálhatja.
-      Ezért havonta 1000 Ft jóváírást kap. Elfogadná?
+      Ezért havonta 1000 Ft jóváírást kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "K2 elektromos fűtésre; eszközjegyzet: ellenállásfűtés, energiaszegénységi kockázat"
@@ -587,7 +594,8 @@ cards:
     lead: *ajanlat
     text: |
       Nagy termelésű, napos napokon a hálózat évente legfeljebb 10 alkalommal, néhány órára korlátozhatja, hogy a napeleme áramot tápláljon vissza. A saját fogyasztására termelt áramot ez nem érinti.
-      Ezért évente 5000 Ft-ot kap. Elfogadná?
+      Ezért évente 5000 Ft-ot kap.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "Saját; forgatókönyv H04, a déli többlet iránya"
@@ -613,7 +621,8 @@ cards:
     lead: *ajanlat
     text: |
       A medence- vagy öntözőszivattyú akkor menne, amikor sok és olcsó az áram (pl. délben), és nem az esti csúcsban. Ugyanannyit menne, csak máskor.
-      Ezért havonta 300 Ft jóváírást kap a szezonban. Elfogadná?
+      Ezért havonta 300 Ft jóváírást kap a szezonban.
+      Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
     source: "Saját; forgatókönyv B04 (öntözés) háztartási léptékben"
