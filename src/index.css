@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/* Theme tokens as CSS variables, so a dark theme only needs another :root block. */
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --fg: #1c1b19;
+  --muted: #55524c; /* 7.4:1 on --bg */
+  --border: #8d897f; /* >= 3:1 against --bg for UI components */
+  --border-soft: #d9d6cd;
+  --primary: #1f4fb8; /* 7.4:1 against white */
+  --primary-fg: #ffffff;
+  --primary-soft: #e3ebfb;
+  --focus: #b45309;
+  --danger: #a31616;
+  --banner-bg: #fde68a;
+  --banner-fg: #3b2a00;
+  --yes: #166534;
+  --no: #9f1239;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-soft: var(--border-soft);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+  --color-danger: var(--danger);
+  --color-yes: var(--yes);
+  --color-no: var(--no);
+}
+
+html {
+  font-size: 106.25%; /* 17px base */
+  overscroll-behavior: none;
+  scroll-padding-top: 6rem; /* keep focused elements clear of the fixed banner (WCAG 2.4.11) */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.45;
+  overscroll-behavior: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+h2:focus {
+  outline: none; /* the heading only receives programmatic focus; the card itself is the visible context */
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-fg);
+  }
+  .btn-quiet {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 500;
+    text-decoration: underline;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .opt[aria-pressed="true"],
+  .opt[aria-checked="true"] {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    box-shadow: inset 0 0 0 1px var(--primary);
+    font-weight: 600;
+  }
+  .kbd-hint {
+    display: none;
+    margin-left: 0.4rem;
+    padding: 0 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--bg);
+  }
+  .card-panel {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 1rem;
+    padding: 1.25rem 1rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  }
+}
+
+/* Key hints only where a physical keyboard and a fine pointer are likely. */
+@media (hover: hover) and (pointer: fine) {
+  .kbd-hint {
+    display: inline-block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
