@@ -3,8 +3,8 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { buildRecord, currentId } from "../engine/session.ts";
 import type { Issue } from "../engine/validate.ts";
-import { KeyHint } from "./CardShell.tsx";
-import { useSel, useSessionStore } from "./session.tsx";
+import { KeyHint, splitScenario } from "./CardShell.tsx";
+import { cardText, useSel, useSessionStore } from "./session.tsx";
 
 export function Banner() {
   return (
@@ -76,9 +76,10 @@ export function Announcer() {
   const cur = useSel((s) => currentId(s.state));
   const total = useSel((s) => s.analysis.path.length);
   const idx = useSel((s) => (cur ? s.analysis.path.indexOf(cur) : -1));
+  const variant = useSel((s) => (cur ? s.state.items[cur]?.variant : undefined));
   const card = cur ? ctx.byId.get(cur) : undefined;
   const block = ctx.bank.blocks.find((b) => b.id === card?.block)?.title;
-  const heading = card ? ("title" in card ? card.title : "text" in card ? card.text : "") : "";
+  const heading = card ? ("title" in card ? card.title : splitScenario(cardText(card, variant)).question) : "";
   const [msg, setMsg] = useState("");
   useEffect(() => {
     setMsg(`${block ?? ""}, ${idx + 1}. kártya ${total} közül: ${heading.replace(/\s+/g, " ")}`);

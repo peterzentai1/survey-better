@@ -63,6 +63,10 @@ export interface CardApi {
   store: SessionStore;
 }
 
+export function cardText(card: Card, variant?: number): string {
+  return (variant === undefined ? undefined : card.textVariants?.[variant]?.text) ?? card.text;
+}
+
 export function useCardApi(card: Card): CardApi {
   const store = useSessionStore();
   const item = useSel((s) => s.state.items[card.id]);
@@ -71,8 +75,7 @@ export function useCardApi(card: Card): CardApi {
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const variant = item?.variant;
-  const text = variant !== undefined && card.textVariants?.[variant] ? card.textVariants[variant].text : "text" in card ? card.text : "";
+  const text = cardText(card, item?.variant);
 
   const commit = useCallback((value: ItemValue) => store.getState().commit(card.id, value), [store, card.id]);
   const next = useCallback(() => store.getState().next(), [store]);

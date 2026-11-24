@@ -1,6 +1,7 @@
 // End-to-end flows through the whole UI, on the engine fixture (not the real content files).
 import { fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { SKIP, simulatePath } from "./engine/simulate.ts";
 import { parseContent } from "./engine/validate.ts";
 import { MINI_BANK_YAML, MINI_DEVICES_YAML } from "./engine/__fixtures__/mini.ts";
 import { clickIntro, clickToYesNo, expectCard, MemSink, renderApp, screen, wait, waitFor } from "./test-utils.tsx";
@@ -183,6 +184,21 @@ describe("summary: jump back to a skipped card and return", () => {
     expect(screen.queryByRole("button", { name: "Fűtés?" })).toBeNull();
     expect(sink.record?.items.Q_HEAT).toMatchObject({ status: "answered", value: "gas", changes: 1 });
   });
+
+  it("labels and announces a skipped scenario using the question the respondent saw", async () => {
+    const bankYaml = MINI_BANK_YAML.replace(
+      '"Városi szöveg 1"',
+      JSON.stringify("Városi helyzetleírás.\nVárosi szöveg 1"),
+    );
+    const content = parseContent(bankYaml, MINI_DEVICES_YAML);
+    if (!content.ok) throw new Error(JSON.stringify(content.issues));
+    const { state } = simulatePath(content.bank, content.devices, { answers: { Q_TOWN: "x", W1: SKIP } });
+    const { user } = renderApp({ content, sink: new MemSink(state) });
+    await user.click(screen.getByRole("button", { name: "Folytatom" }));
+    await user.click(screen.getByRole("button", { name: "Városi szöveg 1" }));
+    await expectCard("Városi szöveg 1");
+    expect(screen.getByTestId("announcer").textContent).toMatch(/: Városi szöveg 1$/);
+  });
 });
 
 describe("back navigation", () => {
@@ -211,6 +227,29 @@ describe("back navigation", () => {
     // the app's own Back did not double-step through a stray popstate
     await wait(100);
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Üdvözöljük");
+  });
+
+  it("waits for the browser to finish each traversal when Back is clicked twice quickly", async () => {
+    window.history.replaceState(null, "");
+    const { user } = renderApp();
+    await clickIntro(user);
+    await expectCard("Település?");
+    const go = vi.spyOn(window.history, "go").mockImplementation(() => {});
+    try {
+      fireEvent.click(screen.getByRole("button", { name: "Vissza" }));
+      fireEvent.click(screen.getByRole("button", { name: "Vissza" }));
+      await expectCard("Üdvözöljük");
+      expect(go.mock.calls).toEqual([[-1]]);
+
+      window.history.replaceState({ kd: 2 }, "");
+      fireEvent.popState(window, { state: window.history.state });
+      expect(go.mock.calls).toEqual([[-1], [-1]]);
+      window.history.replaceState({ kd: 1 }, "");
+      fireEvent.popState(window, { state: window.history.state });
+      expect(go).toHaveBeenCalledTimes(2);
+    } finally {
+      go.mockRestore();
+    }
   });
 
   it("a pending auto-advance is cancelled by going back", async () => {
@@ -253,6 +292,26 @@ describe("start-up, resume and errors", () => {
     const third = renderApp({ sink: new MemSink(saved) });
     await third.user.click(screen.getByRole("button", { name: "Újrakezdem" }));
     await expectCard("Üdvözöljük");
+  });
+
+  it("resumes saved answers even after going back to the welcome card", async () => {
+    const first = renderApp();
+    await clickIntro(first.user);
+    await first.user.click(screen.getByRole("button", { name: "X város" }));
+    await expectCard("Fűtés?");
+    for (let i = 0; i < 3; i++) {
+      await first.user.click(screen.getByRole("button", { name: "Vissza" }));
+    }
+    await expectCard("Üdvözöljük");
+    await waitFor(() => expect(window.history.state).toEqual({ kd: 1 }));
+    const saved = JSON.parse(JSON.stringify(first.sink.state));
+    first.unmount();
+
+    const resumed = renderApp({ sink: new MemSink(saved) });
+    await resumed.user.click(screen.getByRole("button", { name: "Folytatom" }));
+    await resumed.user.click(screen.getByRole("button", { name: /Kezdjük/ }));
+    await resumed.user.click(screen.getByRole("button", { name: /^Tovább/ }));
+    expect(screen.getByRole("button", { name: "X város", pressed: true })).toBeTruthy();
   });
 
   it("ignores a stored session that does not fit the bank", async () => {
@@ -310,6 +369,7 @@ describe("paradata", () => {
     await expectCard("Mi a fontos?");
     const rec = withConsent.sink.record!;
     expect(rec.consent).toEqual({ participation: true, paradata: true });
+    expect(rec.paradata?.N02).toBeUndefined();
     expect(rec.paradata?.Q_UP.inputs.tap).toBeGreaterThan(0);
     expect((rec.paradata?.Q_UP.dwellMs ?? 1) % 100).toBe(0);
     expect(rec.paradata?.Q_TOWN).toBeTruthy();

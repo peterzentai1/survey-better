@@ -26,6 +26,7 @@ export interface StoreState {
   // actions
   commit(id: string, value: ItemValue): void;
   skipCard(id: string): void;
+  /** Record consent and advance in one transition. */
   acceptConsent(id: string, consent: { participation: boolean; paradata: boolean }): void;
   setHighlights(highlights: Highlight[]): void;
   /** Continue from the current card (in jump mode: back to the summary or the next new card). */
@@ -90,7 +91,11 @@ export function createSessionStore(opts: {
 
       commit: (id, value) => apply(engine.answer(ctx, get().state, id, value)),
       skipCard: (id) => apply(engine.skip(ctx, get().state, id)),
-      acceptConsent: (id, consent) => apply(engine.acceptConsent(ctx, get().state, id, consent)),
+      acceptConsent: (id, consent) => {
+        if (!consent.participation) return;
+        // Measure time on the consent card using the consent in effect while it was open.
+        navigate((s) => engine.advance(ctx, engine.acceptConsent(ctx, s, id, consent)), { toast: null });
+      },
       setHighlights: (h) => apply(engine.setHighlights(get().state, h)),
 
       next: () => navigate((s) => engine.advance(ctx, s), { toast: null }),
