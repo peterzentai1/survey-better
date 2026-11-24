@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.2.0"
+version: "0.2.1"
 locale: hu
 
 defaults:
@@ -45,30 +45,32 @@ cards:
   - id: N01
     block: nyitas
     type: info
-    title: "Mikor használjuk az áramot?"
+    title: "Miért kérte a magyar kormány augusztusban a klímák esti kikapcsolását?"
     text: |
-      Ez a kérdőív arról szól, mennyire tudnák és akarnák a háztartások máskor használni az áramot, például ha este kevés, délben pedig sok és olcsó van belőle, és mi lenne ebben igazságos azoknak is, akiknek nincs erre alkalmas eszközük.
+      A vezetékek terheltsége számottevő, azonban a magas esti áramár volt a valódi ok. Tudta, hogy az áram ára negyedóránként változik?
 
-      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak. A kérdőív hosszát Ön választja meg lent: a rövid változat a legfontosabb kérdéseket tartalmazza, a hosszabbak részletesebben rákérdeznek az Ön eszközeire és véleményére is. Ha egy kérdésre nincs kialakult válasza, válassza a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti, ami Önnek a legfontosabb.
+      Magyarországon augusztus 13-án a napelemek csúcstermelése majdnem 3,5 Pakssal értek fel (normális paksi termeléshez viszonyítva - 6,9 GW / 2 GW).
+      A nálunk telepített napelemkapacitás világi összehasonlításban is rendkívül magasnak számít. Ez lehetőség és felelősség is egyben.
 
-      Nincs jó vagy rossz válasz. A kérdésekben szereplő ajánlatok elképzeltek, a bennük lévő összegek csak példák.
+      Ez a kérdőív azt vizsgálja, mennyire áll a háztartások lehetőségében akkor használni az áramot, mikor "sok és olcsó", mennyire tudjuk csökkenteni a használatot akkor, amikor az földgáz elégetésével termelt, sokszor Európából importált drága áram - és hogyan maradhat ez igazságos azoknak is, akik kevesebb erre alkalmas eszközzel rendelkeznek.
     effortLabel: "Mennyi ideje van a kitöltésre?"
-    cta: "Kezdjük"
-    source: "Saját. A nyitószöveg a jóváhagyott terv szerinti."
+    cta: "Mehet! \nVállalom, hogy jól átgondolom a válaszokat."
+    source: "Saját. A 0.2.1 nyitószöveg a kitöltő 2026-11-24-i szerkesztése. Ellenőrizendő: a kormányzati kérés oka, a 2026-08-13-i 6,9 GW-os PV-csúcs (MAVIR), a negyedórás ár (HUPX) forrása."
 
   - id: N02
     block: nyitas
     type: consent
-    title: "Tájékoztatás"
+    title: "Köszönöm, hogy megosztja velem véleményét."
     text: |
-      A kutatást [KUTATÓ], a(z) [INTÉZMÉNY] hallgatója végzi szakdolgozati kutatásként. Adatkezelő: [ADATKEZELŐ]. Jogalap: [JOGALAP].
+      A kutatást Zentai Péter, a Szegedi Tudományegyetem hallgatója végzi szakdolgozati kutatásként. Adatkezelő: [ADATKEZELŐ]. Jogalap: [JOGALAP].
 
-      A kérdőív névtelen: nem kérünk nevet, címet vagy elérhetőséget. A válaszokat [MEGŐRZÉSI IDŐ] ideig őrizzük, és csak összesítve közöljük. Bármelyik kérdést kihagyhatja, és bármikor abbahagyhatja.
+      Nincs jó vagy rossz válasz. Választhatja a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti a legfontosabbat is!
+      A kérdőív anonim, az eredményeket csak összesítve közöljük.
 
-      Kérdés esetén: [ELÉRHETŐSÉG].
+      Kérdés esetén: peterzentai1@gmail.com
     participationLabel: "Elolvastam, és részt veszek a kérdőívben."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait is rögzítsék (pl. kártyánként eltöltött idő, koppintás vagy billentyű). Ez segít a kérdőív javításában; nélküle is kitölthető."
-    source: "Saját; a helyőrzők a konzulensi válasz után tölthetők ki (adatkezelő, jogalap, megőrzés)."
+    source: "Saját; a helyőrzők a konzulensi válasz után tölthetők ki (adatkezelő, jogalap). 0.2.1: a megőrzési idő és a kihagyás/abbahagyás joga kikerült a szövegből, élesítés előtt visszaírandó."
 
   - id: N03
     block: nyitas
@@ -204,7 +206,7 @@ cards:
     block: eszkozok
     type: yesno
     showIf: { all: [ { owns: klima }, { not: { answer: A06, in: [klima] } } ] }
-    text: "Fűtenek is a klímával a fűtési idényben, legalább kiegészítésként?"
+    text: "Fűtenek is klímával a fűtési idényben, legalább kiegészítésként?"
     source: "S8; a fűtő klíma levegő–levegő hőszivattyú, ezért a klíma modulja ilyenkor nagyobb keretet kap."
 
   - id: E04
@@ -277,7 +279,7 @@ cards:
     block: indokok
     type: scale6
     randomizeGroup: indokmag
-    lead: &indok_lead "Képzelje el: előző nap jelzést kap, hogy holnap este 17 és 19 óra között jó lenne kevesebb áramot használni. Egy halasztható dolgot (pl. mosást, mosogatást) egy-két órával későbbre tenne…"
+    lead: &indok_lead "Képzelje el, hogy ma jelzést kap, hogy holnap este 17 és 19 óra között jó lenne kevesebb áramot használni. Egy halasztható dolgot (pl. mosást, mosogatást) egy-két órával későbbre tenne…"
     text: "…ha ezzel segítene elkerülni, hogy az országban átmenetileg ne legyen elég áram."
     scale: &valoszinu
       left: "Biztosan nem"
@@ -362,7 +364,7 @@ cards:
     type: yesno
     lead: "Elképzelt ajánlat (a számok csak példák):"
     text: |
-      Előző nap értesítést kap (SMS-ben, levélben vagy telefonon): holnap este 17 és 19 óra között, ha teheti, használjon kevesebb áramot, vagy tegye későbbre, amit tud. Önkéntes, nincs büntetés.
+      Előző nap értesítést kap (SMS-ben, emailben vagy mobil appban): holnap este 17 és 19 óra között, ha teheti, használjon kevesebb áramot, vagy tegye későbbre, amit tud. Önkéntes, nincs büntetés.
       Évente legfeljebb 10 ilyen nap lenne, és minden teljesített alkalom után 500 Ft jóváírást kap.
       Részt venne benne?
     yesLabel: "Részt vennék"
@@ -372,7 +374,7 @@ cards:
   - id: I10
     block: indokok
     type: scale6
-    lead: &homerseklet "Képzelje el, hogy Ön állíthatja a fűtést. Egy téli napon arra kérik, hogy az esti csúcsidőben két órára egy fokkal vegye lejjebb a lakás beállított hőmérsékletét."
+    lead: &homerseklet "Tételezzük, hogy Ön állítja a fűtést. Egy téli napon arra kérik, hogy az esti csúcsidőben két órára egy fokkal vegye lejjebb a lakás beállított hőmérsékletét."
     text: "Milyen érzést kelt Önben a gondolat, hogy teljesítse ezt a kérést?"
     scale:
       left: "Nagyon kellemetlen"
