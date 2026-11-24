@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import { DEFAULT_SURVEY, checkSurveyConsent, defaultSettings, parseSurveyManifest } from "./survey.ts";
-import { loadContent } from "./load.ts";
+import { checkSurveyConsent, defaultSettings, parseSurveyManifest } from "./survey.ts";
+import type { Card } from "../engine/schema.ts";
 
 const files = "bank: bank.yaml\ndevices: devices.yaml";
 
@@ -19,18 +19,20 @@ it("requires a concrete retention date for Supabase", () => {
 });
 
 it("blocks all server writes until N02 is complete", () => {
-  const content = loadContent();
-  if (!content.ok) throw new Error("Invalid survey");
-  expect(content.slug).toBe(DEFAULT_SURVEY);
-  const local = content.settings;
-  expect(() => checkSurveyConsent(content.bank.cards, local)).not.toThrow();
-  expect(() => checkSurveyConsent(content.bank.cards, { ...local, storage: { ...local.storage, metrics: true } })).toThrow(/N02/);
+  const local = defaultSettings();
+  const ready = {
+    id: "N02", block: "N", type: "consent",
+    skip: false, skipLabel: "Kihagyom", effort: 1,
+    title: "Részvétel", text: "Szintetikus tájékoztató.",
+    participationLabel: "Részt veszek", paradataLabel: "Engedélyezem a mérést",
+  } satisfies Card;
+  const placeholder = { ...ready, text: "Adatkezelő [HELYŐRZŐ]" };
+  const metrics = { ...local, storage: { ...local.storage, metrics: true } };
   const remote = { ...local, storage: { ...local.storage, mode: "supabase" as const, retentionUntil: "2028-02-29" } };
-  expect(() => checkSurveyConsent(content.bank.cards, remote)).toThrow(/N02/);
-  expect(() => checkSurveyConsent(content.bank.cards.filter((c) => c.id !== "N02"), remote)).toThrow(/N02/);
-
-  const ready = content.bank.cards.map((card) => card.type === "consent" ? {
-    ...card, text: "Szintetikus tájékoztató integrációs teszthez.",
-  } : card);
-  expect(() => checkSurveyConsent(ready, remote)).not.toThrow();
+  expect(() => checkSurveyConsent([placeholder], local)).not.toThrow();
+  for (const settings of [metrics, remote]) {
+    expect(() => checkSurveyConsent([placeholder], settings)).toThrow(/N02/);
+    expect(() => checkSurveyConsent([], settings)).toThrow(/N02/);
+    expect(() => checkSurveyConsent([ready], settings)).not.toThrow();
+  }
 });

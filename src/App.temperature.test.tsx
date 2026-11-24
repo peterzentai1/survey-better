@@ -70,6 +70,9 @@ describe("survey display settings", () => {
   });
 
   it("can hide the effort selector and disable optional paradata", async () => {
+    const intro = content.bank.cards.find((card) => card.id === "N01");
+    if (intro?.type !== "info") throw new Error("Missing N01 intro card");
+    const startLabel = intro.cta.replace(/\s+/g, " ").trim();
     const settings = {
       display: { ...content.settings.display, effortSelector: false, banner: "Tesztkérdőív" },
       storage: { ...content.settings.storage, paradata: false },
@@ -77,7 +80,7 @@ describe("survey display settings", () => {
     const { user, sink } = renderApp({ content: { ...content, settings } });
     expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(screen.getByRole("note").textContent).toBe("Tesztkérdőív");
-    await user.click(screen.getByRole("button", { name: /Kezd/ }));
+    await user.click(screen.getByRole("button", { name: (name) => name.startsWith(startLabel) }));
     const checkboxes = screen.getAllByRole("checkbox");
     expect(checkboxes).toHaveLength(1);
     await user.click(checkboxes[0]);

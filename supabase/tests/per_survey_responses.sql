@@ -1,10 +1,16 @@
--- Run against a disposable database with both migrations applied.
+-- Run against a disposable database with all migrations applied and pgTAP available.
 begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(8);
+
 set local role service_role;
 select survey_admin.create_survey('alpha_test');
 select survey_admin.create_survey('alpha_test');
 select survey_admin.create_survey('beta_test');
 select survey_admin.create_survey('closed_test');
+select survey_admin.create_survey('expired_test');
+select survey_admin.create_survey('haztartasi_rugalmassag');
 
 do $$
 begin
@@ -20,6 +26,11 @@ reset role;
 update survey_admin.surveys set accepting_responses = true,
   retention_until = (statement_timestamp() at time zone 'UTC')::date + 1,
   paradata = slug = 'beta_test' where slug in ('alpha_test', 'beta_test');
+update survey_admin.surveys set paradata = true,
+  retention_until = (statement_timestamp() at time zone 'UTC')::date + 1
+  where slug in ('closed_test', 'haztartasi_rugalmassag');
+update survey_admin.surveys set accepting_responses = true, paradata = true,
+  retention_until = (statement_timestamp() at time zone 'UTC')::date - 1 where slug = 'expired_test';
 
 set local role anon;
 select public.submit_response('alpha_test', 'same-receipt', '{"sessionId":"same-receipt","completed":true,"consent":{"participation":true,"paradata":true},"paradata":{"N01":{}}}');
@@ -79,6 +90,37 @@ begin
 end;
 $$;
 
+select throws_ok(
+  $$select public.submit_survey_metrics('missing_test', 'receipt', 'test', 'kozepes', 60, null, 'not_shown', null, null, null)$$,
+  '22023', 'Survey does not accept metrics', 'metrics require a registered survey'
+);
+select throws_ok(
+  $$select public.submit_survey_metrics('closed_test', 'receipt', 'test', 'kozepes', 60, null, 'not_shown', null, null, null)$$,
+  '22023', 'Survey does not accept metrics', 'closed surveys reject metrics'
+);
+select throws_ok(
+  $$select public.submit_survey_metrics('expired_test', 'receipt', 'test', 'kozepes', 60, null, 'not_shown', null, null, null)$$,
+  '22023', 'Survey does not accept metrics', 'expired surveys reject metrics'
+);
+select throws_ok(
+  $$select public.submit_survey_metrics('alpha_test', 'receipt', 'test', 'kozepes', 60, null, 'not_shown', null, null, null)$$,
+  '22023', 'Survey does not accept metrics', 'metrics require paradata to be enabled'
+);
+select throws_ok(
+  $$insert into survey_private.completions (receipt, bank_version, effort, reaction_status)
+    values (decode('00', 'hex'), 'test', 'kozepes', 'not_shown')$$,
+  '42501', null, 'anon cannot insert metrics directly'
+);
+select ok(not has_table_privilege('anon', 'survey_private.completions', 'INSERT'), 'anon lacks INSERT on completions');
+select ok(not has_table_privilege('authenticated', 'survey_private.completions', 'INSERT'), 'authenticated lacks INSERT on completions');
+select throws_ok(
+  $$select public.submit_survey_completion('receipt', 'test', 'kozepes', 60, 'drag', 'answered', 'drag', 100, 5::smallint)$$,
+  '22023', 'Survey does not accept metrics', 'the legacy RPC respects the default survey closure'
+);
+
+reset role;
+update survey_admin.surveys set accepting_responses = true where slug = 'haztartasi_rugalmassag';
+set local role anon;
 select public.submit_survey_completion('legacy-' || n, 'test', 'kozepes', 60, 'drag',
   'answered', 'drag', 100, 5::smallint) from generate_series(1, 5) n;
 select public.submit_survey_metrics('beta_test', 'scoped-' || n, 'test', 'kozepes', 120, null,
@@ -121,4 +163,5 @@ begin
 end;
 $$;
 
+select * from finish();
 rollback;

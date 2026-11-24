@@ -33,12 +33,15 @@ const outboxes = new Map<string, ReturnType<typeof deliveryQueue<Completion>>>()
 function outbox(slug: string) {
   let queue = outboxes.get(slug);
   if (!queue) {
-    const scope = slug === DEFAULT_SURVEY ? "" : slug + ":";
-    queue = deliveryQueue<Completion>("kartya-kerdoiv:metrics:" + supabaseScope + ":" + scope, (sample) => {
-      return slug === DEFAULT_SURVEY && sample.arm
+    const prefix = "kartya-kerdoiv:metrics:" + supabaseScope + ":";
+    const isDefault = slug === DEFAULT_SURVEY;
+    // The @ marker is outside the survey slug alphabet.
+    const scope = isDefault ? "@default" : slug;
+    queue = deliveryQueue<Completion>(prefix + scope + ":", (sample) => {
+      return isDefault && sample.arm
         ? rpc("submit_survey_completion", sample)
         : rpc("submit_survey_metrics", { slug, ...sample });
-    });
+    }, isDefault ? prefix : undefined);
     outboxes.set(slug, queue);
   }
   return queue;

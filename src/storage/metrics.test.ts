@@ -89,4 +89,49 @@ describe("temperature experiment", () => {
       vi.resetModules();
     }
   });
+
+  it("retries only the selected survey's metrics, including legacy default entries", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://survey.example");
+    vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "test-key");
+    vi.resetModules();
+    try {
+      const api = await import("./metrics.ts");
+      const requests = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
+      vi.stubGlobal("fetch", requests);
+      const { ctx, state } = fixture();
+      const done = submit(ctx, state);
+      const record = buildRecord(ctx, done, "test");
+      const sample = completionMetrics(done, record);
+      const prefix = "kartya-kerdoiv:metrics:https://survey.example:";
+      localStorage.setItem(prefix + "legacy-test", JSON.stringify({ ...sample, token: "legacy-test" }));
+      api.queueCompletion(done, record);
+      api.queueCompletion(done, record, "default");
+      expect(localStorage.length).toBe(3);
+
+      // Reimport to retry the stored entries after a page reload.
+      vi.resetModules();
+      const reloaded = await import("./metrics.ts");
+      requests.mockClear().mockImplementation(async () => new Response(null, { status: 204 }));
+      reloaded.retryCompletions();
+      await vi.waitFor(() => expect(localStorage.length).toBe(1));
+      expect(requests.mock.calls.map(([url]) => url)).toEqual([
+        "https://survey.example/rest/v1/rpc/submit_survey_completion",
+        "https://survey.example/rest/v1/rpc/submit_survey_completion",
+      ]);
+      expect(requests.mock.calls.map(([, init]) => JSON.parse(String(init?.body)).token)).toEqual([
+        "legacy-test", record.sessionId,
+      ]);
+      expect(localStorage.getItem(prefix + "default:" + record.sessionId)).not.toBeNull();
+
+      reloaded.retryCompletions("default");
+      await vi.waitFor(() => expect(localStorage.length).toBe(0));
+      expect(requests).toHaveBeenCalledTimes(3);
+      const [url, init] = requests.mock.calls[2];
+      expect(url).toBe("https://survey.example/rest/v1/rpc/submit_survey_metrics");
+      expect(JSON.parse(String(init?.body))).toMatchObject({ slug: "default", token: record.sessionId });
+    } finally {
+      vi.stubEnv("VITE_SUPABASE_URL", "");
+      vi.resetModules();
+    }
+  });
 });

@@ -10,7 +10,7 @@ const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), 
   version: string;
 };
 
-function surveyContent(slug: string): Plugin {
+function surveyContent(slug: string, failOnInvalidContent: boolean): Plugin {
   const id = "virtual:survey-content";
   const resolvedId = "\0" + id;
   return {
@@ -19,7 +19,7 @@ function surveyContent(slug: string): Plugin {
     load(source) {
       if (source !== resolvedId) return;
       const survey = readSurvey(slug, (path) => this.addWatchFile(path));
-      if (!survey.ok) {
+      if (!survey.ok && failOnInvalidContent) {
         this.error(survey.issues.map(({ file, path, message }) => `${file} ${path}: ${message}`).join("\n"));
       }
       return "export default JSON.parse(" + JSON.stringify(JSON.stringify(survey)) + ")";
@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => ({
   plugins: [
     surveyContent(command === "serve" && mode === "test"
       ? DEFAULT_SURVEY
-      : loadEnv(mode, process.cwd(), "VITE_").VITE_SURVEY || DEFAULT_SURVEY),
+      : loadEnv(mode, process.cwd(), "VITE_").VITE_SURVEY || DEFAULT_SURVEY, command === "build"),
     react(),
     tailwindcss(),
   ],
