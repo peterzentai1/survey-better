@@ -2,6 +2,10 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.3.1 változások (2026-11-25)
+
+- **N01 visszaállítva** a szerző 0.2.1/0.2.2-es szövegére, változtatás nélkül. A cím, a szöveg és a `source` mező is visszaállt. A 0.3.0 átírása a szerző jóváhagyása nélkül készült. Az alábbi 0.3.0-s N01-sor már nem érvényes.
+
 ## v0.3.0 változások (élesítés előtti változat, 2026-11-25)
 
 | Kártya | Változás |
