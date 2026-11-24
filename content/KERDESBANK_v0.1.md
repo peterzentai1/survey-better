@@ -2,6 +2,23 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.3.2 változások (a kitöltő 1. körös jegyzetei alapján, 2026-11-25)
+
+| Kártya | Változás |
+| --- | --- |
+| A01, A01B | Kétlépcsős lakóhely. Az A01 opciói: „Mórahalom és környéke”, „Máshol Magyarországon” és „Külföldön”. Az első válasznál jön az A01B: „Mórahalom belterülete”, „Mórahalom külterülete, tanya” vagy „Környező település”. A mórahalmi szövegváltozatok kapuja mostantól az A01B. A „vármegye” szó kikerült. |
+| A02 | „Panellakás” és „Egyéb társasházi lakás” a „Társasházi lakás” helyett. |
+| A03 | „Saját vagy családi, de a döntést más hozza meg (pl. szülő, házastárs)”. |
+| A04 | Opciók 1–7 és „8 vagy több”. A lapozható választó motormunka. |
+| A05, A05B | Új „Egyéb” opció, utána nem kötelező, rövid szabad szöveg (A05B, legfeljebb 200 karakter). |
+| A06 | Külön opció a fára („kályha, kandalló, sparhelt”) és a vegyes tüzelésű kazánra („központi fűtés”). A hőszivattyúnál „radiátor vagy padlófűtés”, a „pl. levegő–víz” helyett. Az „elsősorban” marad, egy választással. |
+| T02 | Többes választás: „Igen, vezérelt (éjszakai) áramköröm van”, „Igen, H tarifám van (hőszivattyúhoz)”, és kizáró opcióként „Nem” vagy „Nem tudom”. |
+| E04 | Többes választás a „jellemzően” helyett: otthon, munkahelyen, nyilvános töltőn. Az autós modul akkor jön, ha az otthon be van jelölve. Az arányok megadása motormunka. |
+| M_HP_1, M_KL_1, M_KL_2, M_EF_1 | „kicsit visszavesz (nem kapcsol ki)”. |
+| N02 | A „Nincs jó vagy rossz válasz…” bekezdés a kitöltő eredeti szövege, szó szerint. |
+
+Elemzési következmény: az A01, A04, A06, T02 és E04 értékkészlete változott. A korábbi változatokból származó próbaadatok nem vonhatók össze ezekkel.
+
 ## v0.3.1 változások (2026-11-25)
 
 - **N01 visszaállítva** a szerző 0.2.1/0.2.2-es szövegére, változtatás nélkül. A cím, a szöveg és a `source` mező is visszaállt. A 0.3.0 átírása a szerző jóváhagyása nélkül készült. Az alábbi 0.3.0-s N01-sor már nem érvényes.
