@@ -2,6 +2,19 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.2.1 változások (szövegjavítás, 2026-11-24)
+
+A kitöltő a helyi kérdésszerkesztőben javított. Az export: `kerdes-szerkeszto/exports/kerdes-javitasok_0.2.0_2026-11-24-17-06.json`. A kártyák szerkezete és a logika nem változott.
+
+| Kártya | Változás |
+| --- | --- |
+| N01 | Új cím és nyitószöveg: az augusztusi esti klímakérés, a napelemes csúcstermelés és az esti gázalapú áram. A gomb felirata egyben vállalás. A hosszválasztó magyarázata és az „ajánlatok elképzeltek” mondat kikerült. |
+| N02 | Új cím. A kutató neve és intézménye, valamint a kapcsolattartó e-mail kitöltve. A kihagyásról és visszanézésről szóló mondat az N01-ből ide került. A megőrzési idő és az abbahagyás joga kikerült. |
+| E03 | „a klímával” helyett „klímával”. |
+| I01–I07 | A közös bevezető (`indok_lead`): „Képzelje el, hogy ma jelzést kap…”. |
+| I09 | Az értesítés csatornái: SMS, e-mail vagy mobilapp. |
+| I10–I11 | A közös bevezető (`homerseklet`): „Tételezzük, hogy Ön állítja a fűtést.” |
+
 ## v0.2 változások
 
 - **I10–I12.** Kétórás, egyfokos esti hőmérséklet-csökkentés. Az első érzést véletlenszerűen kiosztott koppintós vagy húzós felületen mérjük, a vállalási szándékot egységes hatfokú skálán. Az első kérdést megválaszolók külön értékelhetik a válaszadási módot.
@@ -119,7 +132,8 @@ A cselekvési keret közös, és rögzített: egy előre jelzett esti kétórás
 - **OETP (M_AK_3):** a távoli vezérlés követelménye a 2026-09-28-i módosított felhívás 6. pontjában szerepel, az eredeti januáriban nem.
 - **D04 (szubjektív jövedelmi helyzet):** az ESS-kérdés mintájára, emlékezetből. Az eredeti megfogalmazással össze kell vetni.
 - **Tesztértékek** (500 Ft, 1000 Ft, 20 000 Ft, 10%): horgonyozhatnak. A pilot után el kell dönteni, maradjanak-e, vagy legyenek változó értékek.
-- **N02:** a tájékoztató helyőrzői ([ADATKEZELŐ], [JOGALAP], [MEGŐRZÉSI IDŐ]) csak a konzulensi és adatvédelmi egyeztetés után tölthetők ki. Addig a platform nem gyűjthet valódi választ.
+- **N02:** a tájékoztató helyőrzői ([ADATKEZELŐ], [JOGALAP]) csak a konzulensi és adatvédelmi egyeztetés után tölthetők ki. Addig a platform nem gyűjthet valódi választ. A 0.2.1-ben kikerült megőrzési időt és az abbahagyás jogát vissza kell írni.
+- **N01 (0.2.1):** forrás kell minden tényállításhoz. (1) A kormány augusztusi kérése az esti klímahasználatról, és hogy a valódi ok az esti ár volt. (2) A 2026-08-13-i 6,9 GW-os napelemes csúcs (MAVIR) és a Paks ~2 GW-os viszonyítása. (3) A negyedórás ár (HUPX) és hogy ez a háztartási árra nem igaz. A kérdések előtti keretezés befolyásolhatja a válaszokat.
 
 ## Hossz
 

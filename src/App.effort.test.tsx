@@ -5,9 +5,15 @@ import { expectCard, MemSink, renderApp, screen, waitFor } from "./test-utils.ts
 
 const content = loadContent();
 if (!content.ok) throw new Error(JSON.stringify(content.issues));
-const introHeading = "Mikor használjuk az áramot?";
+// Wording comes from the bank so that text edits do not break these tests.
+const squash = (s: string) => s.replace(/\s+/g, " ").trim();
+const cardText = (id: string, key: "title" | "cta") =>
+  squash(String((content.bank.cards.find((c) => c.id === id) as Record<string, unknown> | undefined)?.[key] ?? ""));
+const introHeading = cardText("N01", "title");
+const consentHeading = cardText("N02", "title");
+const startLabel = cardText("N01", "cta");
 const radio = (name: RegExp) => screen.getByRole("radio", { name });
-const start = () => screen.getByRole("button", { name: /^Kezdjük/ });
+const start = () => screen.getByRole("button", { name: (n) => squash(n).startsWith(startLabel) });
 const consent = () => screen.getByRole("checkbox", { name: /^Elolvastam/ });
 const next = () => screen.getByRole("button", { name: /^Tovább/ });
 
@@ -31,7 +37,7 @@ describe("effort selector", () => {
     expect(radio(/^Alapos/)).toHaveProperty("ariaChecked", "true");
     await user.click(radio(/^Rövid/));
     await user.click(start());
-    await expectCard("Tájékoztatás");
+    await expectCard(consentHeading);
     expect(next()).toHaveProperty("disabled", true);
     expect(save).not.toHaveBeenCalled();
     await user.click(consent());
