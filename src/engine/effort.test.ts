@@ -11,6 +11,12 @@ if (!content.ok) throw new Error(JSON.stringify(content.issues));
 const { bank, devices } = content;
 
 describe("effort levels", () => {
+  it("shows every card, including effort 3, in a bank without effortLevels", () => {
+    const legacy = { ...bank, effortLevels: undefined };
+    expect(simulatePath(legacy, devices, {}).path).toContain("B04");
+    expect(simulatePath(bank, devices, {}).path).not.toContain("B04");
+  });
+
   it("filters the tagged cards and keeps the entire randomized core at every level", () => {
     const answers = { J04: "nem", F01: "nem", A03: "berelt_berbeado" };
     const short = simulatePath(bank, devices, { effortLevel: "rovid", answers });
@@ -46,7 +52,7 @@ describe("effort levels", () => {
   it("exports the level after participation consent and the deviation only with paradata consent", () => {
     const ctx = makeCtx(bank, devices, "effort");
     const initial = createSession(ctx, { sessionId: "effort", startedDate: "2000-01-01" });
-    expect(initial.effortLevel).toBe("alapos");
+    expect(initial.effortLevel).toBe("kozepes");
     const selected = setEffortLevel(ctx, initial, "rovid");
     expect(selected.effortLevel).toBe("rovid");
     const beforeConsent = advance(ctx, selected);
@@ -59,7 +65,7 @@ describe("effort levels", () => {
     expect(buildRecord(ctx, participationOnly, "test")).not.toHaveProperty("effortChangedFromDefault");
     expect(validateSnapshot(ctx, JSON.parse(JSON.stringify(participationOnly)))?.effortLevel).toBe("rovid");
     expect(validateSnapshot(ctx, { ...participationOnly, effortLevel: "invalid" })).toBeNull();
-    expect(validateSnapshot(ctx, { ...participationOnly, effortLevel: undefined })?.effortLevel).toBe("alapos");
+    expect(validateSnapshot(ctx, { ...participationOnly, effortLevel: undefined })?.effortLevel).toBe("kozepes");
 
     const accepted = acceptConsent(ctx, beforeConsent, "N02", { participation: true, paradata: true });
     expect(buildRecord(ctx, accepted, "test")).toHaveProperty("effortChangedFromDefault", true);

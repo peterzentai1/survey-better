@@ -8,7 +8,7 @@ A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICE
 
 | Kártya | Változás |
 | --- | --- |
-| N01 | A nyitószöveg második bekezdése bemutatja a három választható kitöltési hosszt. Az alapos a kezdő beállítás, a percek szögletes zárójelben jelölt előteszt-helyőrzők. |
+| N01 | A nyitószöveg második bekezdése bemutatja a három választható kitöltési hosszt. A közepes a kezdő beállítás, a percek szögletes zárójelben jelölt előteszt-helyőrzők. |
 | N03 | Új, kötelező igen/nem tétel a figyelmes válaszadás vállalásáról, közvetlenül a hozzájárulás után. Mindkét válasszal folytatható a kérdőív. |
 | J02 | Az első opció az előrefizetés akadályára kérdez rá (`elozetes`, persely ikon). A megtérülés hiánya külön opció. |
 | J04 | Új, elképzelt ajánlat a villanyszámlán törlesztett, a teljes rezsit nagyjából változatlanul hagyó kölcsönről. Ha más dönt a lakásról, a szöveg külön jelzi a feltételezett döntési lehetőséget. |

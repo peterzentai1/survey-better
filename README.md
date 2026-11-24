@@ -4,7 +4,7 @@ An open-source, card-based web questionnaire about household electricity flexibi
 One card is shown at a time; the questions adapt to the respondent's household (appliances, answers so far).
 It runs on phones, tablets and laptops (touch, mouse, trackpad, keyboard). The respondent-facing UI is in Hungarian.
 
-The opening card offers three lengths and initially selects **Alapos**. The prototype saves survey responses on the respondent’s device. With Supabase configured, it also shows per-level timing estimates and can send a small measurement record when a consenting respondent finishes.
+The opening card offers three lengths and initially selects **Közepes**. The prototype saves survey responses on the respondent’s device. With Supabase configured, it also shows per-level timing estimates and can send a small measurement record when a consenting respondent finishes.
 
 ## Run it
 
@@ -93,7 +93,7 @@ Code: AGPL-3.0-only (see `LICENSE`). The question bank and appliance content in 
 Ez egy nyílt forráskódú, kártyaalapú online kérdőív a háztartási villamosenergia-rugalmasságról, egy BSc-szakdolgozathoz.
 Egyszerre egy kártya jelenik meg, és a kérdések az adott háztartáshoz igazodnak.
 
-A teljes kérdőívet a böngésző tárolja. A Supabase-kapcsolat a hozzájárulással befejezett kitöltések időmérését és a hőmérsékletes kártya válaszfelületének összehasonlítását szolgálja. A nyitókártya alapértéke az Alapos. Öt mért kitöltéstől fokozatonként megjelenik a medián.
+A teljes kérdőívet a böngésző tárolja. A Supabase-kapcsolat a hozzájárulással befejezett kitöltések időmérését és a hőmérsékletes kártya válaszfelületének összehasonlítását szolgálja. A nyitókártya alapértéke a Közepes. Öt mért kitöltéstől fokozatonként megjelenik a medián.
 
 **Futtatás:** `npm install`, majd `npm run dev`. Telefonon vagy tábláneten, ugyanazon a helyi hálózaton:
 `npm run dev -- --host`. A tartalom a `content/` mappában van; a kártyaséma leírása a `content/sample.yaml` fájl.

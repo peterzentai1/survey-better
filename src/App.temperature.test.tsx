@@ -8,7 +8,7 @@ import { MemSink, renderApp, screen } from "./test-utils.tsx";
 vi.mock("./storage/metrics.ts", async (original) => ({
   ...await original<typeof import("./storage/metrics.ts")>(),
   metricsEnabled: true,
-  effortMedians: async () => new Map([["alapos", 10.5]]),
+  effortMedians: async () => new Map([["kozepes", 10.5]]),
 }));
 
 const content = loadContent();
@@ -17,7 +17,7 @@ if (!content.ok) throw new Error("Invalid test bank");
 describe("survey metrics UI", () => {
   it("shows a measured median only for a level with data", async () => {
     renderApp({ content });
-    expect((await screen.findByRole("radio", { name: /Alapos.*Medián 10,5 perc/ })).getAttribute("aria-checked")).toBe("true");
+    expect((await screen.findByRole("radio", { name: /Közepes.*Medián 10,5 perc/ })).getAttribute("aria-checked")).toBe("true");
     expect(screen.getByRole("radio", { name: /Rövid.*kb\. \[5\] perc/ })).toBeTruthy();
   });
 

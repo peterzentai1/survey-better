@@ -12,18 +12,18 @@ const consent = () => screen.getByRole("checkbox", { name: /^Elolvastam/ });
 const next = () => screen.getByRole("button", { name: /^Tovább/ });
 
 describe("effort selector", () => {
-  it("defaults to Alapos, supports keys and click, and waits for consent before saving", async () => {
+  it("defaults to Közepes, supports keys and click, and waits for consent before saving", async () => {
     const { user, sink } = renderApp({ content });
     const save = vi.spyOn(sink, "save");
     expect(screen.getByRole("radiogroup", { name: "Mennyi ideje van a kitöltésre?" })).toBeTruthy();
-    expect(radio(/^Alapos/)).toHaveProperty("ariaChecked", "true");
+    expect(radio(/^Közepes/)).toHaveProperty("ariaChecked", "true");
     const total = () => Number(screen.getByTestId("announcer").textContent?.match(/kártya (\d+) közül/)?.[1]);
     await waitFor(() => expect(total()).toBeGreaterThan(0));
     const full = total();
 
-    await user.keyboard("{ArrowLeft}");
-    expect(radio(/^Közepes/)).toHaveProperty("ariaChecked", "true");
-    expect(document.activeElement).toBe(radio(/^Közepes/));
+    await user.keyboard("{ArrowRight}");
+    expect(radio(/^Alapos/)).toHaveProperty("ariaChecked", "true");
+    expect(document.activeElement).toBe(radio(/^Alapos/));
     await user.keyboard("1");
     expect(radio(/^Rövid/)).toHaveProperty("ariaChecked", "true");
     await waitFor(() => expect(total()).toBeLessThan(full));

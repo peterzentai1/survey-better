@@ -42,7 +42,8 @@ export interface Analysis {
 
 export function analyze(ctx: Ctx, items: Record<string, ItemRecord>, effortLevel: EffortLevelId = DEFAULT_EFFORT_LEVEL): Analysis {
   const level = ctx.bank.effortLevels?.find((e) => e.id === effortLevel);
-  const maxEffort = EFFORT_LEVEL_IDS.indexOf(level?.id ?? DEFAULT_EFFORT_LEVEL) + 1;
+  // Banks without effortLevels show every card, whatever the default level is.
+  const maxEffort = level ? EFFORT_LEVEL_IDS.indexOf(level.id) + 1 : EFFORT_LEVEL_IDS.length;
   const path: string[] = [];
   const pathSet = new Set<string>();
   const used: Record<string, number> = {};
