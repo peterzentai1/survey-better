@@ -2,9 +2,12 @@
 import { fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { defaultSettings } from "./content/survey.ts";
+import { makeCtx } from "./engine/path.ts";
+import { buildRecord } from "./engine/session.ts";
 import { SKIP, simulatePath } from "./engine/simulate.ts";
 import { parseContent } from "./engine/validate.ts";
 import { MINI_BANK_YAML, MINI_DEVICES_YAML } from "./engine/__fixtures__/mini.ts";
+import { LocalSink } from "./storage/sinks.ts";
 import { clickIntro, clickToYesNo, expectCard, MemSink, miniContent, renderApp, screen, wait, waitFor } from "./test-utils.tsx";
 
 const SCALE_HEADINGS = /^(Általános szöveg 1|Városi szöveg 1|Szöveg 2|Szöveg 3|Szöveg 4)$/;
@@ -107,6 +110,29 @@ describe("complete the questionnaire with clicks only", () => {
     expect(sink.record?.items.W5.value).toEqual([9, 10]);
     expect(sink.record?.highlights).toEqual([{ topic: "t1", statement: "Állítás B" }]);
     expect(sink.record?.items.Q_UP.value).toBe("nem");
+
+    const sessionId = sink.state!.sessionId;
+    expect(sink.record?.sessionId).toBe(sessionId);
+    expect(screen.getByText(sessionId, { selector: "code" })).toBeTruthy();
+    expect(screen.getByText("Az Ön kitöltési azonosítója:")).toBeTruthy();
+    expect(screen.getByText("Ezzel az azonosítóval kérheti a kitöltése törlését vagy a válaszai másolatát. Nevet és elérhetőséget nem kérünk, ezért az azonosító nélkül a kitöltését nem tudjuk Önhöz kötni. Kérjük, mentse el. Ezen az eszközön is megmarad, amíg nem kezd új kitöltést, vagy nem törli a böngésző adatait.")).toBeTruthy();
+    expect(screen.getByText("Új kitöltés előtt mentse el az azonosítót: az új kitöltés törli ezt az eszközről.")).toBeTruthy();
+
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    try {
+      const copy = screen.getByRole("button", { name: "Azonosító másolása" });
+      await user.click(copy);
+      expect(writeText).toHaveBeenCalledExactlyOnceWith(sessionId);
+      expect(screen.getByRole("status").textContent).toBe("Kimásolva.");
+      expect(document.activeElement).toBe(copy);
+
+      writeText.mockRejectedValueOnce(new Error("Clipboard access denied"));
+      await user.click(copy);
+      expect(screen.getByRole("status").textContent).toBe("");
+      expect(screen.getByText(sessionId, { selector: "code" })).toBeTruthy();
+    } finally {
+      writeText.mockRestore();
+    }
   });
 });
 
@@ -285,6 +311,36 @@ describe("back navigation", () => {
 });
 
 describe("start-up, resume and errors", () => {
+  it.each([true, false])("restores a completed session with collection open = %s, then clears it on restart", async (open) => {
+    const content = miniContent();
+    if (!content.ok) throw new Error(JSON.stringify(content.issues));
+    const { state } = simulatePath(content.bank, content.devices);
+    const ctx = makeCtx(content.bank, content.devices, state.sessionId);
+    const sink = new LocalSink(content.bank.version);
+    sink.save(state, buildRecord(ctx, state, "test"));
+
+    const first = renderApp({ content, sink });
+    await first.user.click(screen.getByRole("button", { name: "Folytatom" }));
+    await first.user.click(screen.getByRole("button", { name: "Beküldés" }));
+    expect(screen.getByText(state.sessionId, { selector: "code" })).toBeTruthy();
+    first.unmount();
+
+    const settings = defaultSettings(ctx.slug);
+    settings.storage.acceptingResponses = open;
+    const reload = renderApp({ content: { ...content, settings }, sink: new LocalSink(content.bank.version) });
+    expect(screen.getByText(state.sessionId, { selector: "code" })).toBeTruthy();
+    await reload.user.click(screen.getByRole("button", { name: "Új kitöltés kezdése" }));
+    expect(screen.queryByTestId("thank-you")).toBeNull();
+    expect(sink.load()).toBeNull();
+    if (open) {
+      await clickIntro(reload.user);
+      expect(sink.load()).toMatchObject({ completed: false });
+      expect(sink.load()).not.toMatchObject({ sessionId: state.sessionId });
+    } else {
+      expect(screen.getByRole("status").textContent).toBe("A kérdőív lezárult.");
+    }
+  });
+
   it("shows every validation issue in Hungarian with its path", () => {
     const bad = parseContent(MINI_BANK_YAML.replace("{ id: W2, block: why", "{ id: W2, block: nincs"), MINI_DEVICES_YAML);
     renderApp({ content: bad });

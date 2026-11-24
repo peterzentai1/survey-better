@@ -2,7 +2,8 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(12);
+set local timezone = 'America/Los_Angeles';
+select plan(23);
 
 set local role service_role;
 select survey_admin.create_survey('alpha_test');
@@ -140,6 +141,8 @@ end;
 $$;
 
 set local role service_role;
+select is((select received_on from public.export_survey_responses('alpha_test')),
+  (statement_timestamp() at time zone 'UTC')::date, 'the export returns the UTC arrival date');
 do $$
 declare
   payload_a jsonb;
@@ -155,6 +158,8 @@ end;
 $$;
 
 reset role;
+select col_type_is('survey_data', 'responses', 'received_on', 'date', 'the parent stores dates');
+select col_type_is('survey_data', 'responses_alpha_test', 'received_on', 'date', 'the partition stores dates');
 select ok((select count(*) = 5 and min(use_again) = 5 from survey_private.completions
   where bank_version = 'test' and use_again is not null), 'legacy ratings are retained');
 select ok((select count(*) = 2 from survey_private.completions
@@ -178,5 +183,70 @@ begin
 end;
 $$;
 
+select public.submit_response('haztartasi_rugalmassag', 'withdrawal-receipt',
+  '{"completed":true,"consent":{"participation":true},"marker":"default"}');
+select public.submit_response('beta_test', 'withdrawal-receipt',
+  '{"completed":true,"consent":{"participation":true},"marker":"beta"}');
+select public.submit_survey_completion('withdrawal-receipt', 'withdrawal-test', 'kozepes', 60, 'tap', 'not_shown', null, null);
+select public.submit_survey_metrics('beta_test', 'withdrawal-receipt', 'withdrawal-test', 'kozepes', 120, 'drag', 'not_shown', null, null);
+reset role;
+
+-- The same ID in two surveys exercises both hash rules and survey scoping.
+prepare read_test_response(text, text) as
+with request(survey_slug, session_id) as (values ($1, $2))
+select (
+  select r.payload ->> 'marker' from survey_data.responses r
+  where r.survey_slug = q.survey_slug
+    and r.receipt_hash = sha256(convert_to(q.session_id, 'UTF8'))
+) as response_marker, (
+  select c.active_seconds from survey_private.completions c
+  where c.survey_slug = q.survey_slug
+    and c.receipt = sha256(convert_to(
+      case when q.survey_slug = 'haztartasi_rugalmassag' then q.session_id
+           else q.survey_slug || ':' || q.session_id end, 'UTF8'))
+) as active_seconds
+from request q;
+
+prepare delete_test_response(text, text) as
+with request(survey_slug, session_id) as (values ($1, $2)),
+deleted_response as (
+  delete from survey_data.responses r using request q
+  where r.survey_slug = q.survey_slug
+    and r.receipt_hash = sha256(convert_to(q.session_id, 'UTF8'))
+  returning 1
+), deleted_metrics as (
+  delete from survey_private.completions c using request q
+  where c.survey_slug = q.survey_slug
+    and c.receipt = sha256(convert_to(
+      case when q.survey_slug = 'haztartasi_rugalmassag' then q.session_id
+           else q.survey_slug || ':' || q.session_id end, 'UTF8'))
+  returning 1
+)
+select (select count(*) from deleted_response) as responses_deleted,
+       (select count(*) from deleted_metrics) as metrics_deleted;
+
+select results_eq($$execute read_test_response('beta_test', 'withdrawal-receipt')$$,
+  $$values ('beta'::text, 120)$$, 'lookup finds the scoped response and metrics');
+select results_eq($$execute delete_test_response('beta_test', 'withdrawal-receipt')$$,
+  $$values (1::bigint, 1::bigint)$$, 'deleting a scoped ID removes one response and one metrics row');
+select results_eq($$execute read_test_response('beta_test', 'withdrawal-receipt')$$,
+  $$values (null::text, null::integer)$$, 'the deleted ID no longer matches either row');
+select results_eq($$execute read_test_response('haztartasi_rugalmassag', 'withdrawal-receipt')$$,
+  $$values ('default'::text, 60)$$, 'the same ID in the default survey still matches both rows');
+select results_eq($$execute delete_test_response('haztartasi_rugalmassag', 'withdrawal-receipt')$$,
+  $$values (1::bigint, 1::bigint)$$, 'deletion also matches the default survey hash');
+select results_eq($$select survey_slug from survey_data.responses order by survey_slug$$,
+  $$values ('alpha_test'::text), ('beta_test'::text)$$, 'other responses remain');
+select is((select count(*) from survey_private.completions where bank_version = 'test'),
+  12::bigint, 'other metrics remain');
+select ok(bool_and(
+    not has_table_privilege(api_role, 'survey_data.responses', 'SELECT, DELETE')
+    and not has_table_privilege(api_role, 'survey_private.completions', 'SELECT, DELETE')
+    and not has_function_privilege(api_role, 'public.export_survey_responses(text, text, integer)', 'EXECUTE')
+  ), 'public API roles cannot read or delete response or metrics rows')
+from (values ('anon'), ('authenticated')) as roles(api_role);
+
+deallocate read_test_response;
+deallocate delete_test_response;
 select * from finish();
 rollback;

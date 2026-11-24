@@ -1,6 +1,6 @@
 // Page chrome and screens around the cards: banner, top bar, toast, debug panel, error / resume / thank-you screens.
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buildRecord, currentId } from "../engine/session.ts";
 import type { Issue } from "../engine/validate.ts";
 import { KeyHint, splitScenario } from "./CardShell.tsx";
@@ -210,14 +210,38 @@ export function ResumePrompt({ onResume, onRestart }: { onResume: () => void; on
 }
 
 export function ThankYou({ download, onRestart }: { download: boolean; onRestart: () => void }) {
+  const sessionId = useSel((s) => s.state.sessionId);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => heading.current?.focus(), []);
+
+  const copyId = async () => {
+    setCopied(false);
+    try {
+      if (!navigator.clipboard) return;
+      await navigator.clipboard.writeText(sessionId);
+      setCopied(true);
+    } catch {
+      // The ID remains selectable when clipboard access is unavailable.
+    }
+  };
+
   return (
     <div className="card-panel" data-testid="thank-you">
-      <h1 className="text-xl font-bold" tabIndex={-1} ref={(el) => el?.focus()}>
+      <h1 className="text-xl font-bold" tabIndex={-1} ref={heading}>
         Köszönjük a kitöltést!
       </h1>
       <p className="mt-2">A kitöltés befejeződött. Köszönjük, hogy megosztotta a véleményét.</p>
       <div className="mt-4 flex flex-col gap-2">
+        <p className="font-semibold">Az Ön kitöltési azonosítója:</p>
+        <code className="block select-text rounded-lg border border-soft p-2 font-mono wrap-anywhere">{sessionId}</code>
+        <button type="button" className="btn" onClick={copyId}>Azonosító másolása</button>
+        <p role="status" className="text-sm">{copied && "Kimásolva."}</p>
+        <p>Ezzel az azonosítóval kérheti a kitöltése törlését vagy a válaszai másolatát. Nevet és elérhetőséget nem kérünk, ezért az azonosító nélkül a kitöltését nem tudjuk Önhöz kötni. Kérjük, mentse el. Ezen az eszközön is megmarad, amíg nem kezd új kitöltést, vagy nem törli a böngésző adatait.</p>
+      </div>
+      <div className="mt-4 flex flex-col gap-2">
         {download && <DownloadButton />}
+        <p>Új kitöltés előtt mentse el az azonosítót: az új kitöltés törli ezt az eszközről.</p>
         <button type="button" className="btn" onClick={onRestart}>
           Új kitöltés kezdése
         </button>
