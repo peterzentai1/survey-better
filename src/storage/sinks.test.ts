@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadMini } from "../engine/__fixtures__/mini.ts";
 import { makeCtx } from "../engine/path.ts";
 import { buildRecord, createSession } from "../engine/session.ts";
-import { LocalSink, RemoteSink } from "./sinks.ts";
+import { LocalSink } from "./sinks.ts";
 
 const { bank, devices } = loadMini();
 const ctx = makeCtx(bank, devices, "s");
@@ -44,12 +44,12 @@ describe("LocalSink", () => {
     localStorage.setItem("kartya-kerdoiv:v1:session", "{not json");
     expect(new LocalSink("v1").load()).toBeNull();
   });
-});
-
-describe("RemoteSink", () => {
-  it("is a stub that throws", () => {
-    const sink = new RemoteSink();
-    expect(() => sink.save()).toThrow("not configured");
-    expect(() => sink.load()).toThrow("not configured");
+  it("keeps progress separate for surveys that share a bank version", () => {
+    const a = new LocalSink("v1", "survey_a");
+    const b = new LocalSink("v1", "survey_b");
+    a.save(state, record);
+    expect(a.load()).toEqual(state);
+    expect(b.load()).toBeNull();
+    expect(new LocalSink("v1").load()).toBeNull();
   });
 });

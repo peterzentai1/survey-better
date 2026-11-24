@@ -1,5 +1,10 @@
 # Kártyaséma változásai
 
+## v0.3
+
+- A `content/surveys/<slug>/survey.yaml` adja meg a kérdésbankot, az eszközfájlt és a kérdőív megjelenítési, tárolási beállításait.
+- Az `effortChangedFromDefault` jelzést a kérdőív beállított kezdőértékéhez viszonyítjuk. A `temperatureArm` mező az `ab_test` módban rögzíti az I10 besorolását.
+
 ## v0.2
 
 - A kérdésbank opcionális `effortLevels` listája megadja a három kitöltési hossz feliratait és modulkereteit. Az első információs kártya `effortLabel` mezője adja a választó feliratát. A korábbi bankok a meglévő eszközfájl kereteivel működnek.

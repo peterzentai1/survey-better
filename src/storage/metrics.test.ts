@@ -9,7 +9,7 @@ import { completionMetrics } from "./metrics.ts";
 function fixture(sessionId = "metrics-test") {
   const content = loadContent();
   if (!content.ok) throw new Error("Invalid test bank");
-  const ctx = makeCtx(content.bank, content.devices, sessionId);
+  const ctx = makeCtx(content.bank, content.devices, sessionId, content.settings);
   const start = createSession(ctx, { sessionId, startedDate: "2026-11-24" });
   const state = acceptConsent(ctx, start, "N02", { participation: true, paradata: true });
   state.history.push("I10");

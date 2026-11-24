@@ -1,7 +1,7 @@
 {
   "name": "kartya-kerdoiv",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "oxlint",
-    "validate-content": "node scripts/validate-content.ts"
+    "validate-content": "node scripts/validate-content.ts",
+    "export": "node scripts/export-responses.ts"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.52.0",

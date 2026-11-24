@@ -1,24 +1,25 @@
+import { DEFAULT_SURVEY } from "../content/survey.ts";
 import type { SessionState } from "../engine/session.ts";
 import { APPRAISAL_CARD, REACTION_CARD } from "../engine/temperature.ts";
 import type { ResponseRecord } from "../engine/types.ts";
+import { deliveryQueue } from "./delivery.ts";
+import { rpc, supabaseConfigured, supabaseScope } from "./supabase.ts";
 
-const url = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, "");
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-export const metricsEnabled = Boolean(url && key);
+export const metricsEnabled = supabaseConfigured;
 
 export function completionMetrics(state: SessionState, record: ResponseRecord) {
   if (!record.completed || !record.consent.participation || !record.consent.paradata ||
-      !record.paradata || !record.effortLevel || !record.temperatureArm) return null;
-  const reaction = record.items[REACTION_CARD];
-  const first = record.paradata[REACTION_CARD]?.firstAnswer;
-  const appraisal = record.items[APPRAISAL_CARD];
+      !record.paradata || !record.effortLevel) return null;
+  const reaction = record.temperatureArm ? record.items[REACTION_CARD] : undefined;
+  const first = reaction && record.paradata[REACTION_CARD]?.firstAnswer;
+  const appraisal = reaction && record.items[APPRAISAL_CARD];
   const ms = Object.values(state.paradata ?? {}).reduce((sum, card) => sum + card.dwellMs, 0);
   return {
     token: record.sessionId,
     bank_version: record.bankVersion,
     effort: record.effortLevel,
     active_seconds: state.fullTiming && ms > 0 ? Math.max(1, Math.round(ms / 1000)) : null,
-    arm: record.temperatureArm,
+    arm: record.temperatureArm ?? null,
     reaction_status: reaction?.status === "answered" || reaction?.status === "skipped" ? reaction.status : "not_shown",
     first_input: first?.input ?? null,
     first_answer_ms: first?.ms ?? null,
@@ -26,68 +27,39 @@ export function completionMetrics(state: SessionState, record: ResponseRecord) {
   };
 }
 
-async function rpc(name: string, body: unknown) {
-  const res = await fetch(url + "/rest/v1/rpc/" + name, {
-    method: "POST",
-    headers: { apikey: key, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    credentials: "omit",
-    referrerPolicy: "no-referrer",
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!res.ok) throw new Error("Supabase RPC " + res.status);
-  return res;
+type Completion = NonNullable<ReturnType<typeof completionMetrics>>;
+const outboxes = new Map<string, ReturnType<typeof deliveryQueue<Completion>>>();
+
+function outbox(slug: string) {
+  let queue = outboxes.get(slug);
+  if (!queue) {
+    const scope = slug === DEFAULT_SURVEY ? "" : slug + ":";
+    queue = deliveryQueue<Completion>("kartya-kerdoiv:metrics:" + supabaseScope + ":" + scope, (sample) => {
+      return slug === DEFAULT_SURVEY && sample.arm
+        ? rpc("submit_survey_completion", sample)
+        : rpc("submit_survey_metrics", { slug, ...sample });
+    });
+    outboxes.set(slug, queue);
+  }
+  return queue;
 }
 
-type Completion = NonNullable<ReturnType<typeof completionMetrics>>;
-const prefix = "kartya-kerdoiv:metrics:" + url + ":";
-const sending = new Set<string>();
-const memory = new Map<string, Completion>();
-
-export function queueCompletion(state: SessionState, record: ResponseRecord) {
+export function queueCompletion(state: SessionState, record: ResponseRecord, slug = DEFAULT_SURVEY) {
   if (!metricsEnabled) return;
   const sample = completionMetrics(state, record);
-  if (!sample) return;
-  const id = prefix + sample.token;
-  memory.set(id, sample);
-  try {
-    localStorage.setItem(id, JSON.stringify(sample));
-  } catch { /* In-memory delivery is still possible. */ }
-  void send(id, sample);
+  if (sample) outbox(slug).put(sample.token, sample);
 }
 
-async function send(id: string, sample: Completion) {
-  if (sending.has(id)) return;
-  sending.add(id);
-  try {
-    await rpc("submit_survey_completion", sample);
-    memory.delete(id);
-    localStorage.removeItem(id);
-  } catch { /* Retain pending samples for the next online event or visit. */ }
-  finally { sending.delete(id); }
-}
-
-export function retryCompletions() {
-  if (!metricsEnabled) return;
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const id = localStorage.key(i);
-      if (id?.startsWith(prefix)) {
-        try {
-          const sample = JSON.parse(localStorage.getItem(id) ?? "null") as Completion | null;
-          if (sample && id === prefix + sample.token) memory.set(id, sample);
-        } catch { /* A damaged entry must not block other receipts. */ }
-      }
-    }
-  } catch { /* Storage may be disabled. */ }
-  for (const [id, sample] of memory) void send(id, sample);
+export function retryCompletions(slug = DEFAULT_SURVEY) {
+  if (metricsEnabled) outbox(slug).retry();
 }
 
 const reads = new Map<string, Promise<Map<string, number>>>();
-export function effortMedians(version: string) {
-  const existing = reads.get(version);
+export function effortMedians(version: string, slug = DEFAULT_SURVEY) {
+  const id = slug + ":" + version;
+  const existing = reads.get(id);
   if (existing) return existing;
-  const request = rpc("survey_effort_medians", { version })
+  const request = rpc("survey_effort_medians", slug === DEFAULT_SURVEY ? { version } : { slug, version })
     .then(async (r) => {
       const rows = await r.json() as { effort: string; median_minutes: number | string }[];
       const medians = new Map<string, number>();
@@ -97,7 +69,7 @@ export function effortMedians(version: string) {
       }
       return medians;
     })
-    .finally(() => reads.delete(version));
-  reads.set(version, request);
+    .finally(() => reads.delete(id));
+  reads.set(id, request);
   return request;
 }

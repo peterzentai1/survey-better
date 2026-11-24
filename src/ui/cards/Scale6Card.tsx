@@ -11,8 +11,10 @@ const N = 6;
 
 export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }) {
   const api = useCardApi(card);
-  const experimental = card.id === REACTION_CARD;
-  const dragPad = experimental && temperatureArm(api.store.getState().state.sessionId) === "drag";
+  const { ctx, state } = api.store.getState();
+  const input = ctx.settings.display.scaleInput;
+  const experimental = input === "ab_test" && card.id === REACTION_CARD;
+  const dragPad = input === "drag_reveal" || (experimental && temperatureArm(state.sessionId) === "drag");
   const trackPointer = !experimental || dragPad;
   const scale = scaleOf(card, api.store.getState().ctx.bank);
   const stored = api.item?.status === "answered" && typeof api.item.value === "number" ? api.item.value - 1 : null;
@@ -149,7 +151,7 @@ export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }
         role="radiogroup"
         aria-label={api.text}
         className={dragPad ? "scale-control" : "relative flex gap-1.5 select-none"}
-        style={{ touchAction: experimental ? "pan-y pinch-zoom" : "none" }}
+        style={{ touchAction: experimental || dragPad ? "pan-y pinch-zoom" : "none" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

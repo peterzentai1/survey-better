@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadContent } from "./content/load.ts";
+import { acceptingResponses, DEFAULT_SURVEY, defaultSettings, type SurveySettings } from "./content/survey.ts";
 import { makeCtx } from "./engine/path.ts";
 import type { Bank, Devices } from "./engine/schema.ts";
 import { createSession, currentId, localDate, validateSnapshot, type SessionState } from "./engine/session.ts";
 import type { ContentResult } from "./engine/validate.ts";
 import { createSessionStore, type SessionStore } from "./state/store.ts";
-import { retryCompletions } from "./storage/metrics.ts";
+import { queueCompletion, retryCompletions } from "./storage/metrics.ts";
+import { responseOutbox } from "./storage/responses.ts";
 import { LocalSink, type ResponseSink } from "./storage/sinks.ts";
+import { supabaseConfigured } from "./storage/supabase.ts";
+import { Admin } from "./ui/Admin.tsx";
 import { CardView } from "./ui/CardView.tsx";
 import { Announcer, Banner, DebugPanel, ErrorScreen, ResumePrompt, ThankYou, Toast, TopBar } from "./ui/Chrome.tsx";
 import { GlobalKeys } from "./ui/GlobalKeys.tsx";
@@ -22,7 +26,7 @@ export interface DebugFlags {
 
 export interface AppProps {
   /** Parsed content; defaults to the files in /content. */
-  content?: ContentResult;
+  content?: ContentResult & { slug?: string; settings?: SurveySettings };
   sink?: ResponseSink;
   debug?: DebugFlags;
 }
@@ -44,33 +48,70 @@ function newSessionId(): string {
 }
 
 export function App({ content, sink, debug }: AppProps) {
-  useEffect(() => {
-    retryCompletions();
-    window.addEventListener("online", retryCompletions);
-    return () => window.removeEventListener("online", retryCompletions);
-  }, []);
   const [parsed] = useState(() => content ?? loadContent());
+  if (!parsed.ok) {
+    return <main className="mx-auto max-w-[560px] px-4 pt-3"><ErrorScreen issues={parsed.issues} /></main>;
+  }
+  const slug = parsed.slug ?? DEFAULT_SURVEY;
+  const settings = parsed.settings ?? defaultSettings(slug);
+  const { bank, devices } = parsed;
+  const isAdmin = /^\/admin\/?$/.test(window.location.pathname);
   return (
     <>
-      <Banner />
-      <main className="mx-auto w-full max-w-[560px] px-4 pb-28 pt-3">
-        {parsed.ok ? (
-          <Questionnaire bank={parsed.bank} devices={parsed.devices} sink={sink} debug={debug ?? defaultDebug()} />
-        ) : (
-          <ErrorScreen issues={parsed.issues} />
-        )}
-      </main>
+      {isAdmin ? <Admin slug={slug} bank={bank} devices={devices} settings={settings} /> : (
+        <>
+          <Banner text={settings.display.banner} />
+          <main className="mx-auto w-full max-w-[560px] px-4 pb-12 pt-3">
+            <Questionnaire bank={bank} devices={devices} slug={slug} settings={settings} sink={sink} debug={debug ?? defaultDebug()} />
+          </main>
+        </>
+      )}
+      <footer className="mx-auto max-w-[560px] px-4 pb-8 text-center text-sm">
+        <a className="text-primary underline" href={settings.display.sourceLink}>Forráskód (AGPL-3.0)</a>
+      </footer>
     </>
   );
 }
 
-function Questionnaire({ bank, devices, sink: sinkProp, debug }: { bank: Bank; devices: Devices; sink?: ResponseSink; debug: DebugFlags }) {
-  const sink = useMemo(() => sinkProp ?? new LocalSink(bank.version), [sinkProp, bank.version]);
+function Questionnaire({ bank, devices, slug, settings, sink, debug }: {
+  bank: Bank; devices: Devices; slug: string; settings: SurveySettings; sink?: ResponseSink; debug: DebugFlags;
+}) {
+  const { storage } = settings;
+  const remote = useMemo(() => responseOutbox(slug, storage), [slug, storage]);
+  const metrics = storage.paradata && storage.metrics;
+  useEffect(() => {
+    const retry = () => {
+      remote.retry();
+      if (metrics && acceptingResponses(storage)) retryCompletions(slug);
+    };
+    retry();
+    window.addEventListener("online", retry);
+    return () => window.removeEventListener("online", retry);
+  }, [metrics, remote, slug, storage]);
+  if (!acceptingResponses(storage)) {
+    return <p role="status" className="card-panel">A kérdőív lezárult.</p>;
+  }
+  if (storage.mode === "supabase" && !supabaseConfigured) {
+    return <p role="status" className="card-panel">A válaszok fogadása jelenleg nem elérhető.</p>;
+  }
+  return <SurveySession bank={bank} devices={devices} slug={slug} settings={settings} sink={sink} debug={debug}
+    onComplete={(state, record) => {
+      if (metrics && acceptingResponses(storage)) queueCompletion(state, record, slug);
+      remote.submit(record);
+    }}
+  />;
+}
+
+function SurveySession({ bank, devices, slug, settings, sink: sinkProp, debug, onComplete }: {
+  bank: Bank; devices: Devices; slug: string; settings: SurveySettings; sink?: ResponseSink; debug: DebugFlags;
+  onComplete: NonNullable<Parameters<typeof createSessionStore>[0]["onComplete"]>;
+}) {
+  const sink = useMemo(() => sinkProp ?? new LocalSink(bank.version, slug), [sinkProp, bank.version, slug]);
 
   const makeStore = (sessionId: string, state?: SessionState): SessionStore => {
-    const ctx = makeCtx(bank, devices, sessionId);
+    const ctx = makeCtx(bank, devices, sessionId, settings, slug);
     const initial = state ?? createSession(ctx, { sessionId, startedDate: localDate() });
-    return createSessionStore({ ctx, sink, appVersion: __APP_VERSION__, initial });
+    return createSessionStore({ ctx, sink, appVersion: __APP_VERSION__, initial, onComplete });
   };
 
   // An unfinished session saved on this device that still fits the current bank (else it is ignored).
@@ -78,7 +119,7 @@ function Questionnaire({ bank, devices, sink: sinkProp, debug }: { bank: Bank; d
     try {
       const raw = sink.load() as { sessionId?: unknown } | null;
       if (!raw || typeof raw.sessionId !== "string") return null;
-      const state = validateSnapshot(makeCtx(bank, devices, raw.sessionId), raw);
+      const state = validateSnapshot(makeCtx(bank, devices, raw.sessionId, settings, slug), raw);
       return state && state.order.length > 1 ? state : null;
     } catch {
       return null;

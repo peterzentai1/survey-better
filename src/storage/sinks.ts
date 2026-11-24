@@ -1,5 +1,4 @@
-// Full responses stay on the device. Consented completion metrics have a separate delivery queue.
-import { queueCompletion } from "./metrics.ts";
+import { DEFAULT_SURVEY } from "../content/survey.ts";
 import type { SessionState } from "../engine/session.ts";
 import type { ResponseRecord } from "../engine/types.ts";
 
@@ -15,8 +14,9 @@ export interface ResponseSink {
 /** localStorage sink. Every access is wrapped: the app must work with storage unavailable. */
 export class LocalSink implements ResponseSink {
   private readonly key: string;
-  constructor(bankVersion: string) {
-    this.key = `kartya-kerdoiv:${bankVersion}:session`;
+  constructor(bankVersion: string, slug = DEFAULT_SURVEY) {
+    const scope = slug === DEFAULT_SURVEY ? bankVersion : `${slug}:${bankVersion}`;
+    this.key = `kartya-kerdoiv:${scope}:session`;
   }
 
   load(): unknown {
@@ -29,7 +29,6 @@ export class LocalSink implements ResponseSink {
   }
 
   save(state: SessionState, record: ResponseRecord): void {
-    if (state.completed) queueCompletion(state, record);
     try {
       localStorage.setItem(this.key, JSON.stringify({ state, record }));
     } catch {
@@ -43,18 +42,5 @@ export class LocalSink implements ResponseSink {
     } catch {
       /* ignore */
     }
-  }
-}
-
-/** Placeholder for a future backend. Deliberately not wired anywhere in v0.1. */
-export class RemoteSink implements ResponseSink {
-  load(): unknown {
-    throw new Error("RemoteSink: not configured");
-  }
-  save(): void {
-    throw new Error("RemoteSink: not configured");
-  }
-  clear(): void {
-    throw new Error("RemoteSink: not configured");
   }
 }

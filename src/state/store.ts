@@ -5,7 +5,7 @@ import { analyze, type Analysis, type Ctx } from "../engine/path.ts";
 import * as engine from "../engine/session.ts";
 import type { SessionState } from "../engine/session.ts";
 import { REACTION_CARD, type InputMethod } from "../engine/temperature.ts";
-import type { Highlight, ItemValue } from "../engine/types.ts";
+import type { Highlight, ItemValue, ResponseRecord } from "../engine/types.ts";
 import type { ResponseSink } from "../storage/sinks.ts";
 
 export interface Toast {
@@ -55,6 +55,7 @@ export function createSessionStore(opts: {
   sink: ResponseSink;
   appVersion: string;
   initial: SessionState;
+  onComplete?: (state: SessionState, record: ResponseRecord) => void;
 }): SessionStore {
   const { ctx, sink, appVersion } = opts;
   // Wall-clock-free dwell timing: a monotonic in-memory mark, never stored or exported as such.
@@ -69,20 +70,23 @@ export function createSessionStore(opts: {
   }
   let toastSeq = 0;
 
-  const persist = (s: SessionState) => {
+  const persist = (s: SessionState, justCompleted: boolean) => {
     if (!s.consent.participation) return;
+    const record = engine.buildRecord(ctx, s, appVersion);
     try {
-      sink.save(s, engine.buildRecord(ctx, s, appVersion));
+      sink.save(s, record);
     } catch {
       /* a sink failure must never break the questionnaire */
     }
+    if (justCompleted) opts.onComplete?.(s, record);
   };
 
   return createStore<StoreState>((set, get) => {
     /** Replace the state, refresh the analysis and persist. */
     const apply = (state: SessionState, extra: Partial<StoreState> = {}) => {
+      const justCompleted = state.completed && !get().state.completed;
       set({ state, analysis: analyze(ctx, state.items, state.effortLevel), ...extra });
-      persist(state);
+      persist(state, justCompleted);
     };
     /** Navigation: add dwell time for the card being left, then apply the transition. */
     const navigate = (fn: (s: SessionState) => SessionState, extra: Partial<StoreState> = {}) => {
@@ -109,7 +113,7 @@ export function createSessionStore(opts: {
       commit: (id, value, input) => {
         const s = checkpoint(get().state);
         const entry = s.paradata?.[id];
-        const first = id === REACTION_CARD && input && entry && !entry.firstAnswer
+        const first = ctx.settings.display.scaleInput === "ab_test" && id === REACTION_CARD && input && entry && !entry.firstAnswer
           && s.items[id]?.status === "shown";
         const timed = first ? { ...s, paradata: { ...s.paradata, [id]: {
           ...entry, firstAnswer: { input, ms: Math.round(entry.dwellMs / 100) * 100 },

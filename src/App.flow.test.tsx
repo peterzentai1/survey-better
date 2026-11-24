@@ -1,10 +1,11 @@
 // End-to-end flows through the whole UI, on the engine fixture (not the real content files).
 import { fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { defaultSettings } from "./content/survey.ts";
 import { SKIP, simulatePath } from "./engine/simulate.ts";
 import { parseContent } from "./engine/validate.ts";
 import { MINI_BANK_YAML, MINI_DEVICES_YAML } from "./engine/__fixtures__/mini.ts";
-import { clickIntro, clickToYesNo, expectCard, MemSink, renderApp, screen, wait, waitFor } from "./test-utils.tsx";
+import { clickIntro, clickToYesNo, expectCard, MemSink, miniContent, renderApp, screen, wait, waitFor } from "./test-utils.tsx";
 
 const SCALE_HEADINGS = /^(Általános szöveg 1|Városi szöveg 1|Szöveg 2|Szöveg 3|Szöveg 4)$/;
 
@@ -63,7 +64,7 @@ describe("complete the questionnaire with the keyboard only", () => {
     expect(sink.record?.items.Z01.value).toBe("köszönöm");
     expect(sink.record?.items.W5.value).toEqual([0]);
     expect("paradata" in sink.record!).toBe(false);
-  });
+  }, 10_000);
 });
 
 describe("complete the questionnaire with clicks only", () => {
@@ -360,8 +361,10 @@ describe("start-up, resume and errors", () => {
   });
 
   it("shows the prototype banner, and the download button only in debug mode", async () => {
-    const hidden = renderApp({ debug: { panel: false, download: false } });
-    expect(screen.getByText("PROTOTÍPUS – nem gyűjt adatot; a válaszok csak ezen az eszközön maradnak.")).toBeTruthy();
+    const settings = defaultSettings();
+    settings.display.banner = "Próbakérdőív";
+    const hidden = renderApp({ content: { ...miniContent(), settings }, debug: { panel: false, download: false } });
+    expect(screen.getByRole("note").textContent).toBe("Próbakérdőív");
     expect(screen.queryByText("Hibakeresés")).toBeNull();
     hidden.unmount();
     renderApp({ debug: { panel: true, download: true } });

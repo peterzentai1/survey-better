@@ -1,0 +1,124 @@
+-- Run against a disposable database with both migrations applied.
+begin;
+set local role service_role;
+select survey_admin.create_survey('alpha_test');
+select survey_admin.create_survey('alpha_test');
+select survey_admin.create_survey('beta_test');
+select survey_admin.create_survey('closed_test');
+
+do $$
+begin
+  begin
+    perform survey_admin.create_survey('INVALID slug');
+    raise exception 'create_survey accepted an invalid slug';
+  exception when invalid_parameter_value then null;
+  end;
+end;
+$$;
+
+reset role;
+update survey_admin.surveys set accepting_responses = true,
+  retention_until = (statement_timestamp() at time zone 'UTC')::date + 1,
+  paradata = slug = 'beta_test' where slug in ('alpha_test', 'beta_test');
+
+set local role anon;
+select public.submit_response('alpha_test', 'same-receipt', '{"sessionId":"same-receipt","completed":true,"consent":{"participation":true,"paradata":true},"paradata":{"N01":{}}}');
+select public.submit_response('alpha_test', 'same-receipt', '{"completed":true,"consent":{"participation":true}}');
+select public.submit_response('beta_test', 'same-receipt', '{"completed":true,"consent":{"participation":true,"paradata":true},"paradata":{"N02":{}}}');
+
+do $$
+declare
+  s text;
+begin
+  if public.survey_response_count('alpha_test') <> 1 or public.survey_response_count('beta_test') <> 1
+    or public.survey_response_count('closed_test') <> 0 or public.survey_response_count('missing_test') is not null then
+    raise exception 'Unexpected response count';
+  end if;
+
+  foreach s in array array['INVALID slug', 'missing_test', 'closed_test'] loop
+    begin
+      perform public.submit_response(s, 'receipt', '{"completed":true,"consent":{"participation":true}}');
+      raise exception 'submit_response accepted inactive or invalid slug %', s;
+    exception when invalid_parameter_value then null;
+    end;
+  end loop;
+
+  begin
+    perform public.submit_response('alpha_test', 'large-receipt',
+      jsonb_build_object('completed', true, 'consent', '{"participation":true}'::jsonb, 'large', repeat('a', 262145)));
+    raise exception 'submit_response accepted an oversized payload';
+  exception when invalid_parameter_value then null;
+  end;
+
+  begin
+    perform public.submit_response('alpha_test', 'no-consent', '{"completed":true,"consent":{"participation":false}}');
+    raise exception 'submit_response accepted a response without participation consent';
+  exception when invalid_parameter_value then null;
+  end;
+
+  begin
+    perform 1 from survey_data.responses;
+    raise exception 'anon read the partitioned parent';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform 1 from survey_data.responses_alpha_test;
+    raise exception 'anon read a partition';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform * from public.export_survey_responses('alpha_test');
+    raise exception 'anon exported responses';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform survey_admin.create_survey('anon_test');
+    raise exception 'anon created a survey';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+select public.submit_survey_completion('legacy-' || n, 'test', 'kozepes', 60, 'drag',
+  'answered', 'drag', 100, 5::smallint) from generate_series(1, 5) n;
+select public.submit_survey_metrics('beta_test', 'scoped-' || n, 'test', 'kozepes', 120, null,
+  'not_shown', null, null, null) from generate_series(1, 5) n;
+
+do $$
+begin
+  if (select median_minutes from public.survey_effort_medians('test')) is distinct from 1::numeric
+    or (select median_minutes from public.survey_effort_medians('beta_test', 'test')) is distinct from 2::numeric then
+    raise exception 'Metrics aggregated across surveys or lost legacy rows';
+  end if;
+end;
+$$;
+
+set local role service_role;
+do $$
+declare
+  payload_a jsonb;
+  payload_b jsonb;
+begin
+  select payload into strict payload_a from public.export_survey_responses('alpha_test');
+  select payload into strict payload_b from public.export_survey_responses('beta_test');
+  if payload_a ? 'sessionId' or payload_a ? 'paradata' or payload_a #> '{consent,paradata}' is distinct from 'false'::jsonb
+    or not (payload_b ? 'paradata') then
+    raise exception 'Unexpected paradata or raw receipt in the exported payload';
+  end if;
+end;
+$$;
+
+reset role;
+update survey_admin.surveys set retention_until = (statement_timestamp() at time zone 'UTC')::date - 1 where slug = 'alpha_test';
+set local role anon;
+do $$
+begin
+  begin
+    perform public.submit_response('alpha_test', 'expired-receipt', '{"completed":true,"consent":{"participation":true}}');
+    raise exception 'submit_response accepted an expired survey';
+  exception when invalid_parameter_value then null;
+  end;
+end;
+$$;
+
+rollback;

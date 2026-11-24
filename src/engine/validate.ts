@@ -8,9 +8,8 @@ import { EFFORT_LEVEL_IDS } from "./effort.ts";
 import { bankSchema, devicesSchema, resolveBank, isAnswerable, type Bank, type Card, type Devices } from "./schema.ts";
 import type { Condition } from "./types.ts";
 
-export type ContentFile = "kerdesbank.hu.yaml" | "eszkozok.yaml";
 export interface Issue {
-  file: ContentFile;
+  file: string;
   path: string;
   message: string;
 }
@@ -30,7 +29,7 @@ function formatPath(path: PropertyKey[], data: unknown): string {
   return out || "(gyökér)";
 }
 
-function zodIssues(file: ContentFile, error: z.ZodError, data: unknown): Issue[] {
+function zodIssues(file: string, error: z.ZodError, data: unknown): Issue[] {
   return error.issues.map((i) => {
     const isType = i.code === "invalid_union" && i.path[i.path.length - 1] === "type";
     return {
@@ -43,7 +42,7 @@ function zodIssues(file: ContentFile, error: z.ZodError, data: unknown): Issue[]
   });
 }
 
-function parseYaml(file: ContentFile, text: string): { data?: unknown; issues: Issue[] } {
+function parseYaml(file: string, text: string): { data?: unknown; issues: Issue[] } {
   try {
     // `merge` also resolves YAML 1.1 merge keys (<<: *anchor); anchors and aliases work by default.
     return { data: parse(text, { merge: true }), issues: [] };
@@ -55,30 +54,32 @@ function parseYaml(file: ContentFile, text: string): { data?: unknown; issues: I
 export interface ParseOptions {
   /** Semantic icon keys the UI can draw; unknown keys only produce warnings. */
   knownIcons?: readonly string[];
+  files?: readonly [bank: string, devices: string];
 }
 
 export function parseContent(bankText: string, devicesText: string, opts: ParseOptions = {}): ContentResult {
   const issues: Issue[] = [];
-  const bankY = parseYaml("kerdesbank.hu.yaml", bankText);
-  const devY = parseYaml("eszkozok.yaml", devicesText);
+  const [bankFile, devicesFile] = opts.files ?? ["kerdesbank.hu.yaml", "eszkozok.yaml"];
+  const bankY = parseYaml(bankFile, bankText);
+  const devY = parseYaml(devicesFile, devicesText);
   issues.push(...bankY.issues, ...devY.issues);
   const bankP = bankY.data === undefined ? undefined : bankSchema.safeParse(bankY.data);
   const devP = devY.data === undefined ? undefined : devicesSchema.safeParse(devY.data);
-  if (bankP && !bankP.success) issues.push(...zodIssues("kerdesbank.hu.yaml", bankP.error, bankY.data));
-  if (devP && !devP.success) issues.push(...zodIssues("eszkozok.yaml", devP.error, devY.data));
+  if (bankP && !bankP.success) issues.push(...zodIssues(bankFile, bankP.error, bankY.data));
+  if (devP && !devP.success) issues.push(...zodIssues(devicesFile, devP.error, devY.data));
   if (!bankP?.success || !devP?.success) return { ok: false, issues, warnings: [] };
 
   const bank = resolveBank(bankP.data);
   const devices = devP.data;
   const warnings: Issue[] = [];
-  issues.push(...checkDevices(devices));
-  issues.push(...checkBank(bank, devices, warnings, opts.knownIcons));
+  issues.push(...checkDevices(devices, devicesFile));
+  issues.push(...checkBank(bank, devices, warnings, bankFile, devicesFile, opts.knownIcons));
   return issues.length ? { ok: false, issues, warnings } : { ok: true, bank, devices, warnings };
 }
 
-function checkDevices(d: Devices): Issue[] {
+function checkDevices(d: Devices, file: string): Issue[] {
   const out: Issue[] = [];
-  const add = (path: string, message: string) => out.push({ file: "eszkozok.yaml", path, message });
+  const add = (path: string, message: string) => out.push({ file, path, message });
   const applianceIds = new Set<string>();
   d.appliances.forEach((a, i) => {
     if (applianceIds.has(a.id)) add(`appliances[${i}] (${a.id})`, "Az eszköz azonosítója nem egyedi.");
@@ -98,10 +99,10 @@ function checkDevices(d: Devices): Issue[] {
   return out;
 }
 
-function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?: readonly string[]): Issue[] {
+function checkBank(bank: Bank, devices: Devices, warnings: Issue[], file: string, devicesFile: string, knownIcons?: readonly string[]): Issue[] {
   const out: Issue[] = [];
-  const add = (path: string, message: string) => out.push({ file: "kerdesbank.hu.yaml", path, message });
-  const warn = (path: string, message: string) => warnings.push({ file: "kerdesbank.hu.yaml", path, message });
+  const add = (path: string, message: string) => out.push({ file, path, message });
+  const warn = (path: string, message: string) => warnings.push({ file, path, message });
   const where = (c: Card, i: number) => `cards[${i}] (${c.id})`;
 
   const blockIds = new Set<string>();
@@ -254,10 +255,10 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
 
   function checkConditionForModule(cond: Condition, path: string, cards: Card[]) {
     const shape = checkConditionShape(cond, path);
-    shape.forEach((x) => out.push({ file: "eszkozok.yaml", path: x.path, message: x.message }));
+    shape.forEach((x) => out.push({ file: devicesFile, path: x.path, message: x.message }));
     if (shape.length) return;
     const refs = collectRefs(cond);
-    const push = (message: string) => out.push({ file: "eszkozok.yaml", path, message });
+    const push = (message: string) => out.push({ file: devicesFile, path, message });
     const first = cards[0]?.id;
     for (const ref of refs.answers) {
       const target = cardById.get(ref);
