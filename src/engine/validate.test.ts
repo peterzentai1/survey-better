@@ -134,7 +134,7 @@ describe("effort validation", () => {
     expect(msgs(mixed)).toEqual(expect.arrayContaining([expect.stringMatching(/randomizeGroup „g”.*azonos effort/)]));
   });
 
-  it.each(["N01", "N02", "N03", "Z01"])("requires effort 1 on %s", (id) => {
+  it.each(["N01", "N02", "Z01"])("requires effort 1 on %s", (id) => {
     const invalid = bankText.replace(`  - id: ${id}\n`, `  - id: ${id}\n    effort: 2\n`);
     expect(msgs(invalid, devicesText)).toEqual(expect.arrayContaining([
       expect.stringMatching(new RegExp(`\\(${id}\\)\\.effort.*kötelező értéke 1`)),

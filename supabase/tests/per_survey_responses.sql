@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(8);
+select plan(12);
 
 set local role service_role;
 select survey_admin.create_survey('alpha_test');
@@ -125,6 +125,10 @@ select public.submit_survey_completion('legacy-' || n, 'test', 'kozepes', 60, 'd
   'answered', 'drag', 100, 5::smallint) from generate_series(1, 5) n;
 select public.submit_survey_metrics('beta_test', 'scoped-' || n, 'test', 'kozepes', 120, null,
   'not_shown', null, null, null) from generate_series(1, 5) n;
+select public.submit_survey_completion('no-rating', 'test', 'kozepes', 60, 'tap',
+  'answered', 'tap', 200);
+select public.submit_survey_metrics('beta_test', 'no-rating', 'test', 'kozepes', 120, 'drag',
+  'skipped', null, null);
 
 do $$
 begin
@@ -151,6 +155,17 @@ end;
 $$;
 
 reset role;
+select ok((select count(*) = 5 and min(use_again) = 5 from survey_private.completions
+  where bank_version = 'test' and use_again is not null), 'legacy ratings are retained');
+select ok((select count(*) = 2 from survey_private.completions
+  where bank_version = 'test' and arm is not null and use_again is null), 'both RPCs accept omitted ratings');
+select ok((select answered = 1 and used_tap = 1 and used_drag = 0 and median_first_answer_ms = 200
+  from survey_private.temperature_ab where survey_slug = 'haztartasi_rugalmassag'
+    and bank_version = 'test' and arm = 'tap'), 'temperature view reports behavioural outcomes');
+select ok(not exists (select from information_schema.columns
+  where table_schema = 'survey_private' and table_name = 'temperature_ab'
+    and column_name in ('rated_use_again', 'willing_to_use_again')), 'temperature view omits self-reported ratings');
+
 update survey_admin.surveys set retention_until = (statement_timestamp() at time zone 'UTC')::date - 1 where slug = 'alpha_test';
 set local role anon;
 do $$

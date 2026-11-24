@@ -44,7 +44,7 @@ blocks:
 cards:
   # effort: a kártya minimális kitöltési szintje (1 = rövid, 2 = közepes, 3 = alapos). Alapérték: 1.
   # Feltételben csak azonos vagy kisebb effort értékű kártyára lehet hivatkozni.
-  # Egy randomizeGroup kártyáinak effort értéke azonos. Az info, consent, summary_highlight és N03 effort értéke 1.
+  # Egy randomizeGroup kártyáinak effort értéke azonos. Az info, consent és summary_highlight effort értéke 1.
 
   # ── info: szöveg és egy gomb, az első kártyán opcionális hosszválasztóval. ─────
   - id: N01

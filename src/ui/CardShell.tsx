@@ -1,6 +1,6 @@
 // Common frame of every card: lead line, heading (receives focus), help text, controls, skip button.
 import { useEffect, useRef, type ReactNode } from "react";
-import type { CardApi } from "./session.tsx";
+import { useSel, type CardApi } from "./session.tsx";
 
 export function KeyHint({ children }: { children: ReactNode }) {
   return (
@@ -49,6 +49,10 @@ export function CardShell({
     window.scrollTo?.(0, 0);
   }, []);
   const lead = "lead" in card ? card.lead : undefined;
+  const firstLead = useSel(({ ctx, state }) => !!lead && state.order.find((id) => {
+    const shown = ctx.byId.get(id);
+    return shown && "lead" in shown && shown.lead === lead;
+  }) === card.id);
   const help = "help" in card ? card.help : undefined;
   const skipped = api.item?.status === "skipped";
   // A multi-line text is a scenario: everything but the last line is body copy,
@@ -59,7 +63,13 @@ export function CardShell({
     <section aria-labelledby={`h-${card.id}`} data-card={card.id}>
       {api.inJump && <ReturnToSummary api={api} />}
       <div className="card-panel">
-        {lead && <p className="mb-2 text-sm text-muted whitespace-pre-line">{lead}</p>}
+        {lead && (
+          <p className="mb-2 grid items-start text-muted whitespace-pre-line">
+            <span className={`col-start-1 row-start-1 ${firstLead ? "text-base" : "text-sm"}`}>{lead}</span>
+            {/* Reserve the first lead's height on repeats, including at narrow widths. */}
+            {!firstLead && <span aria-hidden="true" className="invisible col-start-1 row-start-1 text-base">{lead}</span>}
+          </p>
+        )}
         {body && (
           <p id={bodyId} className="mb-3 leading-relaxed whitespace-pre-line">
             {body}

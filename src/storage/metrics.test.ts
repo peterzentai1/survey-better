@@ -53,7 +53,7 @@ describe("temperature experiment", () => {
     expect(completionMetrics(done, rec)).toEqual({
       token: state.sessionId, bank_version: ctx.bank.version, effort: "kozepes", active_seconds: 3,
       arm: temperatureArm(state.sessionId), reaction_status: "answered", first_input: "drag",
-      first_answer_ms: 1300, use_again: null,
+      first_answer_ms: 1300,
     });
     const withdrawn = acceptConsent(ctx, done, "N02", { participation: true, paradata: false });
     expect(completionMetrics(withdrawn, buildRecord(ctx, withdrawn, "test"))).toBeNull();
@@ -103,7 +103,7 @@ describe("temperature experiment", () => {
       const record = buildRecord(ctx, done, "test");
       const sample = completionMetrics(done, record);
       const prefix = "kartya-kerdoiv:metrics:https://survey.example:";
-      localStorage.setItem(prefix + "legacy-test", JSON.stringify({ ...sample, token: "legacy-test" }));
+      localStorage.setItem(prefix + "legacy-test", JSON.stringify({ ...sample, token: "legacy-test", use_again: 4 }));
       api.queueCompletion(done, record);
       api.queueCompletion(done, record, "default");
       expect(localStorage.length).toBe(3);
@@ -121,6 +121,8 @@ describe("temperature experiment", () => {
       expect(requests.mock.calls.map(([, init]) => JSON.parse(String(init?.body)).token)).toEqual([
         "legacy-test", record.sessionId,
       ]);
+      expect(JSON.parse(String(requests.mock.calls[0][1]?.body))).toHaveProperty("use_again", 4);
+      expect(JSON.parse(String(requests.mock.calls[1][1]?.body))).not.toHaveProperty("use_again");
       expect(localStorage.getItem(prefix + "default:" + record.sessionId)).not.toBeNull();
 
       reloaded.retryCompletions("default");
