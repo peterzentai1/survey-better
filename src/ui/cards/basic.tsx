@@ -87,6 +87,13 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
   return (
     <CardShell api={api} heading={card.title}>
       <p className="whitespace-pre-line">{card.text}</p>
+      {ctx.settings.display.privacyNotice && (
+        <p className="mt-2">
+          <a className="text-primary underline" href={ctx.settings.display.privacyNotice} target="_blank" rel="noopener">
+            Részletes adatkezelési tájékoztató (új lapon nyílik)
+          </a>
+        </p>
+      )}
       <div className="mt-4 flex flex-col gap-1">
         <label className="flex min-h-12 items-start gap-3 py-2">
           <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-primary" checked={participation} onChange={(e) => setParticipation(e.target.checked)} />

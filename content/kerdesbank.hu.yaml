@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.2.2"
+version: "0.3.0"
 locale: hu
 
 defaults:
@@ -45,32 +45,32 @@ cards:
   - id: N01
     block: nyitas
     type: info
-    title: "Miért kérte a magyar kormány augusztusban a klímák esti kikapcsolását?"
+    title: "Miért kérte a kormány augusztusban, hogy este fogjuk vissza a klímát?"
     text: |
-      A vezetékek terheltsége számottevő, azonban a magas esti áramár volt a valódi ok. Tudta, hogy az áram ára negyedóránként változik?
+      2026 augusztusának elején a kormány arra kérte a lakosságot és a cégeket, hogy 17 és 21 óra között fogják vissza az áramfogyasztást. Az indoklás szerint az alacsony Duna-vízállás miatt a paksi atomerőmű csökkentett teljesítménnyel működött, a napelemek termelése pedig estére visszaesik.
 
-      Magyarországon augusztus 13-án a napelemek csúcstermelése majdnem 3,5 Pakssal értek fel (normális paksi termeléshez viszonyítva - 6,9 GW / 2 GW).
-      A nálunk telepített napelemkapacitás világi összehasonlításban is rendkívül magasnak számít. Ez lehetőség és felelősség is egyben.
+      Napközben viszont sok a napenergia: augusztusban a naperőművek a hazai áramfelhasználás több mint harmadát (38%) fedezték. Ez lehetőség és felelősség is egyben.
 
-      Ez a kérdőív azt vizsgálja, mennyire áll a háztartások lehetőségében akkor használni az áramot, mikor "sok és olcsó", mennyire tudjuk csökkenteni a használatot akkor, amikor az földgáz elégetésével termelt, sokszor Európából importált drága áram - és hogyan maradhat ez igazságos azoknak is, akik kevesebb erre alkalmas eszközzel rendelkeznek.
+      Ez a kérdőív azt vizsgálja, mennyire tudják a háztartások akkor használni az áramot, amikor sok van belőle, és visszafogni, amikor kevés – és hogyan maradhat ez igazságos azoknak is, akiknek kevesebb erre alkalmas eszközük van.
     effortLabel: "Mennyi ideje van a kitöltésre?"
     cta: "Mehet! \nVállalom, hogy jól átgondolom a válaszokat."
-    source: "Saját. A 0.2.1 nyitószöveg a kitöltő 2026-11-24-i szerkesztése. Ellenőrizendő: a kormányzati kérés oka, a 2026-08-13-i 6,9 GW-os PV-csúcs (MAVIR), a negyedórás ár (HUPX) forrása."
+    source: "Saját. 0.3.0: a 0.2.1 szöveg forrásolt, semleges változata. A kérés ideje (17–21 óra) és indoka (Paks a Duna alacsony vízállása miatt csökkentett teljesítményen, esti napelemes kiesés): Pénzcentrum, 2026-08-10, https://www.penzcentrum.hu/otthon/20260810/mukodik-a-legalis-klimatrukk-igy-sporolhatnak-rengeteget-a-legmelegebb-napokon-a-magyarok-1203673; Paks kiesése: 444, 2026-08-03 (MAVIR-adatok). Augusztusi naperőművi termelés 1552,5 GWh = a felhasználás 38,1%-a: Otthontérkép Magazin, 2026-09-25. Kivett, forrás nélküli állítások: az esti áramár mint „valódi ok”, a 2026-08-13-i 6,9 GW-os csúcs, a háztartási negyedórás ár. Élesítés előtt ajánlott: a 38,1% ellenőrzése a MAVIR havi adatán."
 
   - id: N02
     block: nyitas
     type: consent
-    title: "Köszönöm, hogy megosztja velem véleményét."
+    title: "Köszönöm, hogy megosztja velem a véleményét."
     text: |
-      A kutatást Zentai Péter, a Szegedi Tudományegyetem hallgatója végzi szakdolgozati kutatásként. Adatkezelő: [ADATKEZELŐ]. Jogalap: [JOGALAP].
+      A kérdőívet Zentai Péter mórahalmi lakos készítette a szakdolgozati kutatásához. A válaszok adatkezelője ő. A részvétel önkéntes, és az Ön hozzájárulásán alapul.
 
-      Nincs jó vagy rossz válasz. Választhatja a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti a legfontosabbat is!
-      A kérdőív anonim, az eredményeket csak összesítve közöljük.
+      Nem kérek nevet, címet vagy elérhetőséget. A válaszokat 2027. december 1-ig őrzöm egy európai (frankfurti) szerveren, majd törlöm. Az eredményeket csak összesítve közlöm, olyan bontásban, amelyből senki sem azonosítható. Bármelyik kérdést kihagyhatja, és bármikor abbahagyhatja: csak a befejezett kitöltés kerül a szerverre. A végén kap egy kitöltési azonosítót. Ha ezt elküldi nekem, kérésére törlöm a kitöltését, vagy másolatot küldök róla.
 
-      Kérdés esetén: peterzentai1@gmail.com
-    participationLabel: "Elolvastam, és részt veszek a kérdőívben."
-    paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait is rögzítsék (pl. kártyánként eltöltött idő, koppintás vagy billentyű). Ez segít a kérdőív javításában; nélküle is kitölthető."
-    source: "Saját; a helyőrzők a konzulensi válasz után tölthetők ki (adatkezelő, jogalap). 0.2.1: a megőrzési idő és a kihagyás/abbahagyás joga kikerült a szövegből, élesítés előtt visszaírandó."
+      Nincs jó vagy rossz válasz. A „Nem tudom / kihagyom” gomb is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti a legfontosabbat is.
+
+      A kérdőív 18 éven felülieknek szól. Kérdés esetén: peterzentai1@gmail.com
+    participationLabel: "Elolvastam a tájékoztatót, elmúltam 18 éves, és részt veszek a kérdőívben."
+    paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatai (pl. kártyánként eltöltött idő, koppintás, húzás vagy billentyű) is a szerverre kerüljenek. Ez segít a kérdőív javításában; nélküle is kitölthető."
+    source: "Saját. 0.3.0: a végleges rövid tájékoztató (platform-terv/2026-11-24_adatkezelesi-tajekoztato.md, A rész), intézményi megnevezés nélkül: az adatkezelő Zentai Péter magánszemélyként (D1). A teljes tájékoztató: public/adatkezeles.html."
 
   # ════════════════════════════════════════════════════════════════════════
   # 1. ALAPOK
@@ -362,7 +362,7 @@ cards:
   - id: I10
     block: indokok
     type: scale6
-    lead: &homerseklet "Tételezzük, hogy Ön állítja a fűtést. Egy téli napon arra kérik, hogy az esti csúcsidőben két órára egy fokkal vegye lejjebb a lakás beállított hőmérsékletét."
+    lead: &homerseklet "Tételezzük fel, hogy Ön állítja a fűtést. Egy téli napon arra kérik, hogy az esti csúcsidőben két órára egy fokkal vegye lejjebb a lakás beállított hőmérsékletét."
     text: "Milyen érzést kelt Önben a gondolat, hogy teljesítse ezt a kérést?"
     scale:
       left: "Nagyon kellemetlen"

@@ -2,6 +2,16 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.3.0 változások (élesítés előtti változat, 2026-11-25)
+
+| Kártya | Változás |
+| --- | --- |
+| N01 | Forrásolt, semleges nyitószöveg. A kormány 2026. augusztus eleji kérése (17–21 óra) a hivatalos indoklással: Paks csökkentett teljesítménye az alacsony Duna-vízállás miatt, és az esti napelemes kiesés. Az augusztusi naperőművi részarány: a felhasználás 38%-a. Kikerült három forrás nélküli állítás: az esti áramár mint „valódi ok”, a 6,9 GW-os augusztus 13-i csúcs és a háztartási negyedórás ár. |
+| N02 | A végleges rövid adatkezelési tájékoztató. Adatkezelő: Zentai Péter magánszemélyként, intézményi megnevezés nélkül. Visszakerült a megőrzési idő (2027-12-01), az abbahagyás joga és a 18 éves korhatár. Új a kitöltési azonosító és a törlés módja. Az „anonim” szó kikerült, mert a válaszok álnevesített személyes adatok. A helyőrzők megszűntek. |
+| I10–I11 | „Tételezzük, hogy” helyett „Tételezzük fel, hogy”. |
+
+A teljes tájékoztató a `public/adatkezeles.html` oldalon van. A kérdőív beállításai `display.privacyNotice` mezőben hivatkoznak rá.
+
 ## v0.2.2 változások (2026-11-24)
 
 - **N03 kikerült.** A figyelmes válaszadás vállalása az N01 indítógombján marad. A gombnyomásból nem keletkezik külön tételválasz.

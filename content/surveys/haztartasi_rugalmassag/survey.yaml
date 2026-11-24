@@ -1,10 +1,14 @@
 bank: ../../kerdesbank.hu.yaml
 devices: ../../eszkozok.yaml
 
+# Előnézeti (jóváhagyásra váró) változat: a válaszok csak a kitöltő eszközén maradnak.
+# Élesítés: platform-terv/2026-11-25_elesitesi-lista.md (storage.mode: supabase,
+# retentionUntil: 2027-12-01, metrics: true, a banner törlése).
 settings:
   display:
     scaleInput: ab_test
-    banner: "Próbakérdőív · A válaszok ezen az eszközön maradnak."
+    banner: "Előnézet, jóváhagyásra vár · A válaszok nem kerülnek szerverre, csak ezen az eszközön maradnak."
+    privacyNotice: /adatkezeles.html
   storage:
     mode: device
     metrics: false

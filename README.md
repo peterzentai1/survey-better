@@ -76,6 +76,7 @@ accelerate (WCAG 2.2 AA: 2.5.1 pointer gestures, 2.5.7 dragging, 2.5.8 target si
 | `display.banner` | `null` | Hides the banner unless text is provided. The default survey has a prototype banner. |
 | `display.scaleInput` | `buttons` | `drag_reveal` uses a drag pad for every scale. `ab_test` randomizes I10 and uses buttons on the other scales. The default survey uses `ab_test`. |
 | `display.sourceLink` | `https://github.com/peterzentai1/survey-better` | Link to the source code in the footer. Set this to your fork when deploying modified code. |
+| `display.privacyNotice` | `null` | Same-site path (for example a static page in `public/`) or `https` URL of the full privacy notice. It is linked from the consent card (new tab) and the footer. Required for Supabase storage and metrics. The default survey uses `/adatkezeles.html`. |
 | `storage.mode` | `device` | `supabase` sends completed, consented responses to the database and keeps progress on the device for resume. |
 | `storage.table` | `responses_<slug>` | Partition name, derived from the slug. Any explicit value must match it. |
 | `storage.paradata` | `true` | Offers separate consent for technical measurements. Disable it to omit the prompt and the paradata. |
@@ -83,7 +84,22 @@ accelerate (WCAG 2.2 AA: 2.5.1 pointer gestures, 2.5.7 dragging, 2.5.8 target si
 | `storage.retentionUntil` | `null` | Last date for accepting responses, inclusive in UTC. Set a date for Supabase response storage. |
 | `storage.acceptingResponses` | `true` | Set to `false` to close the questionnaire. Supabase also requires the survey to be open in its registry. |
 
-The bundled N02 contains placeholders. The validator rejects Supabase response storage and measurement uploads until the consent card is complete.
+The validator rejects Supabase response storage and measurement uploads while the N02 consent card contains `[...]` placeholders or `display.privacyNotice` is unset. The bundled N02 and `public/adatkezeles.html` are complete. The default survey is built as a preview (`storage.mode: device`, no metrics) until collection is approved.
+
+## Deploy (Cloudflare Pages)
+
+The app is a static site. Connect the GitHub repository in the Cloudflare dashboard (Workers & Pages → Create → Pages → Connect to Git) with:
+
+| Field | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node.js | from `.nvmrc` (22; the build needs >= 22.18) |
+
+Without a top-level `404.html`, Pages serves `index.html` for unknown paths, so `/admin` works. `public/_headers` sets basic security headers. `public/adatkezeles.html` is the privacy notice of the default survey.
+
+For Supabase storage, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as build environment variables (Settings → Variables and Secrets) and redeploy. They are public by design; never add a service-role key.
 
 ### Supabase response storage
 

@@ -1,5 +1,9 @@
 # Kártyaséma változásai
 
+## v0.3.1 (beállítások)
+
+- Új `display.privacyNotice` beállítás: a teljes adatkezelési tájékoztató azonos oldali útvonala vagy `https` címe. A hozzájárulási kártya és a lábléc új lapon nyíló linkkel mutat rá. Supabase-tároláshoz és mérésküldéshez kötelező.
+
 ## v0.3
 
 - A `content/surveys/<slug>/survey.yaml` adja meg a kérdésbankot, az eszközfájlt és a kérdőív megjelenítési, tárolási beállításait.
