@@ -194,7 +194,7 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], file: string
 
   bank.cards.forEach((c, i) => {
     const w = where(c, i);
-    if (c.effort !== 1 && (!isAnswerable(c) || c.id === "N03"))
+    if (c.effort !== 1 && !isAnswerable(c))
       add(`${w}.effort`, "Ezen a kártyán az effort kötelező értéke 1.");
     checkCondition(c.showIf, `${w}.showIf`, c);
     c.textVariants?.forEach((v, k) => checkCondition(v.when, `${w}.textVariants[${k}].when`, c));

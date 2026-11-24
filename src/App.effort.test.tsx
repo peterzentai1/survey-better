@@ -1,7 +1,9 @@
+import { within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { loadContent } from "./content/load.ts";
 import { SKIP, simulatePath } from "./engine/simulate.ts";
 import { expectCard, MemSink, renderApp, screen, waitFor } from "./test-utils.tsx";
+import { cardText as displayedText } from "./ui/session.tsx";
 
 const content = loadContent();
 if (!content.ok) throw new Error(JSON.stringify(content.issues));
@@ -16,6 +18,12 @@ const radio = (name: RegExp) => screen.getByRole("radio", { name });
 const start = () => screen.getByRole("button", { name: (n) => squash(n).startsWith(startLabel) });
 const consent = () => screen.getByRole("checkbox", { name: /^Elolvastam/ });
 const next = () => screen.getByRole("button", { name: /^Tovább/ });
+const question = (id: string) => content.bank.cards.find((card) => card.id === id)!;
+function optionLabel(id: string, value: string) {
+  const card = question(id);
+  if (card.type !== "single") throw new Error(`Expected a single-choice card: ${id}`);
+  return card.options.find((option) => option.value === value)!.label;
+}
 
 describe("effort selector", () => {
   it("defaults to Közepes, supports keys and click, and waits for consent before saving", async () => {
@@ -42,11 +50,12 @@ describe("effort selector", () => {
     expect(save).not.toHaveBeenCalled();
     await user.click(consent());
     await user.click(next());
-    await expectCard("Vállalja ezt?");
+    await expectCard(question("A01").text);
     expect(save).toHaveBeenCalledOnce();
     expect(sink.state?.effortLevel).toBe("rovid");
     expect(sink.record).toHaveProperty("effortLevel", "rovid");
     expect(sink.record).not.toHaveProperty("effortChangedFromDefault");
+    expect(sink.record?.items).not.toHaveProperty("N03");
   });
 
   it("recalculates the path on Back while preserving a removed answer in the export", async () => {
@@ -55,17 +64,14 @@ describe("effort selector", () => {
     await user.click(consent());
     await user.click(screen.getByRole("checkbox", { name: /^Hozzájárulok/ }));
     await user.click(next());
-    await expectCard("Vállalja ezt?");
-    expect(screen.queryByRole("button", { name: /^Nem tudom/ })).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Nem vállalom" }));
-    await expectCard("Hol él?");
-    await user.click(screen.getByRole("button", { name: "Mórahalom, belterület" }));
-    await expectCard("Milyen lakásban él?");
-    await user.click(screen.getByRole("button", { name: "Családi ház" }));
-    await expectCard(/^Kié a lakás/);
+    await expectCard(question("A01").text);
+    await user.click(screen.getByRole("button", { name: optionLabel("A01", "morahalom") }));
+    await expectCard(question("A02").text);
+    await user.click(screen.getByRole("button", { name: optionLabel("A02", "csaladi_haz") }));
+    await expectCard(question("A03").text);
     const stored = sink.record!.items.A02;
     expect(stored).toMatchObject({ status: "answered", value: "csaladi_haz" });
-    for (let i = 0; i < 5; i++) await user.click(screen.getByRole("button", { name: "Vissza" }));
+    for (let i = 0; i < 4; i++) await user.click(screen.getByRole("button", { name: "Vissza" }));
     await expectCard(introHeading);
 
     await user.click(radio(/^Rövid/));
@@ -78,10 +84,8 @@ describe("effort selector", () => {
     await user.click(radio(/^Rövid/));
     await user.click(start());
     await user.click(next());
-    await user.click(screen.getByRole("button", { name: "Nem vállalom" }));
-    await user.click(await screen.findByRole("button", { name: "Mórahalom, belterület" }));
-    await expectCard(/^Kié a lakás/);
-    expect(sink.record?.items.N03).toMatchObject({ status: "answered", value: "nem" });
+    await user.click(await screen.findByRole("button", { name: optionLabel("A01", "morahalom") }));
+    await expectCard(question("A03").text);
     expect(sink.record?.items.A02).toEqual({ ...stored, inactive: true });
   });
 
@@ -113,6 +117,46 @@ describe("effort selector", () => {
     expect(sink.record?.items.B04).not.toHaveProperty("inactive");
     expect(screen.queryByRole("button", { name: /További kérdések/ })).toBeNull();
   });
+});
+
+it("enlarges the first shared lead in presentation order and keeps keyboard focus on the current card", async () => {
+  const example = question("I01");
+  if (example.type !== "scale6" || !example.lead) throw new Error("Missing shared lead");
+  const lead = example.lead;
+  const { state } = simulatePath(content.bank, content.devices, {}, "simulate");
+  const leadIds = state.history.filter((id) => {
+    const card = question(id);
+    return "lead" in card && card.lead === lead;
+  });
+  const [first, second] = leadIds;
+  expect(first).not.toBe("I01");
+  const firstText = displayedText(question(first), state.items[first]?.variant);
+  const secondText = displayedText(question(second), state.items[second]?.variant);
+  state.history = state.history.slice(0, state.history.indexOf(first) + 1);
+  state.order = [...state.history];
+  for (const id of Object.keys(state.items)) {
+    if (!state.order.includes(id)) delete state.items[id];
+  }
+  state.items[first] = { ...state.items[first], status: "shown", value: undefined };
+
+  const { user } = renderApp({ content, sink: new MemSink(state) });
+  await user.click(screen.getByRole("button", { name: "Folytatom" }));
+  const leadSize = (heading: HTMLElement) => {
+    const section = heading.closest("section")!;
+    return within(section).getAllByText(lead).find((node) => !node.hasAttribute("aria-hidden"))?.classList;
+  };
+  const firstHeading = await expectCard(firstText);
+  expect(leadSize(firstHeading)?.contains("text-base")).toBe(true);
+  expect(document.activeElement).toBe(firstHeading);
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getAllByRole("radio")[0]);
+  await user.keyboard("4");
+
+  const secondHeading = await expectCard(secondText);
+  expect(leadSize(secondHeading)?.contains("text-sm")).toBe(true);
+  expect(document.activeElement).toBe(secondHeading);
+  await user.keyboard("{Backspace}");
+  expect(leadSize(await expectCard(firstText))?.contains("text-base")).toBe(true);
 });
 
 describe("B01 exclusive section", () => {

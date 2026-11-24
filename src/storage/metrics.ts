@@ -1,6 +1,6 @@
 import { DEFAULT_SURVEY } from "../content/survey.ts";
 import type { SessionState } from "../engine/session.ts";
-import { APPRAISAL_CARD, REACTION_CARD } from "../engine/temperature.ts";
+import { REACTION_CARD } from "../engine/temperature.ts";
 import type { ResponseRecord } from "../engine/types.ts";
 import { deliveryQueue } from "./delivery.ts";
 import { rpc, supabaseConfigured, supabaseScope } from "./supabase.ts";
@@ -12,7 +12,6 @@ export function completionMetrics(state: SessionState, record: ResponseRecord) {
       !record.paradata || !record.effortLevel) return null;
   const reaction = record.temperatureArm ? record.items[REACTION_CARD] : undefined;
   const first = reaction && record.paradata[REACTION_CARD]?.firstAnswer;
-  const appraisal = reaction && record.items[APPRAISAL_CARD];
   const ms = Object.values(state.paradata ?? {}).reduce((sum, card) => sum + card.dwellMs, 0);
   return {
     token: record.sessionId,
@@ -23,7 +22,6 @@ export function completionMetrics(state: SessionState, record: ResponseRecord) {
     reaction_status: reaction?.status === "answered" || reaction?.status === "skipped" ? reaction.status : "not_shown",
     first_input: first?.input ?? null,
     first_answer_ms: first?.ms ?? null,
-    use_again: appraisal?.status === "answered" && !appraisal.inactive && typeof appraisal.value === "number" ? appraisal.value : null,
   };
 }
 

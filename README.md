@@ -62,7 +62,7 @@ accelerate (WCAG 2.2 AA: 2.5.1 pointer gestures, 2.5.7 dragging, 2.5.8 target si
 
 ## Temperature experiment and completion times
 
-`display.scaleInput: ab_test` is enabled for the default survey. I10 asks how it feels to lower the heating by one degree for two evening hours. Each new session has an equal chance of receiving six tap targets or a drag surface. The assignment is derived from the random session identifier and is stable on Back and resume. Both arms have the same six response labels, skip action and keyboard support. The drag surface also accepts taps. I11 measures willingness to lower the temperature using the same six buttons for everyone. I12 asks respondents who answered I10 how willing they would be to use its input method again.
+`display.scaleInput: ab_test` is enabled for the default survey. I10 asks how it feels to lower the heating by one degree for two evening hours. Each new session has an equal chance of receiving six tap targets or a drag surface. The assignment is derived from the random session identifier and is stable on Back and resume. Both arms have the same six response labels, skip action and keyboard support. The drag surface also accepts taps. I11 measures willingness to lower the temperature using the same six buttons for everyone. The I10 experiment uses behavioural outcomes such as answering or skipping, the first input method and the time to first answer.
 
 ## Survey settings
 
@@ -102,7 +102,7 @@ The write RPC checks the registry, requires completed responses with participati
 
 Turnstile is deferred for v0.3 because the bundled survey collects no server-side data and the issue calls for direct anonymous submission to the RPC. A Turnstile check on the page alone would leave that endpoint reachable. Before enabling collection for a public survey, arrange server-side abuse controls at the submission boundary. The size limit caps each accepted payload, and receipt deduplication prevents duplicate rows on retries.
 
-Run `supabase/tests/per_survey_responses.sql` on a disposable database after both migrations to verify the roles and RPCs.
+Run `supabase/tests/per_survey_responses.sql` on a disposable database after applying the migrations to verify the roles and RPCs.
 
 The retention date closes submissions. The researcher is responsible for deleting the survey’s rows and local exports according to the consent notice. Update the registry and rebuild with `acceptingResponses: false` to close a survey early.
 
@@ -127,7 +127,7 @@ select * from survey_private.temperature_ab
 order by survey_slug, bank_version, effort, arm;
 ```
 
-Compare `willing_to_use_again / rated_use_again` for the share choosing 4–6, and `median_first_answer_ms` for the first I10 answer. The view also returns sample sizes, skip counts and actual drag use.
+The view returns completion, answer and skip counts by assigned arm, plus actual tap and drag counts and `median_first_answer_ms` for the first I10 answer.
 
 ## License
 

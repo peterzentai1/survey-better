@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.2.1"
+version: "0.2.2"
 locale: hu
 
 defaults:
@@ -71,18 +71,6 @@ cards:
     participationLabel: "Elolvastam, és részt veszek a kérdőívben."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait is rögzítsék (pl. kártyánként eltöltött idő, koppintás vagy billentyű). Ez segít a kérdőív javításában; nélküle is kitölthető."
     source: "Saját; a helyőrzők a konzulensi válasz után tölthetők ki (adatkezelő, jogalap). 0.2.1: a megőrzési idő és a kihagyás/abbahagyás joga kikerült a szövegből, élesítés előtt visszaírandó."
-
-  - id: N03
-    block: nyitas
-    type: yesno
-    skip: false
-    text: |
-      A kutatás eredménye azon múlik, mennyire pontosak a válaszok. Kérjük, olvasson el figyelmesen minden kérdést, és a lehető legpontosabban válaszoljon. Ha valamire nincs válasza, a „Nem tudom / kihagyom” gomb erre való, ez is hasznos információ.
-      Vállalja ezt?
-    help: "Ha nem vállalja, a kérdőívet akkor is kitöltheti."
-    yesLabel: "Igen, vállalom"
-    noLabel: "Nem vállalom"
-    source: "Elköteleződési kérés (commitment request): Cannell, Miller & Oksenberg 1981; online kérdőívben Cibelli Hibben 2017. Hivatkozás ellenőrizendő."
 
   # ════════════════════════════════════════════════════════════════════════
   # 1. ALAPOK
@@ -389,17 +377,6 @@ cards:
     text: "Mennyire valószínű, hogy ilyen kérésre tényleg lejjebb venné a lakás hőmérsékletét?"
     scale: *valoszinu
     source: "Saját. Vállalási szándék, mindkét csoportban azonos hatfokú skálán."
-
-  - id: I12
-    block: indokok
-    type: scale6
-    showIf: { answer: I10, answered: true }
-    text: "Mennyire szívesen használná újra azt a válaszadási módot, amellyel a hőmérséklet csökkentésével kapcsolatos első érzését jelezte?"
-    scale:
-      left: "Egyáltalán nem szívesen"
-      right: "Nagyon szívesen"
-      labels: ["Egyáltalán nem szívesen", "Nem szívesen", "Inkább nem szívesen", "Inkább szívesen", "Szívesen", "Nagyon szívesen"]
-    source: "Saját. A felület újrahasználati szándéka az A/B összehasonlításhoz."
 
   # ════════════════════════════════════════════════════════════════════════
   # 5. ESZKÖZMODULOK (kapuzva, a keretet az eszkozok.yaml osztja ki)

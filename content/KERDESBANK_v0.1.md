@@ -2,6 +2,12 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.2.2 változások (2026-11-24)
+
+- **N03 kikerült.** A figyelmes válaszadás vállalása az N01 indítógombján marad. A gombnyomásból nem keletkezik külön tételválasz.
+- **I12 kikerült.** Az I10 A/B összehasonlítás viselkedési mutatói a válaszadás vagy kihagyás, az első válasz beviteli módja (koppintás, húzás vagy billentyű), valamint az első válaszig eltelt idő.
+- A közös bevezető mondat az első megjelenésekor nagyobb betűméretet kap. A méretezés a kitöltő tényleges sorrendjét követi, beleértve a véletlenszerű sorrendű kártyákat is.
+
 ## v0.2.1 változások (szövegjavítás, 2026-11-24)
 
 A kitöltő a helyi kérdésszerkesztőben javított. Az export: `kerdes-szerkeszto/exports/kerdes-javitasok_0.2.0_2026-11-24-17-06.json`. A kártyák szerkezete és a logika nem változott.

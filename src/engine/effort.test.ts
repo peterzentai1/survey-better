@@ -23,7 +23,8 @@ describe("effort levels", () => {
     const medium = simulatePath(bank, devices, { effortLevel: "kozepes", answers });
     const long = simulatePath(bank, devices, { effortLevel: "alapos", answers });
     const level2 = ["A02", "A04", "A05", "T02", "T03", "T04", "I08", "I09", "J01", "J03", "J05", "F02", "F04", "F05", "B03"];
-    expect(short.path).toEqual(expect.arrayContaining(["N01", "N02", "N03", "A01", "A03", "A06", "T01", "J02", "J04", "B01", "D04", "Z01"]));
+    expect(short.path.slice(0, 3)).toEqual(["N01", "N02", "A01"]);
+    expect(short.path).toEqual(expect.arrayContaining(["A03", "A06", "T01", "J02", "J04", "B01", "D04", "Z01"]));
     expect(short.path.filter((id) => [...level2, "B04"].includes(id))).toEqual([]);
     expect(medium.path).toEqual(expect.arrayContaining(level2));
     expect(medium.path).not.toContain("B04");
