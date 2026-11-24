@@ -107,7 +107,7 @@ describe("text variants, implied options, option rules", () => {
     expect(s.items.E01).toMatchObject({ status: "shown", value: ["app_a1"] });
     // respondent unticks, answers, goes back and forth: not pre-selected again
     s = step(s, ["app_a2"]);
-    s = goBack(s);
+    s = goBack(ctx, s);
     expect(s.items.E01.value).toEqual(["app_a2"]);
   });
 });
@@ -122,9 +122,9 @@ describe("back navigation and inactive marking", () => {
     s = step(s, "igen");
     expect(currentId(s)).toBe("Q_MULTI");
     expect(analyze(ctx, s.items).quotas).toEqual({ m_b2: 4 });
-    s = goBack(s);
+    s = goBack(ctx, s);
     expect(currentId(s)).toBe("Q_UP");
-    s = goBack(s);
+    s = goBack(ctx, s);
     expect(currentId(s)).toBe("E01");
 
     s = answer(ctx, s, "E01", ["app_a1"]);
@@ -134,7 +134,7 @@ describe("back navigation and inactive marking", () => {
     s = advance(ctx, s);
     expect(currentId(s)).toBe("Q_MULTI"); // forward path recomputed: Q_UP is skipped
 
-    s = goBack(s);
+    s = goBack(ctx, s);
     s = answer(ctx, s, "E01", ["app_b2"]);
     expect(s.items.Q_UP.inactive).toBeUndefined();
     expect(s.items.Q_UP.value).toBe("igen");
@@ -144,7 +144,7 @@ describe("back navigation and inactive marking", () => {
 
   it("does not go back before the first card", () => {
     const s = createSession(ctx, { sessionId: "simulate", startedDate: "2000-01-01" });
-    expect(goBack(s)).toBe(s);
+    expect(goBack(ctx, s)).toBe(s);
   });
 
   it("re-answering with the same value does not count as a change; skip then answer does", () => {
@@ -202,7 +202,7 @@ describe("summary jump-back", () => {
 
   it("Back from a jumped-to card returns to the summary", () => {
     let s = jumpTo(ctx, atSummary(), "E01");
-    s = goBack(s);
+    s = goBack(ctx, s);
     expect(currentId(s)).toBe("Z02");
     expect(s.jumpFrom).toBeNull();
   });

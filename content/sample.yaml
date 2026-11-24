@@ -1,11 +1,11 @@
-# MINTA ÉS SÉMA-REFERENCIA, v0.1. Ez a fájl a kártyaséma befagyasztott leírása.
+# MINTA ÉS SÉMA-REFERENCIA, v0.2.
 # Minden kártyatípusból van benne egy példa. A motor tesztjei erre épülhetnek;
 # a valódi tartalom a `kerdesbank.hu.yaml`-ban lesz, ugyanebben a sémában.
 #
 # Ha a motornak sémaváltozás kell, NE itt változtasd meg csendben:
 # írd le a platform/SCHEMA_CHANGES.md-be, indokkal.
 
-version: "0.1.0-sample"
+version: "0.2.0-sample"
 locale: hu
 
 # Alapértelmezések minden kártyára
@@ -23,6 +23,15 @@ defaults:
       - "Nagyrészt igen"
       - "Teljes mértékben"
 
+# Opcionális hosszválasztó az első (info) kártyán. Ha meg van adva, mindhárom szint szerepeljen ebben a sorrendben.
+# Az alapértelmezett szint közepes. A szintek felülírják az eszkozok.yaml modulkereteit.
+# A tierFloors megmaradnak a szint keretein belül. Ha nem férnek bele az összesített keretbe,
+# az alacsonyabb prioritású modulok kerete a padló alá csökkenhet.
+effortLevels:
+  - { id: rovid,   label: "Rövid · kb. [5] perc",    moduleCaps: { tierCaps: { A: 1, B: 1, C: 0 }, globalModuleCap: 3 } }
+  - { id: kozepes, label: "Közepes · kb. [8] perc", moduleCaps: { tierCaps: { A: 2, B: 1, C: 1 }, globalModuleCap: 6 } }
+  - { id: alapos,  label: "Alapos · kb. [12] perc", moduleCaps: { tierCaps: { A: 3, B: 2, C: 1 }, globalModuleCap: 9 } }
+
 # Blokkok: sorrend = megjelenési sorrend. A `title` a haladásjelzőn és az összegzőn látszik.
 blocks:
   - { id: nyitas,  title: "Kezdés" }
@@ -33,14 +42,18 @@ blocks:
   - { id: zaras,   title: "Összegzés" }
 
 cards:
-  # ── info: csak szöveg és egy gomb. Nincs válasz. ─────────────────────────────
+  # effort: a kártya minimális kitöltési szintje (1 = rövid, 2 = közepes, 3 = alapos). Alapérték: 1.
+  # Feltételben csak azonos vagy kisebb effort értékű kártyára lehet hivatkozni.
+  # Egy randomizeGroup kártyáinak effort értéke azonos. Az info, consent, summary_highlight és N03 effort értéke 1.
+
+  # ── info: szöveg és egy gomb, az első kártyán opcionális hosszválasztóval. ─────
   - id: N01
     block: nyitas
     type: info
     title: "Üdvözöljük!"
     text: |
-      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak,
-      ezért a kitöltés kb. 10 perc.
+      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak.
+    effortLabel: "Mennyi ideje van a kitöltésre?" # a hosszválasztó felirata az első info kártyán
     cta: "Kezdjük"
 
   # ── consent: tájékoztatás + kötelező részvételi jelölő + opcionális paraadat-jelölő.
@@ -69,6 +82,7 @@ cards:
   - id: A02
     block: alapok
     type: single
+    effort: 2
     layout: chips
     text: "Hányan élnek a háztartásban, Önnel együtt?"
     options:
@@ -90,7 +104,9 @@ cards:
 
   # ── multi_tiles: piktogramos csempék, több választás.
   #    devicePicker: true → ennek a válasza adja az `owns` feltételek alapját (egy ilyen kártya lehet).
-  #    exclusive: ezek kiválasztása törli a többit, és fordítva.
+  #    exclusive: ezek kiválasztása törli a többit, és fordítva. A kizáró opciók a rács végén,
+  #    vékony, lekerekített, teljes szélességű elválasztó alatt jelennek meg. A szakaszokon belül
+  #    megmarad az options sorrendje, billentyűzettel is.
   #    option.impliedBy: első megjelenéskor előre bejelöli, ha a feltétel igaz (a kitöltő levehet).
   #    option.showIf: az opció csak akkor jelenik meg, ha igaz.
   #    max: legfeljebb ennyi választható (elhagyható).

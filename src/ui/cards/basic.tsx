@@ -1,18 +1,73 @@
 // info, consent, single and free_text cards.
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { DEFAULT_EFFORT_LEVEL } from "../../engine/effort.ts";
 import { visibleOptions } from "../../engine/inputs.ts";
 import type { Card } from "../../engine/schema.ts";
+import { metricsEnabled } from "../../storage/metrics.ts";
 import { CardShell, KeyHint } from "../CardShell.tsx";
-import { useCardApi, useKeyHandlers } from "../session.tsx";
+import { EffortMedian } from "../EffortMedian.tsx";
+import { useCardApi, useKeyHandlers, useSel } from "../session.tsx";
 
 type Of<T extends Card["type"]> = Extract<Card, { type: T }>;
 
 export function InfoCard({ card }: { card: Of<"info"> }) {
   const api = useCardApi(card);
-  useKeyHandlers({ confirm: api.next });
+  const { ctx } = api.store.getState();
+  const levels = card.id === ctx.deck.order[0] ? ctx.bank.effortLevels : undefined;
+  const selected = useSel((s) => s.state.effortLevel) ?? DEFAULT_EFFORT_LEVEL;
+  const options = useRef<(HTMLButtonElement | null)[]>([]);
+  const choose = (index: number, focus: boolean) => {
+    const level = levels?.[index];
+    if (!level) return;
+    api.store.getState().setEffortLevel(level.id);
+    if (focus) options.current[index]?.focus();
+  };
+  const move = (direction: -1 | 1) => {
+    if (!levels?.length) return;
+    const index = levels.findIndex((level) => level.id === api.store.getState().state.effortLevel);
+    choose((index + direction + levels.length) % levels.length, true);
+  };
+  useKeyHandlers({
+    confirm: api.next,
+    ...(levels && {
+      arrowLeft: () => move(-1),
+      arrowRight: () => move(1),
+      digit: (n) => choose(n - 1, true),
+    }),
+  });
   return (
     <CardShell api={api} heading={card.title}>
       <p className="whitespace-pre-line">{card.text}</p>
+      {levels && (
+        <div className="mt-5">
+          <p id={`effort-${card.id}`} className="mb-2 font-semibold">
+            {card.effortLabel ?? "Mennyi ideje van a kitöltésre?"}
+          </p>
+          <div role="radiogroup" aria-labelledby={`effort-${card.id}`} className="grid grid-cols-3 gap-2">
+            {levels.map((level, index) => (
+              <button
+                key={level.id}
+                type="button"
+                role="radio"
+                aria-checked={selected === level.id}
+                tabIndex={selected === level.id ? 0 : -1}
+                ref={(el) => { options.current[index] = el; }}
+                className="opt !min-h-16 !flex-col !justify-center !px-1.5 text-center text-sm leading-snug"
+                onClick={() => choose(index, false)}
+                onKeyDown={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.altKey) return;
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                    e.preventDefault();
+                    move(e.key === "ArrowUp" ? -1 : 1);
+                  }
+                }}
+              >
+                <EffortMedian level={level.id} label={level.label} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <button type="button" className="btn btn-primary mt-5 w-full" onClick={api.next}>
         {card.cta}
         <KeyHint>Enter</KeyHint>
@@ -42,6 +97,14 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
           <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-primary" checked={paradata} onChange={(e) => setParadata(e.target.checked)} />
           <span>
             {card.paradataLabel} <span className="text-sm text-muted">(nem kötelező)</span>
+            {metricsEnabled && (
+              <span className="mt-2 block text-sm">
+                Befejezéskor elküldjük a választott fokozatot és a kitöltés idejét. A hőmérsékletes kérdésnél
+                azt is rögzítjük, melyik felületet kapta, válaszolt-e, hogyan és mennyi idő alatt válaszolt,
+                valamint mennyire szívesen használná újra a felületet.
+                A medián legalább öt mért kitöltés után jelenik meg az adott fokozatnál.
+              </span>
+            )}
           </span>
         </label>
       </div>

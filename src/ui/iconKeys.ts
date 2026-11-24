@@ -3,6 +3,6 @@
 export const ICON_KEYS = [
   "hoszivattyu", "klima", "bojler", "futes", "auto", "napelem", "akkumulator", "mosogep",
   "mosogatogep", "szarito", "fozes", "szivattyu", "nincs", "nemtudom", "haz", "lakas",
-  "tanya", "berlet", "telefon", "sms", "kozosseg", "penz", "pajzs", "lakat", "ember",
+  "tanya", "berlet", "telefon", "sms", "kozosseg", "penz", "persely", "pajzs", "lakat", "ember",
   "epulet", "villam", "naptar", "ora", "egyeb",
 ] as const;

@@ -1,14 +1,16 @@
 // Scripted respondent: which cards would be shown for a given set of answers.
 // Used by validate-content and by the content author.
+import type { EffortLevelId } from "./effort.ts";
 import { visibleOptions } from "./inputs.ts";
 import { analyze, makeCtx } from "./path.ts";
 import type { Bank, Card, Devices } from "./schema.ts";
-import { acceptConsent, advance, answer, createSession, currentId, skip, type SessionState } from "./session.ts";
+import { acceptConsent, advance, answer, createSession, currentId, setEffortLevel, skip, type SessionState } from "./session.ts";
 import type { ItemValue } from "./types.ts";
 
 export const SKIP = "skip" as const;
 
 export interface Strategy {
+  effortLevel?: EffortLevelId;
   /** Explicit answers by card id; SKIP skips the card (if it is skippable). */
   answers?: Record<string, ItemValue | typeof SKIP>;
   /** Appliance ids the respondent owns: answers the devicePicker card with those it offers. */
@@ -28,7 +30,7 @@ export interface SimResult {
 }
 
 function defaultValue(card: Card, state: SessionState, ctx: ReturnType<typeof makeCtx>, st: Strategy): ItemValue | typeof SKIP {
-  const view = analyze(ctx, state.items).view;
+  const view = analyze(ctx, state.items, state.effortLevel).view;
   switch (card.type) {
     case "single":
       return visibleOptions(card, view)[0]?.value ?? SKIP;
@@ -60,6 +62,7 @@ function defaultValue(card: Card, state: SessionState, ctx: ReturnType<typeof ma
 export function simulatePath(bank: Bank, devices: Devices, strategy: Strategy = {}, sessionId = "simulate"): SimResult {
   const ctx = makeCtx(bank, devices, sessionId);
   let s = createSession(ctx, { sessionId, startedDate: "2000-01-01" });
+  if (strategy.effortLevel) s = setEffortLevel(ctx, s, strategy.effortLevel);
   for (let guard = 0; guard < ctx.deck.order.length * 2 + 5; guard++) {
     const id = currentId(s);
     if (id === undefined) break;
@@ -78,6 +81,6 @@ export function simulatePath(bank: Bank, devices: Devices, strategy: Strategy = 
     s = advance(ctx, s);
     if (s.completed) break;
   }
-  const a = analyze(ctx, s.items);
+  const a = analyze(ctx, s.items, s.effortLevel);
   return { path: [...s.order], quotas: a.quotas, owned: [...a.owned], state: s };
 }

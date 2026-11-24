@@ -1,4 +1,6 @@
 // Shared plain types for the engine. No runtime code, so it is safe to import anywhere.
+import type { InputMethod } from "./temperature.ts";
+import type { EffortLevelId } from "./effort.ts";
 
 export type Scalar = string | number;
 
@@ -44,6 +46,7 @@ export interface Highlight {
 }
 
 export interface ParadataEntry {
+  firstAnswer?: { ms: number; input: InputMethod };
   dwellMs: number;
   inputs: { tap: number; key: number; drag: number };
   backNavs: number;
@@ -51,6 +54,7 @@ export interface ParadataEntry {
 
 export interface ResponseRecord {
   schema: "kartya-kerdoiv-response/0.1";
+  temperatureArm?: "tap" | "drag";
   sessionId: string;
   bankVersion: string;
   weightsVersion: string;
@@ -58,6 +62,9 @@ export interface ResponseRecord {
   startedDate: string;
   completed: boolean;
   consent: { participation: boolean; paradata: boolean };
+  effortLevel?: EffortLevelId;
+  /** Present only with paradata consent. True after confirming a nondefault level or selecting one later at the opening card. */
+  effortChangedFromDefault?: boolean;
   items: Record<string, ItemRecord>;
   order: string[];
   randomization: Record<string, string[]>;

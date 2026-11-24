@@ -108,3 +108,36 @@ describe("parseContent", () => {
     expect(r.warnings.map((w) => w.message).join()).toMatch(/ismeretlen/);
   });
 });
+
+describe("effort validation", () => {
+  it("requires exactly the three named levels in ascending order", () => {
+    const row = /^  - \{ id: rovid,.*\n/m;
+    expect(issuesFor(bankText.replace(row, ""), devicesText).map((issue) => issue.path)).toContain("effortLevels");
+    expect(issuesFor(bankText.replace(row, (line) => line.replace("rovid", "alapos")), devicesText).map((issue) => issue.path))
+      .toContain("effortLevels[0].id");
+  });
+
+  it("rejects references to higher-effort cards in card, option, and module conditions", () => {
+    const highEffort = MINI_BANK_YAML
+      .replace("    skip: false\n    text: \"Település?\"", "    effort: 3\n    skip: false\n    text: \"Település?\"")
+      .replace("{ id: Q_UP, block: devs, type: yesno,", "{ id: Q_UP, block: devs, type: yesno, effort: 2,");
+    expect(msgs(highEffort)).toEqual(expect.arrayContaining([
+      expect.stringMatching(/\(Q_MULTI\)\.options\[3\]\.showIf.*Q_TOWN.*effort/),
+      expect.stringMatching(/\(W1\)\.textVariants\[0\]\.when.*Q_TOWN.*effort/),
+      expect.stringMatching(/\(M_A1_3\)\.showIf.*Q_TOWN.*effort/),
+      expect.stringMatching(/\(m_b2\)\.tierUpgrade\.when.*Q_UP.*effort/),
+    ]));
+  });
+
+  it("requires uniform effort for each randomized group", () => {
+    const mixed = MINI_BANK_YAML.replace("{ id: W2, block: why,", "{ id: W2, block: why, effort: 2,");
+    expect(msgs(mixed)).toEqual(expect.arrayContaining([expect.stringMatching(/randomizeGroup „g”.*azonos effort/)]));
+  });
+
+  it.each(["N01", "N02", "N03", "Z01"])("requires effort 1 on %s", (id) => {
+    const invalid = bankText.replace(`  - id: ${id}\n`, `  - id: ${id}\n    effort: 2\n`);
+    expect(msgs(invalid, devicesText)).toEqual(expect.arrayContaining([
+      expect.stringMatching(new RegExp(`\\(${id}\\)\\.effort.*kötelező értéke 1`)),
+    ]));
+  });
+});

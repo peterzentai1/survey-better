@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { loadContent } from "./content/load.ts";
 import { makeCtx } from "./engine/path.ts";
 import type { Bank, Devices } from "./engine/schema.ts";
 import { createSession, currentId, localDate, validateSnapshot, type SessionState } from "./engine/session.ts";
 import type { ContentResult } from "./engine/validate.ts";
 import { createSessionStore, type SessionStore } from "./state/store.ts";
+import { retryCompletions } from "./storage/metrics.ts";
 import { LocalSink, type ResponseSink } from "./storage/sinks.ts";
 import { CardView } from "./ui/CardView.tsx";
 import { Announcer, Banner, DebugPanel, ErrorScreen, ResumePrompt, ThankYou, Toast, TopBar } from "./ui/Chrome.tsx";
@@ -43,6 +44,11 @@ function newSessionId(): string {
 }
 
 export function App({ content, sink, debug }: AppProps) {
+  useEffect(() => {
+    retryCompletions();
+    window.addEventListener("online", retryCompletions);
+    return () => window.removeEventListener("online", retryCompletions);
+  }, []);
   const [parsed] = useState(() => content ?? loadContent());
   return (
     <>
@@ -101,6 +107,19 @@ function SessionScreen({ debug, onRestart }: { debug: DebugFlags; onRestart: () 
   const completed = useSel((s) => s.state.completed);
   const cur = useSel((s) => currentId(s.state));
   useBrowserHistory(store);
+  useEffect(() => {
+    const visibility = () => store.getState().setTimingVisible(!document.hidden);
+    const hide = () => store.getState().setTimingVisible(false);
+    visibility();
+    document.addEventListener("visibilitychange", visibility);
+    window.addEventListener("pagehide", hide);
+    window.addEventListener("pageshow", visibility);
+    return () => {
+      document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("pagehide", hide);
+      window.removeEventListener("pageshow", visibility);
+    };
+  }, [store]);
   const card = cur ? store.getState().ctx.byId.get(cur) : undefined;
 
   if (completed) {

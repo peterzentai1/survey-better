@@ -32,6 +32,16 @@ const households = [
   { name: "Minden eszköz (amit az eszközválasztó felkínál)", owned: allAppliances },
 ];
 
+if (bank.effortLevels) {
+  console.log("\nKitöltési hossz | Minimum | Minden eszköz | Nincs eszköz");
+  for (const { id: effortLevel } of bank.effortLevels) {
+    const min = simulatePath(bank, devices, { effortLevel, defaultPolicy: "skip" });
+    const all = simulatePath(bank, devices, { effortLevel, owned: allAppliances });
+    const none = simulatePath(bank, devices, { effortLevel });
+    console.log(`${effortLevel} | ${min.path.length} | ${all.path.length} | ${none.path.length}`);
+  }
+}
+
 for (const h of households) {
   const sim = simulatePath(bank, devices, { owned: h.owned });
   console.log(`\n=== ${h.name}: ${sim.path.length} kártya ===`);

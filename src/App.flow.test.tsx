@@ -252,6 +252,26 @@ describe("back navigation", () => {
     }
   });
 
+  it("resumes history synchronization after a traversal without popstate", async () => {
+    window.history.replaceState(null, "");
+    const { user } = renderApp();
+    await clickIntro(user);
+    await expectCard("Település?");
+    const go = vi.spyOn(window.history, "go").mockImplementation(() => {});
+    try {
+      await user.click(screen.getByRole("button", { name: "Vissza" }));
+      await expectCard("Tájékoztatás");
+      expect(go).toHaveBeenCalledOnce();
+      await waitFor(() => expect(window.history.state).toEqual({ kd: 2 }));
+      await user.click(screen.getByRole("button", { name: /^Tovább/ }));
+      await expectCard("Település?");
+      expect(window.history.state).toEqual({ kd: 3 });
+      expect(go).toHaveBeenCalledOnce();
+    } finally {
+      go.mockRestore();
+    }
+  });
+
   it("a pending auto-advance is cancelled by going back", async () => {
     const { user } = renderApp();
     await clickIntro(user);

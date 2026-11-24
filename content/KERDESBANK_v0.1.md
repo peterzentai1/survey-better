@@ -1,6 +1,22 @@
 # Kérdésbank v0.1: változásnapló és indoklás
 
-A `kerdesbank.hu.yaml` 0.1.0-s változata. A tartalom licence CC BY 4.0 (`content/LICENSE`).
+A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
+
+## v0.2 változások
+
+- **I10–I12.** Kétórás, egyfokos esti hőmérséklet-csökkentés. Az első érzést véletlenszerűen kiosztott koppintós vagy húzós felületen mérjük, a vállalási szándékot egységes hatfokú skálán. Az első kérdést megválaszolók külön értékelhetik a válaszadási módot.
+
+| Kártya | Változás |
+| --- | --- |
+| N01 | A nyitószöveg második bekezdése bemutatja a három választható kitöltési hosszt. A közepes a kezdő beállítás, a percek szögletes zárójelben jelölt előteszt-helyőrzők. |
+| N03 | Új, kötelező igen/nem tétel a figyelmes válaszadás vállalásáról, közvetlenül a hozzájárulás után. Mindkét válasszal folytatható a kérdőív. |
+| J02 | Az első opció az előrefizetés akadályára kérdez rá (`elozetes`, persely ikon). A megtérülés hiánya külön opció. |
+| J04 | Új, elképzelt ajánlat a villanyszámlán törlesztett, a teljes rezsit nagyjából változatlanul hagyó kölcsönről. Ha más dönt a lakásról, a szöveg külön jelzi a feltételezett döntési lehetőséget. |
+| J05 | A J04 elutasításakor megjelenő új szonda. A közepes és alapos változatban legfeljebb két akadály jelölhető. |
+| B01 | Az `onkent_magam` más szereplőkkel együtt jelölhető. A `senki` kizáró opció a csempék végén, elválasztó alatt jelenik meg. Az E01 és J01 kizáró opciói ugyanígy jelennek meg. |
+
+- `effort: 2` jelölést kapott az A02, A04, A05, T02, T03, T04, I08, I09, J01, J03, J05, F02, F04, F05 és B03. A B04 értéke `effort: 3`.
+- A jelöletlen kártyák `effort` értéke 1. A modulkártyák elsőbbségi sorrendje a meglévő `priority` mezőn alapul. A rövid, közepes és alapos változatban rendre 3, 6 és 9 az összesített modulkeret.
 
 **Állapot:** pilot előtti munkaváltozat. Kognitív előtesztelés még nem volt. Az összegek tesztértékek, a valós kitöltési időt pilottal kell mérni.
 

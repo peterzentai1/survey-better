@@ -35,13 +35,17 @@ export function GlobalKeys() {
           break;
         case "i":
         case "I":
-        case "ArrowRight":
           act(h.yes);
+          break;
+        case "ArrowRight":
+          act(h.arrowRight ?? h.yes);
           break;
         case "n":
         case "N":
-        case "ArrowLeft":
           act(h.no);
+          break;
+        case "ArrowLeft":
+          act(h.arrowLeft ?? h.no);
           break;
         case "k":
         case "K":

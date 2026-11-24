@@ -1,5 +1,7 @@
 // Session state transitions. Pure and immutable: every function returns a new state.
+import { REACTION_CARD, temperatureArm } from "./temperature.ts";
 import { evaluate } from "./conditions.ts";
+import { DEFAULT_EFFORT_LEVEL, nextEffortLevel, type EffortLevelId } from "./effort.ts";
 import { impliedValues } from "./inputs.ts";
 import { analyze, type Ctx } from "./path.ts";
 import { isAnswerable } from "./schema.ts";
@@ -17,10 +19,16 @@ export interface SessionState {
   /** Set while the respondent edits a card reached from the summary: the summary card id. */
   jumpFrom: string | null;
   consent: { participation: boolean; paradata: boolean };
+  effortLevel?: EffortLevelId;
+  effortChangedFromDefault?: true;
+  /** Original effort while answering extra questions opened from the summary. */
+  extensionFrom?: EffortLevelId;
   highlights: Highlight[];
   completed: boolean;
   /** Raw accumulated paradata; only ever present after the paradata consent box was ticked. */
   paradata?: Record<string, ParadataEntry>;
+  /** True when timing consent was continuous from the first consent screen. */
+  fullTiming?: true;
 }
 
 export function currentId(s: SessionState): string | undefined {
@@ -39,7 +47,7 @@ export function localDate(d = new Date()): string {
 
 /** Mark stored-but-off-path items `inactive`; clear the mark on items back on the path. */
 export function reconcile(ctx: Ctx, s: SessionState): SessionState {
-  const { pathSet } = analyze(ctx, s.items);
+  const { pathSet } = analyze(ctx, s.items, s.effortLevel);
   let changed = false;
   const items: Record<string, ItemRecord> = {};
   for (const [id, it] of Object.entries(s.items)) {
@@ -61,7 +69,7 @@ export function reconcile(ctx: Ctx, s: SessionState): SessionState {
 function show(ctx: Ctx, s: SessionState, id: string): SessionState {
   const card = ctx.byId.get(id);
   if (!card) return s;
-  const { view } = analyze(ctx, s.items);
+  const { view } = analyze(ctx, s.items, s.effortLevel);
   const existing = s.items[id];
   let item: ItemRecord = existing ?? { status: "shown", changes: 0, position: s.order.length };
   if (!existing && card.type === "multi_tiles") {
@@ -92,12 +100,21 @@ export function createSession(ctx: Ctx, init: { sessionId: string; startedDate: 
     history: [],
     jumpFrom: null,
     consent: { participation: false, paradata: false },
+    ...(ctx.bank.effortLevels ? { effortLevel: DEFAULT_EFFORT_LEVEL } : {}),
     highlights: [],
     completed: false,
   };
-  const first = analyze(ctx, {}).path[0];
+  const first = analyze(ctx, base.items, base.effortLevel).path[0];
   if (!first) return base;
   return show(ctx, { ...base, history: [first] }, first);
+}
+
+export function setEffortLevel(ctx: Ctx, s: SessionState, level: EffortLevelId): SessionState {
+  const first = ctx.deck.order[0];
+  if (currentId(s) !== first || ctx.byId.get(first)?.type !== "info") return s;
+  if (level === s.effortLevel || !ctx.bank.effortLevels?.some((e) => e.id === level)) return s;
+  const changed = s.consent.paradata && level !== DEFAULT_EFFORT_LEVEL;
+  return reconcile(ctx, { ...s, effortLevel: level, ...(changed ? { effortChangedFromDefault: true as const } : {}) });
 }
 
 function ensureItem(s: SessionState, id: string): ItemRecord {
@@ -133,8 +150,17 @@ export function acceptConsent(
 ): SessionState {
   if (!consent.participation) return s;
   const next = answer(ctx, { ...s, consent: { ...consent } }, id, true);
-  if (consent.paradata) return { ...next, paradata: next.paradata ?? {} };
-  const { paradata: _p, ...rest } = next;
+  if (consent.paradata) {
+    return {
+      ...next,
+      paradata: next.paradata ?? {},
+      ...(!s.consent.participation ? { fullTiming: true as const } : {}),
+      ...(s.effortLevel && s.effortLevel !== DEFAULT_EFFORT_LEVEL ? { effortChangedFromDefault: true as const } : {}),
+    };
+  }
+  const { paradata: _p, fullTiming: _timing, effortChangedFromDefault: _changed, ...rest } = next;
+  void _changed;
+  void _timing;
   void _p;
   return rest;
 }
@@ -148,29 +174,52 @@ export function submit(ctx: Ctx, s: SessionState, summaryId?: string): SessionSt
   return { ...withItem, completed: true };
 }
 
-/** Next card: successor on the path; in jump mode the next never-shown card, else back to the summary. */
+function additionalQuestion(ctx: Ctx, s: SessionState, previousLevel: EffortLevelId, candidates: string[]) {
+  const { pathSet } = analyze(ctx, s.items, previousLevel);
+  return candidates.find((id) => {
+    const status = s.items[id]?.status;
+    return !pathSet.has(id) && status !== "answered" && status !== "skipped";
+  });
+}
+
+/** Move up one level from the summary and open the first unanswered addition in deck order. */
+export function extendEffort(ctx: Ctx, s: SessionState): SessionState {
+  const current = s.effortLevel;
+  const next = nextEffortLevel(current);
+  if (current === undefined || next === undefined || ctx.summaryId === undefined || currentId(s) !== ctx.summaryId) return s;
+  const raised = reconcile(ctx, { ...s, effortLevel: next });
+  const first = additionalQuestion(ctx, raised, current, analyze(ctx, raised.items, next).path);
+  return first === undefined ? raised : jumpTo(ctx, { ...raised, extensionFrom: current }, first);
+}
+
+/** Next card: successor on the path, or the next new card when working from the summary. */
 export function advance(ctx: Ctx, s: SessionState): SessionState {
   const cur = currentId(s);
   if (cur === undefined) return s;
-  const { path } = analyze(ctx, s.items);
+  const { path } = analyze(ctx, s.items, s.effortLevel);
   const after = path.slice(path.indexOf(cur) + 1);
   if (s.jumpFrom !== null && cur !== s.jumpFrom) {
-    const unseen = after.find((id) => !s.items[id] && id !== s.jumpFrom);
+    const unseen = s.extensionFrom === undefined
+      ? after.find((id) => !s.items[id] && id !== s.jumpFrom)
+      : additionalQuestion(ctx, s, s.extensionFrom, after);
     if (unseen !== undefined) return show(ctx, { ...s, history: [...s.history, unseen] }, unseen);
     const at = s.history.indexOf(s.jumpFrom);
-    return { ...s, history: s.history.slice(0, at + 1), jumpFrom: null };
+    return { ...s, history: s.history.slice(0, at + 1), jumpFrom: null, extensionFrom: undefined };
   }
   const next = after[0];
   if (next === undefined) return { ...s, completed: true };
   return show(ctx, { ...s, history: [...s.history, next] }, next);
 }
 
-export function goBack(s: SessionState): SessionState {
+export function goBack(ctx: Ctx, s: SessionState): SessionState {
   if (s.history.length <= 1) return s;
   const history = s.history.slice(0, -1);
   const left = s.history[s.history.length - 1];
   const jumpFrom = history[history.length - 1] === s.jumpFrom ? null : s.jumpFrom;
-  return addParadata({ ...s, history, jumpFrom }, left, { backNavs: 1 });
+  const previous = addParadata({ ...s, history, jumpFrom }, left, { backNavs: 1 });
+  if (jumpFrom === null && s.extensionFrom !== undefined)
+    return reconcile(ctx, { ...previous, effortLevel: s.extensionFrom, extensionFrom: undefined });
+  return previous;
 }
 
 /** From the summary: open an earlier card for editing. */
@@ -189,6 +238,7 @@ export function addParadata(
   if (!s.consent.paradata || !s.paradata) return s;
   const prev = s.paradata[id] ?? { dwellMs: 0, inputs: { tap: 0, key: 0, drag: 0 }, backNavs: 0 };
   const entry: ParadataEntry = {
+    ...prev,
     dwellMs: prev.dwellMs + (delta.dwellMs ?? 0),
     inputs: {
       tap: prev.inputs.tap + (delta.tap ?? 0),
@@ -207,7 +257,7 @@ export interface SummaryStats {
 
 /** Answered and skipped counts per block, over answerable cards on the current path. */
 export function summaryStats(ctx: Ctx, s: SessionState): SummaryStats {
-  const { path } = analyze(ctx, s.items);
+  const { path } = analyze(ctx, s.items, s.effortLevel);
   const blocks = ctx.bank.blocks.map((b) => ({ id: b.id, title: b.title, answered: 0, skipped: 0 }));
   const skippedIds: string[] = [];
   for (const id of path) {
@@ -241,9 +291,14 @@ export function buildRecord(ctx: Ctx, s: SessionState, appVersion: string): Resp
     items,
     order: [...s.order],
     randomization: ctx.deck.randomization,
-    quotas: analyze(ctx, s.items).quotas,
+    quotas: analyze(ctx, s.items, s.effortLevel).quotas,
     highlights: s.highlights,
   };
+  if (s.consent.participation && s.effortLevel !== undefined) {
+    record.effortLevel = s.effortLevel;
+    if (s.consent.paradata) record.effortChangedFromDefault = s.effortChangedFromDefault ?? (s.effortLevel !== DEFAULT_EFFORT_LEVEL);
+  }
+  if (s.consent.participation && ctx.byId.has(REACTION_CARD)) record.temperatureArm = temperatureArm(s.sessionId);
   if (s.consent.paradata && s.paradata) {
     record.paradata = Object.fromEntries(
       Object.entries(s.paradata).map(([id, p]) => [id, { ...p, dwellMs: Math.round(p.dwellMs / 100) * 100 }]),
@@ -265,5 +320,11 @@ export function validateSnapshot(ctx: Ctx, raw: unknown): SessionState | null {
   if (typeof s.consent?.participation !== "boolean" || typeof s.consent?.paradata !== "boolean") return null;
   if (!Array.isArray(s.highlights)) return null;
   if (s.jumpFrom !== null && s.jumpFrom !== undefined && !ctx.byId.has(s.jumpFrom)) return null;
-  return { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null };
+  if (s.effortLevel !== undefined && !ctx.bank.effortLevels?.some((e) => e.id === s.effortLevel)) return null;
+  if (s.extensionFrom !== undefined &&
+      (s.jumpFrom !== ctx.summaryId || s.effortLevel === undefined ||
+        !ctx.bank.effortLevels?.some((e) => e.id === s.extensionFrom) ||
+        nextEffortLevel(s.extensionFrom) !== s.effortLevel)) return null;
+  const effortLevel = s.effortLevel ?? (ctx.bank.effortLevels ? DEFAULT_EFFORT_LEVEL : undefined);
+  return { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null, effortLevel };
 }

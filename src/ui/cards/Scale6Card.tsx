@@ -2,6 +2,7 @@
 //  - tap/click or digits 1-6: select and move on after 350 ms
 //  - arrow keys: move the selection without moving on; Enter confirms
 import { useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { REACTION_CARD, temperatureArm, type InputMethod } from "../../engine/temperature.ts";
 import { scaleOf, type Card } from "../../engine/schema.ts";
 import { CardShell, KeyHint } from "../CardShell.tsx";
 import { useCardApi, useKeyHandlers } from "../session.tsx";
@@ -10,19 +11,23 @@ const N = 6;
 
 export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }) {
   const api = useCardApi(card);
+  const experimental = card.id === REACTION_CARD;
+  const dragPad = experimental && temperatureArm(api.store.getState().state.sessionId) === "drag";
+  const trackPointer = !experimental || dragPad;
   const scale = scaleOf(card, api.store.getState().ctx.bank);
   const stored = api.item?.status === "answered" && typeof api.item.value === "number" ? api.item.value - 1 : null;
   // `draft` is a selection that has not been confirmed yet (arrow keys, press-and-slide preview).
   const [draft, setDraft] = useState<number | null>(null);
-  const shown = draft ?? stored;
+  const [preview, setPreview] = useState<number | null>(null);
+  const shown = preview ?? draft ?? stored;
   const bar = useRef<HTMLDivElement>(null);
   const segs = useRef<(HTMLButtonElement | null)[]>([]);
-  const press = useRef<{ id: number; last: number; start: number } | null>(null);
+  const press = useRef<{ id: number; last: number; start: number; x: number; y: number; dragged: boolean } | null>(null);
   const blockClick = useRef(false);
 
-  const select = (i: number) => {
+  const select = (i: number, input: InputMethod = "key") => {
     setDraft(null);
-    api.commit(i + 1);
+    api.commit(i + 1, input);
     api.autoAdvance();
   };
   const move = (i: number) => {
@@ -57,11 +62,11 @@ export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }
   };
 
   const onPointerDown = (e: ReactPointerEvent) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (!trackPointer || press.current || !e.isPrimary || e.button !== 0) return;
     const i = indexAt(e);
     if (i === null) return;
-    press.current = { id: e.pointerId, last: i, start: i };
-    setDraft(i);
+    press.current = { id: e.pointerId, last: i, start: i, x: e.clientX, y: e.clientY, dragged: false };
+    if (!dragPad) setPreview(i);
     try {
       bar.current?.setPointerCapture?.(e.pointerId);
     } catch {
@@ -72,9 +77,17 @@ export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }
     const p = press.current;
     if (!p || p.id !== e.pointerId) return;
     const i = indexAt(e);
-    if (i !== null && i !== p.last) {
+    const dx = Math.abs(e.clientX - p.x);
+    const dy = Math.abs(e.clientY - p.y);
+    if (dragPad && !p.dragged && dy >= 6 && dy > dx) {
+      press.current = null;
+      setPreview(null);
+      return;
+    }
+    if (dx >= 6 || (i !== null && i !== p.start)) p.dragged = true;
+    if (i !== null && p.dragged) {
       p.last = i;
-      setDraft(i);
+      setPreview(i);
     }
   };
   const onPointerUp = (e: ReactPointerEvent) => {
@@ -84,12 +97,16 @@ export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }
     blockClick.current = true;
     window.setTimeout(() => (blockClick.current = false), 100);
     const i = indexAt(e) ?? p.last;
-    if (outside(e)) setDraft(null);
-    else select(i);
+    setPreview(null);
+    if (!outside(e)) {
+      if (p.dragged) api.store.getState().recordInput("drag");
+      select(i, p.dragged ? "drag" : "tap");
+    }
   };
-  const onPointerCancel = () => {
+  const onPointerCancel = (e: ReactPointerEvent) => {
+    if (press.current?.id !== e.pointerId) return;
     press.current = null;
-    setDraft(null);
+    setPreview(null);
   };
 
   const onKeyDown = (e: KeyboardEvent, i: number) => {
@@ -131,36 +148,52 @@ export function Scale6Card({ card }: { card: Extract<Card, { type: "scale6" }> }
         ref={bar}
         role="radiogroup"
         aria-label={api.text}
-        className="flex gap-1.5 select-none"
-        style={{ touchAction: "none" }}
+        className={dragPad ? "scale-control" : "relative flex gap-1.5 select-none"}
+        style={{ touchAction: experimental ? "pan-y pinch-zoom" : "none" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
+        onLostPointerCapture={onPointerCancel}
       >
-        {Array.from({ length: N }, (_, i) => (
-          <button
-            key={i}
-            ref={(el) => {
-              segs.current[i] = el;
-            }}
-            type="button"
-            role="radio"
-            aria-checked={shown === i}
-            aria-label={`${i + 1} – ${scale.labels[i]}`}
-            data-idx={i}
-            tabIndex={tabStop === i ? 0 : -1}
-            className="opt !min-h-14 flex-1 !justify-center !px-0 text-lg"
-            onKeyDown={(e) => onKeyDown(e, i)}
-            onClick={(e) => {
-              if (blockClick.current) return;
-              if (e.detail === 0) setDraft(i); // keyboard-originated click: mark only
-              else select(i);
-            }}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {dragPad && (
+          <div className="scale-pad" aria-hidden="true">
+            {preview === null ? (
+              <span className="scale-invite"><span className="scale-grip">↔</span>Húzza oldalra vagy koppintson</span>
+            ) : (
+              <div className="scale-rail">
+                <span className="scale-bubble" style={{ left: `${preview / (N - 1) * 100}%` }}>
+                  <span key={preview} className="scale-digit">{preview + 1}</span>
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        <div className={dragPad ? "absolute inset-0 grid grid-cols-6" : "contents"}>
+          {Array.from({ length: N }, (_, i) => (
+            <button
+              key={i}
+              ref={(el) => {
+                segs.current[i] = el;
+              }}
+              type="button"
+              role="radio"
+              aria-checked={shown === i}
+              aria-label={`${i + 1} – ${scale.labels[i]}`}
+              data-idx={i}
+              tabIndex={tabStop === i ? 0 : -1}
+              className={dragPad ? "scale-choice" : "opt !min-h-14 flex-1 !justify-center !px-0 text-lg"}
+              onKeyDown={(e) => onKeyDown(e, i)}
+              onClick={(e) => {
+                if (blockClick.current || (dragPad && e.detail > 0)) return;
+                if (e.detail === 0) setDraft(i); // keyboard-originated click: mark only
+                else select(i, "tap");
+              }}
+            >
+              {dragPad ? null : i + 1}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="mt-2 flex justify-between gap-4 text-sm text-muted" aria-hidden="true">
         <span>{scale.left}</span>

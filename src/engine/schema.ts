@@ -1,6 +1,7 @@
 // zod schemas for the question bank (kerdesbank.*.yaml) and the appliance file (eszkozok.yaml).
 // The schema is documented by content/sample.yaml; changes go to SCHEMA_CHANGES.md first.
 import { z } from "zod";
+import { EFFORT_LEVEL_IDS } from "./effort.ts";
 import type { Condition } from "./types.ts";
 
 z.config(z.locales.hu());
@@ -39,6 +40,7 @@ const common = {
   module: z.string().optional(),
   priority: z.number().optional(),
   randomizeGroup: z.string().optional(),
+  effort: z.literal([1, 2, 3]).optional(),
   source: z.string().optional(),
   reversed: z.boolean().optional(),
 };
@@ -46,7 +48,7 @@ const common = {
 const topic = z.strictObject({ id: text, label: text, statements: z.array(text).optional() });
 
 export const cardSchema = z.discriminatedUnion("type", [
-  z.strictObject({ ...common, type: z.literal("info"), title: text, text, cta: text }),
+  z.strictObject({ ...common, type: z.literal("info"), title: text, text, cta: text, effortLabel: text.optional() }),
   z.strictObject({
     ...common,
     type: z.literal("consent"),
@@ -103,6 +105,18 @@ export const cardSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+const tier = z.enum(["A", "B", "C"]);
+const tierMap = z.strictObject({ A: z.number().int().min(0), B: z.number().int().min(0), C: z.number().int().min(0) });
+const moduleCaps = {
+  tierCaps: tierMap,
+  globalModuleCap: z.number().int().min(0),
+};
+const effortLevel = z.strictObject({
+  id: z.enum(EFFORT_LEVEL_IDS),
+  label: text,
+  moduleCaps: z.strictObject(moduleCaps),
+});
+
 export const bankSchema = z.strictObject({
   version: text,
   locale: z.string().optional(),
@@ -114,17 +128,14 @@ export const bankSchema = z.strictObject({
     })
     .optional(),
   blocks: z.array(z.strictObject({ id: text, title: text })).min(1),
+  effortLevels: z.array(effortLevel).length(EFFORT_LEVEL_IDS.length).optional(),
   cards: z.array(cardSchema).min(1),
 });
 
-const tier = z.enum(["A", "B", "C"]);
-const tierMap = z.strictObject({ A: z.number().int().min(0), B: z.number().int().min(0), C: z.number().int().min(0) });
-
 export const devicesSchema = z.strictObject({
   version: text,
-  tierCaps: tierMap,
+  ...moduleCaps,
   tierFloors: tierMap,
-  globalModuleCap: z.number().int().min(0),
   appliances: z.array(z.strictObject({ id: text, label: text, icon: z.string().optional() })).min(1),
   modules: z
     .array(
@@ -147,6 +158,7 @@ export type Appliance = Devices["appliances"][number];
 export type Module = Devices["modules"][number];
 export type Topic = z.infer<typeof topic>;
 export type RawBank = z.infer<typeof bankSchema>;
+export type EffortLevel = z.infer<typeof effortLevel>;
 
 export interface Scale {
   left: string;
@@ -155,11 +167,12 @@ export interface Scale {
 }
 
 /** A card with the bank defaults applied. */
-export type Card = RawCard & { skip: boolean; skipLabel: string };
+export type Card = RawCard & { skip: boolean; skipLabel: string; effort: 1 | 2 | 3 };
 
 export interface Bank {
   version: string;
   blocks: RawBank["blocks"];
+  effortLevels?: EffortLevel[];
   cards: Card[];
   defaultScale: Scale;
 }
@@ -181,9 +194,9 @@ export function resolveBank(raw: RawBank): Bank {
   const noSkipTypes = new Set<CardType>(["info", "consent", "summary_highlight"]);
   const cards = raw.cards.map((c): Card => {
     const skip = noSkipTypes.has(c.type) ? false : (c.skip ?? d.skip ?? true);
-    return { ...c, skip, skipLabel: c.skipLabel ?? d.skipLabel ?? "Nem tudom / kihagyom" };
+    return { ...c, effort: c.effort ?? 1, skip, skipLabel: c.skipLabel ?? d.skipLabel ?? "Nem tudom / kihagyom" };
   });
-  return { version: raw.version, blocks: raw.blocks, cards, defaultScale };
+  return { version: raw.version, blocks: raw.blocks, effortLevels: raw.effortLevels, cards, defaultScale };
 }
 
 /** The scale of a scale6 card: its own values over the bank defaults. */
