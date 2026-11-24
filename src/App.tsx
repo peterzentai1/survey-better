@@ -88,12 +88,6 @@ function Questionnaire({ bank, devices, slug, settings, sink, debug }: {
     window.addEventListener("online", retry);
     return () => window.removeEventListener("online", retry);
   }, [metrics, remote, slug, storage]);
-  if (!acceptingResponses(storage)) {
-    return <p role="status" className="card-panel">A kérdőív lezárult.</p>;
-  }
-  if (storage.mode === "supabase" && !supabaseConfigured) {
-    return <p role="status" className="card-panel">A válaszok fogadása jelenleg nem elérhető.</p>;
-  }
   return <SurveySession bank={bank} devices={devices} slug={slug} settings={settings} sink={sink} debug={debug}
     onComplete={(state, record) => {
       if (metrics && acceptingResponses(storage)) queueCompletion(state, record, slug);
@@ -114,24 +108,35 @@ function SurveySession({ bank, devices, slug, settings, sink: sinkProp, debug, o
     return createSessionStore({ ctx, sink, appVersion: __APP_VERSION__, initial, onComplete });
   };
 
-  // An unfinished session saved on this device that still fits the current bank (else it is ignored).
+  // An unfinished or completed session saved on this device that still fits the current bank.
   const [saved] = useState<SessionState | null>(() => {
     try {
       const raw = sink.load() as { sessionId?: unknown } | null;
       if (!raw || typeof raw.sessionId !== "string") return null;
       const state = validateSnapshot(makeCtx(bank, devices, raw.sessionId, settings, slug), raw);
-      return state && state.order.length > 1 ? state : null;
+      return state && (state.completed || state.order.length > 1) ? state : null;
     } catch {
       return null;
     }
   });
-  const [store, setStore] = useState<SessionStore | null>(() => (saved ? null : makeStore(newSessionId())));
+  const [store, setStore] = useState<SessionStore | null>(() => {
+    if (!saved) return makeStore(newSessionId());
+    return saved.completed ? makeStore(saved.sessionId, saved) : null;
+  });
 
   const restart = () => {
     sink.clear();
     setStore(makeStore(newSessionId()));
   };
 
+  if (!store?.getState().state.completed) {
+    if (!acceptingResponses(settings.storage)) {
+      return <p role="status" className="card-panel">A kérdőív lezárult.</p>;
+    }
+    if (settings.storage.mode === "supabase" && !supabaseConfigured) {
+      return <p role="status" className="card-panel">A válaszok fogadása jelenleg nem elérhető.</p>;
+    }
+  }
   if (!store) {
     return <ResumePrompt onResume={() => setStore(makeStore(saved!.sessionId, saved!))} onRestart={restart} />;
   }

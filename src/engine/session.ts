@@ -319,11 +319,12 @@ export function validateSnapshot(ctx: Ctx, raw: unknown): SessionState | null {
   const s = raw as Partial<SessionState>;
   const ids = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === "string" && ctx.byId.has(x));
   if (typeof s.sessionId !== "string" || typeof s.startedDate !== "string") return null;
-  if (s.bankVersion !== ctx.bank.version || s.completed === true) return null;
+  if (s.bankVersion !== ctx.bank.version || typeof s.completed !== "boolean") return null;
   if (!ids(s.history) || s.history.length === 0 || !ids(s.order)) return null;
   if (typeof s.items !== "object" || s.items === null) return null;
   if (!Object.keys(s.items).every((id) => ctx.byId.has(id))) return null;
   if (typeof s.consent?.participation !== "boolean" || typeof s.consent?.paradata !== "boolean") return null;
+  if (s.completed && !s.consent.participation) return null;
   if (!Array.isArray(s.highlights)) return null;
   if (s.jumpFrom !== null && s.jumpFrom !== undefined && !ctx.byId.has(s.jumpFrom)) return null;
   if (s.effortLevel !== undefined && !ctx.bank.effortLevels?.some((e) => e.id === s.effortLevel)) return null;
@@ -333,5 +334,7 @@ export function validateSnapshot(ctx: Ctx, raw: unknown): SessionState | null {
         nextEffortLevel(s.extensionFrom) !== s.effortLevel)) return null;
   const effortLevel = s.effortLevel ?? (ctx.bank.effortLevels ? ctx.settings.display.defaultEffort : undefined);
   const restored = { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null, effortLevel };
+  if (restored.completed && currentId(restored) !== ctx.summaryId &&
+      currentId(restored) !== analyze(ctx, restored.items, effortLevel).path.at(-1)) return null;
   return ctx.settings.storage.paradata ? restored : withoutParadata(restored);
 }

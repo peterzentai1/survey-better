@@ -36,8 +36,9 @@ try {
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) throw new Error("Response export failed (HTTP " + response.status + ").");
-    const rows = await response.json() as { receipt_hash: string; received_at: string; payload: unknown }[];
-    if (!Array.isArray(rows) || rows.some((row) => !/^[0-9a-f]{64}$/.test(row.receipt_hash))) {
+    const rows = await response.json() as { receipt_hash: string; received_on: string; payload: unknown }[];
+    if (!Array.isArray(rows) || rows.some((row) =>
+      !/^[0-9a-f]{64}$/.test(row.receipt_hash) || !/^\d{4}-\d{2}-\d{2}$/.test(row.received_on))) {
       throw new Error("Unexpected response export format.");
     }
     for (const row of rows) {

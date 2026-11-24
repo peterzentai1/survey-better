@@ -6,6 +6,8 @@ It runs on phones, tablets and laptops (touch, mouse, trackpad, keyboard). The r
 
 The default survey offers three lengths and initially selects **Közepes**. It saves responses on the respondent’s device. Each survey has build-time display and storage settings, shown alongside simulated card counts at `/admin`.
 
+The thank-you screen shows the full kitöltési azonosító in every storage mode and lets respondents copy it. The screen is restored on reload while the completed session is saved in the browser. Starting a new session clears that saved session. Researchers can use the identifier to find or delete a submitted response.
+
 ## Run it
 
 Requires Node.js >= 22.18 (the `validate-content` script runs TypeScript directly) and npm.
@@ -106,6 +108,48 @@ Run `supabase/tests/per_survey_responses.sql` on a disposable database after app
 
 The retention date closes submissions. The researcher is responsible for deleting the survey’s rows and local exports according to the consent notice. Update the registry and rebuild with `acceptingResponses: false` to close a survey early.
 
+#### Kitöltés törlése azonosító alapján
+
+A Supabase SQL Editorban `postgres` szerepkörrel futtassa. Írja az első sorba a kérdőív slugját és a kitöltőtől kapott teljes azonosítót. A két törlés egy műveletben fut, az eredmény a törölt válaszok és technikai mérések darabszáma. A mérés hiányozhat, ha a kitöltő ehhez nem járult hozzá.
+
+```sql
+with request(survey_slug, session_id) as (values ('my_survey', 'PASTE_SESSION_ID_HERE')),
+deleted_response as (
+  delete from survey_data.responses r using request q
+  where r.survey_slug = q.survey_slug
+    and r.receipt_hash = sha256(convert_to(q.session_id, 'UTF8'))
+  returning 1
+), deleted_metrics as (
+  delete from survey_private.completions c using request q
+  where c.survey_slug = q.survey_slug
+    and c.receipt = sha256(convert_to(
+      case when q.survey_slug = 'haztartasi_rugalmassag' then q.session_id
+           else q.survey_slug || ':' || q.session_id end, 'UTF8'))
+  returning 1
+)
+select (select count(*) from deleted_response) as responses_deleted,
+       (select count(*) from deleted_metrics) as metrics_deleted;
+```
+
+Másolatkéréshez ugyanott futtassa ezt a lekérdezést a kérdőív slugjával és az azonosítóval. A `null` érték azt jelzi, hogy az adott adat nem található.
+
+```sql
+with request(survey_slug, session_id) as (values ('my_survey', 'PASTE_SESSION_ID_HERE'))
+select (
+  select jsonb_build_object('received_on', r.received_on, 'payload', r.payload)
+  from survey_data.responses r
+  where r.survey_slug = q.survey_slug
+    and r.receipt_hash = sha256(convert_to(q.session_id, 'UTF8'))
+) as response, (
+  select to_jsonb(c) - 'receipt' from survey_private.completions c
+  where c.survey_slug = q.survey_slug
+    and c.receipt = sha256(convert_to(
+      case when q.survey_slug = 'haztartasi_rugalmassag' then q.session_id
+           else q.survey_slug || ':' || q.session_id end, 'UTF8'))
+) as completion_metrics
+from request q;
+```
+
 ### Researcher export
 
 Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the local shell. Use a server-side service-role or secret key. Pause collection for a stable export across pages.
@@ -114,7 +158,7 @@ Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the local shell. Use a ser
 npm run export -- my_survey
 ```
 
-The script writes a dated JSON file under the git-ignored `exports/` directory. Each row includes its hashed receipt, receipt time and response payload.
+The script writes a dated JSON file under the git-ignored `exports/` directory. Each row includes its hashed receipt, the UTC arrival date (`received_on`, `YYYY-MM-DD`) and the response payload. The migration converts existing arrival timestamps to their UTC calendar dates.
 
 ### Completion metrics
 
