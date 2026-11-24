@@ -15,7 +15,7 @@ const content = loadContent();
 if (!content.ok) throw new Error("Invalid test bank");
 
 describe("survey metrics UI", () => {
-  it("shows a measured median only for a level with data", async () => {
+  it("shows an existing median without requiring new metrics uploads", async () => {
     renderApp({ content });
     expect((await screen.findByRole("radio", { name: /Közepes.*Medián 10,5 perc/ })).getAttribute("aria-checked")).toBe("true");
     expect(screen.getByRole("radio", { name: /Rövid.*kb\. \[5\] perc/ })).toBeTruthy();
@@ -54,5 +54,55 @@ describe("survey metrics UI", () => {
     expect(sink.record?.paradata?.I10.firstAnswer?.input).toBe(arm);
     expect(screen.getByRole("radio", { name: "6 – Biztosan igen" })).toBeTruthy();
     expect(screen.queryByText("Húzza oldalra vagy koppintson")).toBeNull();
+  });
+});
+
+describe("survey display settings", () => {
+  it("uses the configured effort, hides optional chrome and links to the configured source", () => {
+    const settings = {
+      ...content.settings,
+      display: { ...content.settings.display, defaultEffort: "alapos" as const, showMedianTimes: false, banner: null, sourceLink: "https://example.test/source" },
+    };
+    renderApp({ content: { ...content, settings } });
+    expect(screen.getByRole("radio", { name: "Alapos" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.queryByRole("note")).toBeNull();
+    expect(screen.getByRole("link", { name: /Forráskód/ }).getAttribute("href")).toBe("https://example.test/source");
+  });
+
+  it("can hide the effort selector and disable optional paradata", async () => {
+    const intro = content.bank.cards.find((card) => card.id === "N01");
+    if (intro?.type !== "info") throw new Error("Missing N01 intro card");
+    const startLabel = intro.cta.replace(/\s+/g, " ").trim();
+    const settings = {
+      display: { ...content.settings.display, effortSelector: false, banner: "Tesztkérdőív" },
+      storage: { ...content.settings.storage, paradata: false },
+    };
+    const { user, sink } = renderApp({ content: { ...content, settings } });
+    expect(screen.queryByRole("radiogroup")).toBeNull();
+    expect(screen.getByRole("note").textContent).toBe("Tesztkérdőív");
+    await user.click(screen.getByRole("button", { name: (name) => name.startsWith(startLabel) }));
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(1);
+    await user.click(checkboxes[0]);
+    await user.click(screen.getByRole("button", { name: "Tovább" }));
+    expect(sink.record?.consent.paradata).toBe(false);
+    expect(sink.record?.paradata).toBeUndefined();
+  });
+
+  it.each(["buttons", "drag_reveal"] as const)("renders %s for a scale outside the experiment", async (scaleInput) => {
+    const { state } = simulatePath(content.bank, content.devices, {}, "scale-settings-test");
+    state.history = state.history.slice(0, state.history.indexOf("I11") + 1);
+    state.items.I11 = { status: "shown", changes: 0 };
+    const settings = { ...content.settings, display: { ...content.settings.display, scaleInput } };
+    const sink = new MemSink(state);
+    const { user } = renderApp({ content: { ...content, settings }, sink });
+    await user.click(screen.getByRole("button", { name: "Folytatom" }));
+    const label = screen.getByRole("radio", { name: "6 – Biztosan igen" });
+    expect(Boolean(screen.queryByText("Húzza oldalra vagy koppintson"))).toBe(scaleInput === "drag_reveal");
+    expect(screen.getByText("Biztosan igen")).toBeTruthy();
+    label.focus();
+    await user.keyboard("{Enter}");
+    expect(sink.record?.items.I11.value).toBe(6);
+    expect(sink.record?.temperatureArm).toBeUndefined();
   });
 });

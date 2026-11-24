@@ -69,7 +69,7 @@ export function SummaryCard({ card }: { card: Extract<Card, { type: "summary_hig
         ))}
       </ul>
 
-      {nextEffortLevel(state.effortLevel) !== undefined && (
+      {ctx.settings.display.effortSelector && nextEffortLevel(state.effortLevel) !== undefined && (
         <button type="button" className="btn btn-quiet mt-3 w-full" onClick={() => api.store.getState().extendEffort()}>
           Van még néhány perce? További kérdések
         </button>

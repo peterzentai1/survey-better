@@ -1,0 +1,10 @@
+bank: ../../kerdesbank.hu.yaml
+devices: ../../eszkozok.yaml
+
+settings:
+  display:
+    scaleInput: ab_test
+    banner: "Próbakérdőív · A válaszok ezen az eszközön maradnak."
+  storage:
+    mode: device
+    metrics: false

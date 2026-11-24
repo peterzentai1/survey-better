@@ -2,16 +2,15 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { buildRecord, currentId } from "../engine/session.ts";
-import { metricsEnabled } from "../storage/metrics.ts";
 import type { Issue } from "../engine/validate.ts";
 import { KeyHint, splitScenario } from "./CardShell.tsx";
 import { cardText, useSel, useSessionStore } from "./session.tsx";
 
-export function Banner() {
+export function Banner({ text }: { text: string | null }) {
+  if (text === null) return null;
   return (
     <div className="sticky top-0 z-50 bg-[var(--banner-bg)] px-3 py-1 text-center text-sm font-medium text-[var(--banner-fg)]" role="note">
-      {metricsEnabled ? "Próbakérdőív · Az időmérés és a válaszfelület értékelésének megosztása önkéntes." :
-        "PROTOTÍPUS – nem gyűjt adatot; a válaszok csak ezen az eszközön maradnak."}
+      {text}
     </div>
   );
 }

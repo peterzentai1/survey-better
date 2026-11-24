@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { loadMini } from "./engine/__fixtures__/mini.ts";
 import type { SessionState } from "./engine/session.ts";
 import { parseContent, type ContentResult } from "./engine/validate.ts";
-import { App, type DebugFlags } from "./App.tsx";
+import { App, type AppProps, type DebugFlags } from "./App.tsx";
 import type { ResponseSink } from "./storage/sinks.ts";
 import type { ResponseRecord } from "./engine/types.ts";
 import { MINI_BANK_YAML, MINI_DEVICES_YAML } from "./engine/__fixtures__/mini.ts";
@@ -34,7 +34,7 @@ export function miniContent(): ContentResult {
   return parseContent(MINI_BANK_YAML, MINI_DEVICES_YAML);
 }
 
-export function renderApp(opts: { sink?: ResponseSink; debug?: DebugFlags; content?: ContentResult; advanceTimers?: (ms: number) => void | Promise<void> } = {}) {
+export function renderApp(opts: { sink?: ResponseSink; debug?: DebugFlags; content?: AppProps["content"]; advanceTimers?: (ms: number) => void | Promise<void> } = {}) {
   const sink = opts.sink ?? new MemSink();
   const user = userEvent.setup(opts.advanceTimers ? { advanceTimers: opts.advanceTimers } : {});
   const utils = render(<App content={opts.content ?? miniContent()} sink={sink} debug={opts.debug ?? { panel: false, download: false }} />);

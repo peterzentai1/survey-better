@@ -13,7 +13,7 @@ type Of<T extends Card["type"]> = Extract<Card, { type: T }>;
 export function InfoCard({ card }: { card: Of<"info"> }) {
   const api = useCardApi(card);
   const { ctx } = api.store.getState();
-  const levels = card.id === ctx.deck.order[0] ? ctx.bank.effortLevels : undefined;
+  const levels = ctx.settings.display.effortSelector && card.id === ctx.deck.order[0] ? ctx.bank.effortLevels : undefined;
   const selected = useSel((s) => s.state.effortLevel) ?? DEFAULT_EFFORT_LEVEL;
   const options = useRef<(HTMLButtonElement | null)[]>([]);
   const choose = (index: number, focus: boolean) => {
@@ -78,10 +78,11 @@ export function InfoCard({ card }: { card: Of<"info"> }) {
 
 export function ConsentCard({ card }: { card: Of<"consent"> }) {
   const api = useCardApi(card);
-  const initial = api.store.getState().state.consent;
+  const { state: { consent: initial }, ctx } = api.store.getState();
+  const { paradata: allowParadata, metrics, mode } = ctx.settings.storage;
   const [participation, setParticipation] = useState(initial.participation);
   const [paradata, setParadata] = useState(initial.paradata);
-  const proceed = () => api.store.getState().acceptConsent(card.id, { participation, paradata });
+  const proceed = () => api.store.getState().acceptConsent(card.id, { participation, paradata: allowParadata && paradata });
   useKeyHandlers({ confirm: proceed });
   return (
     <CardShell api={api} heading={card.title}>
@@ -93,21 +94,21 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
             {card.participationLabel} <span className="text-sm text-muted">(kötelező)</span>
           </span>
         </label>
-        <label className="flex min-h-12 items-start gap-3 py-2">
+        {allowParadata && <label className="flex min-h-12 items-start gap-3 py-2">
           <input type="checkbox" className="mt-0.5 h-6 w-6 shrink-0 accent-primary" checked={paradata} onChange={(e) => setParadata(e.target.checked)} />
           <span>
             {card.paradataLabel} <span className="text-sm text-muted">(nem kötelező)</span>
-            {metricsEnabled && (
+            {allowParadata && metrics && metricsEnabled && (
               <span className="mt-2 block text-sm">
-                Befejezéskor elküldjük a választott fokozatot és a kitöltés idejét. A hőmérsékletes kérdésnél
-                azt is rögzítjük, melyik felületet kapta, válaszolt-e, hogyan és mennyi idő alatt válaszolt,
-                valamint mennyire szívesen használná újra a felületet.
-                A medián legalább öt mért kitöltés után jelenik meg az adott fokozatnál.
+                Befejezéskor elküldjük a választott fokozatot és a kitöltés idejét.
+                {ctx.settings.display.scaleInput === "ab_test" &&
+                  " A hőmérsékletes kérdésnél a kapott felületet, a válaszadás módját és idejét, valamint a felület értékelését is elküldjük."}
               </span>
             )}
           </span>
-        </label>
+        </label>}
       </div>
+      {mode === "supabase" && <p className="mt-2 text-sm">A válaszokat befejezéskor a kutatás adatbázisába küldjük.</p>}
       <button type="button" className="btn btn-primary mt-4 w-full" disabled={!participation} onClick={proceed}>
         Tovább
         <KeyHint>Enter</KeyHint>

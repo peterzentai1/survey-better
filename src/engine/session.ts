@@ -1,7 +1,7 @@
 // Session state transitions. Pure and immutable: every function returns a new state.
 import { REACTION_CARD, temperatureArm } from "./temperature.ts";
 import { evaluate } from "./conditions.ts";
-import { DEFAULT_EFFORT_LEVEL, nextEffortLevel, type EffortLevelId } from "./effort.ts";
+import { nextEffortLevel, type EffortLevelId } from "./effort.ts";
 import { impliedValues } from "./inputs.ts";
 import { analyze, type Ctx } from "./path.ts";
 import { isAnswerable } from "./schema.ts";
@@ -100,7 +100,7 @@ export function createSession(ctx: Ctx, init: { sessionId: string; startedDate: 
     history: [],
     jumpFrom: null,
     consent: { participation: false, paradata: false },
-    ...(ctx.bank.effortLevels ? { effortLevel: DEFAULT_EFFORT_LEVEL } : {}),
+    ...(ctx.bank.effortLevels ? { effortLevel: ctx.settings.display.defaultEffort } : {}),
     highlights: [],
     completed: false,
   };
@@ -113,7 +113,7 @@ export function setEffortLevel(ctx: Ctx, s: SessionState, level: EffortLevelId):
   const first = ctx.deck.order[0];
   if (currentId(s) !== first || ctx.byId.get(first)?.type !== "info") return s;
   if (level === s.effortLevel || !ctx.bank.effortLevels?.some((e) => e.id === level)) return s;
-  const changed = s.consent.paradata && level !== DEFAULT_EFFORT_LEVEL;
+  const changed = s.consent.paradata && level !== ctx.settings.display.defaultEffort;
   return reconcile(ctx, { ...s, effortLevel: level, ...(changed ? { effortChangedFromDefault: true as const } : {}) });
 }
 
@@ -149,20 +149,25 @@ export function acceptConsent(
   consent: { participation: boolean; paradata: boolean },
 ): SessionState {
   if (!consent.participation) return s;
-  const next = answer(ctx, { ...s, consent: { ...consent } }, id, true);
-  if (consent.paradata) {
+  const paradata = consent.paradata && ctx.settings.storage.paradata;
+  const next = answer(ctx, { ...s, consent: { participation: true, paradata } }, id, true);
+  if (paradata) {
     return {
       ...next,
       paradata: next.paradata ?? {},
       ...(!s.consent.participation ? { fullTiming: true as const } : {}),
-      ...(s.effortLevel && s.effortLevel !== DEFAULT_EFFORT_LEVEL ? { effortChangedFromDefault: true as const } : {}),
+      ...(s.effortLevel && s.effortLevel !== ctx.settings.display.defaultEffort ? { effortChangedFromDefault: true as const } : {}),
     };
   }
-  const { paradata: _p, fullTiming: _timing, effortChangedFromDefault: _changed, ...rest } = next;
+  return withoutParadata(next);
+}
+
+function withoutParadata(state: SessionState): SessionState {
+  const { paradata: _p, fullTiming: _timing, effortChangedFromDefault: _changed, ...rest } = state;
   void _changed;
   void _timing;
   void _p;
-  return rest;
+  return { ...rest, consent: { ...rest.consent, paradata: false } };
 }
 
 export function setHighlights(s: SessionState, highlights: Highlight[]): SessionState {
@@ -296,9 +301,10 @@ export function buildRecord(ctx: Ctx, s: SessionState, appVersion: string): Resp
   };
   if (s.consent.participation && s.effortLevel !== undefined) {
     record.effortLevel = s.effortLevel;
-    if (s.consent.paradata) record.effortChangedFromDefault = s.effortChangedFromDefault ?? (s.effortLevel !== DEFAULT_EFFORT_LEVEL);
+    if (s.consent.paradata) record.effortChangedFromDefault = s.effortChangedFromDefault ?? (s.effortLevel !== ctx.settings.display.defaultEffort);
   }
-  if (s.consent.participation && ctx.byId.has(REACTION_CARD)) record.temperatureArm = temperatureArm(s.sessionId);
+  if (s.consent.participation && ctx.settings.display.scaleInput === "ab_test" &&
+      ctx.byId.get(REACTION_CARD)?.type === "scale6") record.temperatureArm = temperatureArm(s.sessionId);
   if (s.consent.paradata && s.paradata) {
     record.paradata = Object.fromEntries(
       Object.entries(s.paradata).map(([id, p]) => [id, { ...p, dwellMs: Math.round(p.dwellMs / 100) * 100 }]),
@@ -325,6 +331,7 @@ export function validateSnapshot(ctx: Ctx, raw: unknown): SessionState | null {
       (s.jumpFrom !== ctx.summaryId || s.effortLevel === undefined ||
         !ctx.bank.effortLevels?.some((e) => e.id === s.extensionFrom) ||
         nextEffortLevel(s.extensionFrom) !== s.effortLevel)) return null;
-  const effortLevel = s.effortLevel ?? (ctx.bank.effortLevels ? DEFAULT_EFFORT_LEVEL : undefined);
-  return { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null, effortLevel };
+  const effortLevel = s.effortLevel ?? (ctx.bank.effortLevels ? ctx.settings.display.defaultEffort : undefined);
+  const restored = { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null, effortLevel };
+  return ctx.settings.storage.paradata ? restored : withoutParadata(restored);
 }

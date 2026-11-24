@@ -2,6 +2,7 @@
 // Walk the deck in order; a card is on the path when its showIf holds (seeing only answers of cards
 // already on the path) and, for module cards, its module is active and still has quota left.
 // Next card = successor on the path; "inactive" = stored but not on the path.
+import { DEFAULT_SURVEY, defaultSettings, type SurveySettings } from "../content/survey.ts";
 import type { AnswerView } from "./conditions.ts";
 import { evaluate } from "./conditions.ts";
 import { buildDeck, type Deck } from "./deck.ts";
@@ -11,6 +12,8 @@ import type { Bank, Card, Devices } from "./schema.ts";
 import type { ItemRecord } from "./types.ts";
 
 export interface Ctx {
+  slug: string;
+  settings: SurveySettings;
   bank: Bank;
   devices: Devices;
   deck: Deck;
@@ -19,10 +22,12 @@ export interface Ctx {
   summaryId: string | undefined;
 }
 
-export function makeCtx(bank: Bank, devices: Devices, sessionId: string): Ctx {
+export function makeCtx(bank: Bank, devices: Devices, sessionId: string, settings = defaultSettings(), slug = DEFAULT_SURVEY): Ctx {
   return {
     bank,
     devices,
+    settings,
+    slug,
     deck: buildDeck(bank, devices, sessionId),
     byId: new Map(bank.cards.map((c) => [c.id, c])),
     pickerId: bank.cards.find((c) => c.type === "multi_tiles" && c.devicePicker)?.id,
