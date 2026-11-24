@@ -65,7 +65,7 @@ describe("effort selector", () => {
     await user.click(screen.getByRole("checkbox", { name: /^Hozzájárulok/ }));
     await user.click(next());
     await expectCard(question("A01").text);
-    await user.click(screen.getByRole("button", { name: optionLabel("A01", "morahalom") }));
+    await user.click(screen.getByRole("button", { name: optionLabel("A01", "mas") }));
     await expectCard(question("A02").text);
     await user.click(screen.getByRole("button", { name: optionLabel("A02", "csaladi_haz") }));
     await expectCard(question("A03").text);
@@ -84,7 +84,7 @@ describe("effort selector", () => {
     await user.click(radio(/^Rövid/));
     await user.click(start());
     await user.click(next());
-    await user.click(await screen.findByRole("button", { name: optionLabel("A01", "morahalom") }));
+    await user.click(await screen.findByRole("button", { name: optionLabel("A01", "mas") }));
     await expectCard(question("A03").text);
     expect(sink.record?.items.A02).toEqual({ ...stored, inactive: true });
   });

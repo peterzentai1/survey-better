@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.3.1"
+version: "0.3.2"
 locale: hu
 
 defaults:
@@ -68,7 +68,7 @@ cards:
 
       Nem kérek nevet, címet vagy elérhetőséget. A válaszokat 2027. december 1-ig őrzöm egy európai (frankfurti) szerveren, majd törlöm. Az eredményeket csak összesítve közlöm, olyan bontásban, amelyből senki sem azonosítható. Bármelyik kérdést kihagyhatja, és bármikor abbahagyhatja: csak a befejezett kitöltés kerül a szerverre. A végén kap egy kitöltési azonosítót. Ha ezt elküldi nekem, kérésére törlöm a kitöltését, vagy másolatot küldök róla.
 
-      Nincs jó vagy rossz válasz. A „Nem tudom / kihagyom” gomb is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti a legfontosabbat is.
+      Nincs jó vagy rossz válasz. Választhatja a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti a legfontosabbat is!
 
       A kérdőív 18 éven felülieknek szól. Kérdés esetén: peterzentai1@gmail.com
     participationLabel: "Elolvastam a tájékoztatót, elmúltam 18 éves, és részt veszek a kérdőívben."
@@ -83,12 +83,23 @@ cards:
     type: single
     text: "Hol él?"
     options:
-      - { value: morahalom,            label: "Mórahalom, belterület" }
-      - { value: morahalom_kulterulet, label: "Mórahalom külterülete, tanya" }
-      - { value: csongrad_csanad,      label: "Más település Csongrád-Csanád vármegyében" }
-      - { value: mas,                  label: "Máshol Magyarországon" }
+      - { value: morahalom_kornyeke, label: "Mórahalom és környéke" }
+      - { value: mas,                label: "Máshol Magyarországon" }
+      - { value: kulfold,            label: "Külföldön" }
     skip: false
-    source: "S16 (szűrő) általánosítva; a Mórahalomra vonatkozó szövegváltozatok kapuja."
+    source: "S16 (szűrő) általánosítva. 0.3.2: kétlépcsős a kitöltő jegyzete alapján; a pontosítás az A01B."
+
+  - id: A01B
+    block: alapok
+    type: single
+    showIf: { answer: A01, in: [morahalom_kornyeke] }
+    text: "Pontosabban hol?"
+    options:
+      - { value: morahalom,            label: "Mórahalom belterülete" }
+      - { value: morahalom_kulterulet, label: "Mórahalom külterülete, tanya" }
+      - { value: kornyezo,             label: "Környező település" }
+    skip: false
+    source: "0.3.2: az A01 második lépcsője (kitöltői jegyzet). A Mórahalomra vonatkozó szövegváltozatok kapuja."
 
   - id: A02
     block: alapok
@@ -98,7 +109,8 @@ cards:
     options:
       - { value: csaladi_haz, label: "Családi ház" }
       - { value: iker_sor,    label: "Ikerház vagy sorház" }
-      - { value: tarsashaz,   label: "Társasházi lakás" }
+      - { value: panel,       label: "Panellakás" }
+      - { value: tarsashaz,   label: "Egyéb társasházi lakás" }
       - { value: tanya,       label: "Tanya" }
       - { value: egyeb,       label: "Egyéb" }
     source: "S3; NLM Q5.5"
@@ -109,7 +121,7 @@ cards:
     text: "Kié a lakás, és ki dönt például a fűtés cseréjéről vagy a villanyszerződésről?"
     options:
       - { value: sajat_en,      label: "Saját vagy családi, én (is) döntök" }
-      - { value: sajat_mas,     label: "Saját vagy családi, de más dönt" }
+      - { value: sajat_mas,     label: "Saját vagy családi, de a döntést más hozza meg (pl. szülő, házastárs)" }
       - { value: berelt_berbeado, label: "Bérelt, a bérbeadó dönt" }
       - { value: berelt_en,     label: "Bérelt, de én dönthetek" }
       - { value: egyeb,         label: "Egyéb" }
@@ -126,7 +138,10 @@ cards:
       - { value: "2",  label: "2" }
       - { value: "3",  label: "3" }
       - { value: "4",  label: "4" }
-      - { value: "5+", label: "5 vagy több" }
+      - { value: "5",  label: "5" }
+      - { value: "6",  label: "6" }
+      - { value: "7",  label: "7" }
+      - { value: "8+", label: "8 vagy több" }
     source: "S2; NLM Q5.4"
 
   - id: A05
@@ -139,7 +154,18 @@ cards:
       - { value: nehany_nap,    label: "Néhány napon" }
       - { value: ritkan,        label: "Ritkán, mindenki dolgozik vagy tanul" }
       - { value: valtozo,       label: "Változó, például műszakos munka miatt" }
-    source: "S13 munkarend, időzítési lehetőségre fordítva (H5)"
+      - { value: egyeb,         label: "Egyéb" }
+    source: "S13 munkarend, időzítési lehetőségre fordítva (H5). 0.3.2: Egyéb opció, utána szabad szöveg (A05B)."
+
+  - id: A05B
+    block: alapok
+    effort: 2
+    type: free_text
+    showIf: { answer: A05, in: [egyeb] }
+    text: "Ha szeretné, írja le röviden, hogyan alakul ez Önöknél."
+    maxLength: 200
+    privacyNote: "Kérjük, ne írjon nevet, címet, telefonszámot vagy más azonosító adatot."
+    source: "0.3.2: az A05 „Egyéb” válaszának kifejtése (kitöltői jegyzet)."
 
   - id: A06
     block: alapok
@@ -147,8 +173,9 @@ cards:
     text: "Mivel fűtik elsősorban a lakást?"
     options:
       - { value: gaz,         label: "Gázzal" }
-      - { value: fa_vegyes,   label: "Fával vagy vegyes tüzeléssel" }
-      - { value: hoszivattyu, label: "Hőszivattyúval (pl. levegő–víz)" }
+      - { value: fa,          label: "Fával (kályha, kandalló, sparhelt)" }
+      - { value: vegyes,      label: "Vegyes tüzelésű kazánnal (központi fűtés)" }
+      - { value: hoszivattyu, label: "Hőszivattyúval (radiátor vagy padlófűtés)" }
       - { value: klima,       label: "Klímával (levegő–levegő)" }
       - { value: elektromos,  label: "Elektromos fűtéssel (panel, hőtárolós kályha)" }
       - { value: tavfutes,    label: "Távfűtéssel" }
@@ -202,15 +229,14 @@ cards:
 
   - id: E04
     block: eszkozok
-    type: single
+    type: multi_tiles
     showIf: { owns: villanyauto }
-    text: "Hol töltik jellemzően az autót?"
+    text: "Hol szokták tölteni az autót? Mindet jelölje, ahol előfordul."
     options:
-      - { value: otthon,    label: "Otthon" }
-      - { value: vegyes,    label: "Otthon is, máshol is" }
-      - { value: munkahely, label: "Főleg a munkahelyen" }
-      - { value: nyilvanos, label: "Főleg nyilvános töltőn" }
-    source: "S11; forgatókönyvek EV01–EV08. Az autós modul csak otthoni töltésnél jön."
+      - { value: otthon,    label: "Otthon",             icon: haz }
+      - { value: munkahely, label: "A munkahelyen",      icon: epulet }
+      - { value: nyilvanos, label: "Nyilvános töltőn",   icon: villam }
+    source: "S11; forgatókönyvek EV01–EV08. Az autós modul csak otthoni töltésnél jön. 0.3.2: többes választás a „jellemzően” helyett (kitöltői jegyzet); az arányok megadása motormunka."
 
   # ════════════════════════════════════════════════════════════════════════
   # 3. SZÁMLA ÉS TARIFA
@@ -229,14 +255,16 @@ cards:
   - id: T02
     block: tarifa
     effort: 2
-    type: single
-    text: "Van külön, vezérelt („éjszakai”) áramköre vagy mérője, például a bojlerhez vagy a hőszivattyúhoz?"
+    type: multi_tiles
+    text: "Van külön, vezérelt („éjszakai”) áramköre vagy H tarifája, például a bojlerhez vagy a hőszivattyúhoz? Mindet jelölje, ami van."
     options:
-      - { value: igen,      label: "Igen" }
-      - { value: nem,       label: "Nem" }
-      - { value: nem_tudom, label: "Nem tudom" }
+      - { value: vezerelt,  label: "Igen, vezérelt (éjszakai) áramköröm van", icon: ora }
+      - { value: h_tarifa,  label: "Igen, H tarifám van (hőszivattyúhoz)",    icon: hoszivattyu }
+      - { value: nem,       label: "Nem",                                    icon: nincs }
+      - { value: nem_tudom, label: "Nem tudom",                              icon: nemtudom }
+    exclusive: [nem, nem_tudom]
     skip: false
-    source: "S7. A vezérelt körre a D árszabás nem vonatkozik."
+    source: "S7. A vezérelt körre a D árszabás nem vonatkozik. 0.3.2: a vezérelt kör és a H tarifa külön (kitöltői jegyzet); együtt is előfordulhat."
 
   - id: T03
     block: tarifa
@@ -285,7 +313,7 @@ cards:
     lead: *indok_lead
     text: "…ha ezzel csökkenne annak a kockázata, hogy a helyi áramhálózat túlterhelődik, és kimarad az áram."
     textVariants:
-      - when: { answer: A01, in: [morahalom, morahalom_kulterulet] }
+      - when: { answer: A01B, in: [morahalom, morahalom_kulterulet] }
         text: "…ha ezzel csökkenne annak a kockázata, hogy a mórahalmi áramhálózat túlterhelődik, és kimarad az áram."
     scale: *valoszinu
     source: "Aug-mag #2"
@@ -315,7 +343,7 @@ cards:
     lead: *indok_lead
     text: "…ha az ebből származó megtakarítás egy előre rögzített része átlátható helyi közösségi alapba kerülne."
     textVariants:
-      - when: { answer: A01, in: [morahalom, morahalom_kulterulet] }
+      - when: { answer: A01B, in: [morahalom, morahalom_kulterulet] }
         text: "…ha az ebből származó megtakarítás egy előre rögzített része átlátható mórahalmi közösségi alapba kerülne."
     scale: *valoszinu
     source: "Aug-mag #10 (H4)"
@@ -394,7 +422,7 @@ cards:
     priority: 1
     lead: &ajanlat "Elképzelt ajánlat (a számok csak példák):"
     text: |
-      A hőszivattyúja egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz, előtte esetleg kicsit előfűt. A lakás hőmérséklete legfeljebb 1 fokkal tér el a beállítottól, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja, büntetés nélkül.
+      A hőszivattyúja egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz (nem kapcsol ki),előtte esetleg kicsit előfűt. A lakás hőmérséklete legfeljebb 1 fokkal tér el a beállítottól, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja, büntetés nélkül.
       Ezért havonta 1000 Ft jóváírást kap.
       Elfogadná?
     yesLabel: "Elfogadnám"
@@ -434,7 +462,7 @@ cards:
     priority: 1
     lead: *ajanlat
     text: |
-      Kánikulai délutánokon a klímája legfeljebb 60 percre kicsit visszavesz, előtte kicsit előhűt. A lakás legfeljebb 1 fokkal lesz melegebb a beállítottnál, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja.
+      Kánikulai délutánokon a klímája legfeljebb 60 percre kicsit visszavesz (nem kapcsol ki),előtte kicsit előhűt. A lakás legfeljebb 1 fokkal lesz melegebb a beállítottnál, havonta legfeljebb 4 alkalommal, és egy gombnyomással bármikor felülbírálhatja.
       Ezért a nyári hónapokban havonta 1000 Ft jóváírást kap.
       Elfogadná?
     yesLabel: "Elfogadnám"
@@ -449,7 +477,7 @@ cards:
     showIf: { any: [ { answer: E03, in: [igen] }, { answer: A06, in: [klima] } ] }
     lead: *ajanlat
     text: |
-      Télen, egy előre megbeszélt esti időszakban a klímája legfeljebb 60 percre kicsit visszavesz a fűtésből, előtte kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, bármikor felülbírálhatja.
+      Télen, egy előre megbeszélt esti időszakban a klímája legfeljebb 60 percre kicsit visszavesz a fűtésből (nem kapcsol ki),előtte kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, bármikor felülbírálhatja.
       Ezért a fűtési idényben havonta 1000 Ft jóváírást kap.
       Elfogadná?
     yesLabel: "Elfogadnám"
@@ -510,7 +538,7 @@ cards:
     type: yesno
     module: villanyauto
     priority: 1
-    showIf: { answer: E04, in: [otthon, vegyes] }
+    showIf: { answer: E04, in: [otthon] }
     lead: *ajanlat
     text: |
       Hazaérve bedugja az autót, és megadja, mikorra és mennyire kell feltöltve lennie (pl. reggel 7-re 80%). A töltés idejét egy rendszer intézi, a hálózat terheléséhez igazítva. A kért időre a kért töltöttség megvan, és egy „Azonnal töltsd” gombbal bármikor felülbírálhatja.
@@ -526,7 +554,7 @@ cards:
     layout: chips
     module: villanyauto
     priority: 2
-    showIf: { answer: E04, in: [otthon, vegyes] }
+    showIf: { answer: E04, in: [otthon] }
     text: "Hány százalékra kell feltöltve lennie az autónak reggel indulásig, hogy nyugodt legyen?"
     options:
       - { value: "50",  label: "50%" }
@@ -542,7 +570,7 @@ cards:
     type: timeline
     module: villanyauto
     priority: 3
-    showIf: { answer: E04, in: [otthon, vegyes] }
+    showIf: { answer: E04, in: [otthon] }
     text: "Hétköznap mikor áll jellemzően otthon az autó, tölthető állapotban? Jelölje meg az órákat."
     source: "Saját; forgatókönyvek EV01, EV07 (időablak)"
 
@@ -594,7 +622,7 @@ cards:
     priority: 1
     lead: *ajanlat
     text: |
-      Az elektromos fűtése egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz, előtte esetleg kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, és bármikor felülbírálhatja.
+      Az elektromos fűtése egy előre megbeszélt esti időszakban legfeljebb 60 percre kicsit visszavesz (nem kapcsol ki),előtte esetleg kicsit előfűt. Legfeljebb 1 fok eltérés, havonta legfeljebb 4 alkalommal, és bármikor felülbírálhatja.
       Ezért havonta 1000 Ft jóváírást kap.
       Elfogadná?
     yesLabel: "Elfogadnám"

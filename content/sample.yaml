@@ -75,7 +75,7 @@ cards:
     options:
       - { value: morahalom, label: "Mórahalom (belterület)" }
       - { value: morahalom_kulterulet, label: "Mórahalom külterülete, tanya" }
-      - { value: mas_csongrad, label: "Más település Csongrád-Csanád vármegyében" }
+      - { value: mas_csongrad, label: "Más település Csongrád-Csanád megyében" }
       - { value: mas, label: "Máshol Magyarországon" }
     skip: false                     # felülírja az alapértelmezést
 
