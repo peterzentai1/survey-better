@@ -15,6 +15,8 @@ const displaySchema = z.strictObject({
   banner: z.string().trim().min(1).nullable().default(null),
   scaleInput: z.enum(["buttons", "drag_reveal", "ab_test"]).default("buttons"),
   sourceLink: z.url({ protocol: /^https?$/ }).default(SOURCE_LINK),
+  // Same-site path (e.g. a static page in public/) or an https URL of the full privacy notice.
+  privacyNotice: z.string().regex(/^(\/(?!\/)[A-Za-z0-9._/-]*|https:\/\/\S+)$/).nullable().default(null),
 });
 
 const storageSchema = z.strictObject({
@@ -68,6 +70,9 @@ export function checkSurveyConsent(cards: readonly Card[], settings: SurveySetti
       ...(consent.textVariants?.map(({ text }) => text) ?? [])].some((s) => s.includes("["));
   if (!ready && (settings.storage.mode === "supabase" || settings.storage.metrics)) {
     throw new Error("Szerveres adatgyűjtéshez az N02 hozzájárulási kártyát helyőrzők nélkül kell megadni.");
+  }
+  if (settings.display.privacyNotice === null && (settings.storage.mode === "supabase" || settings.storage.metrics)) {
+    throw new Error("Szerveres adatgyűjtéshez meg kell adni a settings.display.privacyNotice tájékoztatót.");
   }
 }
 

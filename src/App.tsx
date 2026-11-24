@@ -67,6 +67,10 @@ export function App({ content, sink, debug }: AppProps) {
         </>
       )}
       <footer className="mx-auto max-w-[560px] px-4 pb-8 text-center text-sm">
+        {settings.display.privacyNotice && <>
+          <a className="text-primary underline" href={settings.display.privacyNotice} target="_blank" rel="noopener">Adatkezelési tájékoztató</a>
+          {" · "}
+        </>}
         <a className="text-primary underline" href={settings.display.sourceLink}>Forráskód (AGPL-3.0)</a>
       </footer>
     </>
