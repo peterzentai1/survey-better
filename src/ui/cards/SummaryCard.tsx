@@ -4,8 +4,8 @@ import { useState } from "react";
 import { summaryStats } from "../../engine/session.ts";
 import type { Card } from "../../engine/schema.ts";
 import type { Highlight } from "../../engine/types.ts";
-import { CardShell } from "../CardShell.tsx";
-import { useCardApi, useKeyHandlers, useSel } from "../session.tsx";
+import { CardShell, splitScenario } from "../CardShell.tsx";
+import { cardText, useCardApi, useKeyHandlers, useSel } from "../session.tsx";
 
 function excerpt(text: string): string {
   const one = text.replace(/\s+/g, " ").trim();
@@ -48,9 +48,9 @@ export function SummaryCard({ card }: { card: Extract<Card, { type: "summary_hig
       }),
     );
 
-  const cardText = (id: string) => {
+  const skippedLabel = (id: string) => {
     const c = ctx.byId.get(id);
-    return c && "text" in c ? excerpt(c.text) : id;
+    return c ? excerpt(splitScenario(cardText(c, state.items[id]?.variant)).question) : id;
   };
   useKeyHandlers({});
 
@@ -76,7 +76,7 @@ export function SummaryCard({ card }: { card: Extract<Card, { type: "summary_hig
             {stats.skippedIds.map((id) => (
               <li key={id}>
                 <button type="button" className="btn btn-quiet !min-h-12 w-full !justify-start !text-left !text-primary" onClick={() => api.store.getState().jumpTo(id)}>
-                  {cardText(id)}
+                  {skippedLabel(id)}
                 </button>
               </li>
             ))}

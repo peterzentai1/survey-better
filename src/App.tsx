@@ -73,7 +73,7 @@ function Questionnaire({ bank, devices, sink: sinkProp, debug }: { bank: Bank; d
       const raw = sink.load() as { sessionId?: unknown } | null;
       if (!raw || typeof raw.sessionId !== "string") return null;
       const state = validateSnapshot(makeCtx(bank, devices, raw.sessionId), raw);
-      return state && state.history.length > 1 ? state : null;
+      return state && state.order.length > 1 ? state : null;
     } catch {
       return null;
     }

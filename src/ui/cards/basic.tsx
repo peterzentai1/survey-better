@@ -26,11 +26,7 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
   const initial = api.store.getState().state.consent;
   const [participation, setParticipation] = useState(initial.participation);
   const [paradata, setParadata] = useState(initial.paradata);
-  const proceed = () => {
-    if (!participation) return;
-    api.store.getState().acceptConsent(card.id, { participation, paradata });
-    api.next();
-  };
+  const proceed = () => api.store.getState().acceptConsent(card.id, { participation, paradata });
   useKeyHandlers({ confirm: proceed });
   return (
     <CardShell api={api} heading={card.title}>

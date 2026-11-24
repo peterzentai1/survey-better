@@ -2,10 +2,12 @@
 //  - every card shown pushes one history entry ({ kd: depth });
 //  - popstate (browser Back, trackpad two-finger back gesture) steps back one card instead of leaving the page;
 //  - when the app moves back itself (Vissza button, Backspace, undo) it also moves the browser back and swallows the popstate.
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { SessionStore } from "../state/store.ts";
 
 export function useBrowserHistory(store: SessionStore) {
+  const pendingBack = useRef(false);
+
   useEffect(() => {
     const want = () => store.getState().state.history.length;
     // Depth of the browser entry we are on; resumes correctly if the effect runs twice (StrictMode).
@@ -14,36 +16,35 @@ export function useBrowserHistory(store: SessionStore) {
       history.replaceState({ kd: 1 }, "");
       depth = 1;
     }
-    let swallow = 0; // popstate events caused by our own history.go()
     let busy = false;
 
     const sync = () => {
-      if (busy) return;
+      if (busy || pendingBack.current) return;
       const target = want();
       if (target > depth) {
         for (let d = depth + 1; d <= target; d++) history.pushState({ kd: d }, "");
         depth = target;
       } else if (target < depth) {
-        swallow++;
+        // history.go() is asynchronous. Re-read the target once the browser arrives.
+        pendingBack.current = true;
         history.go(target - depth);
-        depth = target;
       }
     };
     sync();
     const unsubscribe = store.subscribe(sync);
 
     const onPop = (e: PopStateEvent) => {
-      if (swallow > 0) {
-        swallow--;
+      depth = (e.state as { kd?: number } | null)?.kd ?? 1;
+      if (pendingBack.current) {
+        pendingBack.current = false;
+        sync();
         return;
       }
       if (store.getState().state.completed) return;
-      const kd = (e.state as { kd?: number } | null)?.kd ?? 1;
       const cards = want();
-      depth = kd;
-      if (kd < cards) {
+      if (depth < cards) {
         busy = true; // the browser already moved; do not push or go() while stepping the app back
-        for (let i = 0; i < cards - kd; i++) store.getState().back();
+        for (let i = 0; i < cards - depth; i++) store.getState().back();
         busy = false;
       }
       sync(); // forward navigation (kd > cards): bring the browser back to the current card
