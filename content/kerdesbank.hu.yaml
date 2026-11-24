@@ -20,10 +20,12 @@ defaults:
     right: "Teljes mértékben"
     labels: ["Egyáltalán nem", "Nagyrészt nem", "Inkább nem", "Inkább igen", "Nagyrészt igen", "Teljes mértékben"]
 
+# A percek saját becslések (0.3.0): kártyánként kb. 10–12 másodperc a /admin kártyaszámai alapján
+# (rövid 27–32, közepes 40–46, alapos 41–50 kártya). Élesben a mért mediánok váltják fel őket.
 effortLevels:
-  - { id: rovid,   label: "Rövid · kb. [5] perc",    moduleCaps: { tierCaps: { A: 1, B: 1, C: 0 }, globalModuleCap: 3 } }
-  - { id: kozepes, label: "Közepes · kb. [8] perc", moduleCaps: { tierCaps: { A: 2, B: 1, C: 1 }, globalModuleCap: 6 } }
-  - { id: alapos,  label: "Alapos · kb. [12] perc", moduleCaps: { tierCaps: { A: 3, B: 2, C: 1 }, globalModuleCap: 9 } }
+  - { id: rovid,   label: "Rövid · kb. 5 perc",    moduleCaps: { tierCaps: { A: 1, B: 1, C: 0 }, globalModuleCap: 3 } }
+  - { id: kozepes, label: "Közepes · kb. 8 perc", moduleCaps: { tierCaps: { A: 2, B: 1, C: 1 }, globalModuleCap: 6 } }
+  - { id: alapos,  label: "Alapos · kb. 9 perc", moduleCaps: { tierCaps: { A: 3, B: 2, C: 1 }, globalModuleCap: 9 } }
 
 blocks:
   - { id: nyitas,       title: "Kezdés" }
@@ -47,9 +49,9 @@ cards:
     type: info
     title: "Miért kérte a kormány augusztusban, hogy este fogjuk vissza a klímát?"
     text: |
-      2026 augusztusának elején a kormány arra kérte a lakosságot és a cégeket, hogy 17 és 21 óra között fogják vissza az áramfogyasztást. Az indoklás szerint az alacsony Duna-vízállás miatt a paksi atomerőmű csökkentett teljesítménnyel működött, a napelemek termelése pedig estére visszaesik.
+      2026 augusztusának elején a kormány arra kérte a lakosságot és a cégeket, hogy a késő délutáni és esti órákban fogják vissza az áramfogyasztást. Az indoklás szerint az alacsony Duna-vízállás miatt a paksi atomerőmű csökkentett teljesítménnyel működött, a napelemek termelése pedig estére visszaesik.
 
-      Napközben viszont sok a napenergia: augusztusban a naperőművek a hazai áramfelhasználás több mint harmadát (38%) fedezték. Ez lehetőség és felelősség is egyben.
+      Napközben viszont sok a napenergia: a közölt adatok szerint augusztusban a naperőművek a hazai áramfelhasználás több mint harmadát fedezték. Ez lehetőség és felelősség is egyben.
 
       Ez a kérdőív azt vizsgálja, mennyire tudják a háztartások akkor használni az áramot, amikor sok van belőle, és visszafogni, amikor kevés – és hogyan maradhat ez igazságos azoknak is, akiknek kevesebb erre alkalmas eszközük van.
     effortLabel: "Mennyi ideje van a kitöltésre?"

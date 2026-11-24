@@ -18,7 +18,7 @@ describe("survey metrics UI", () => {
   it("shows an existing median without requiring new metrics uploads", async () => {
     renderApp({ content });
     expect((await screen.findByRole("radio", { name: /Közepes.*Medián 10,5 perc/ })).getAttribute("aria-checked")).toBe("true");
-    expect(screen.getByRole("radio", { name: /Rövid.*kb\. \[5\] perc/ })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: /Rövid.*kb\. 5 perc/})).toBeTruthy();
   });
 
   it.each(["tap", "drag"] as const)("displays the %s first-reaction arm and keeps the intention scale common", async (arm) => {
