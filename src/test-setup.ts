@@ -1,6 +1,9 @@
 // Test environment setup: jsdom gaps and cleanup.
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+
+// Unit tests run offline even when the local development project is connected.
+vi.stubEnv("VITE_SUPABASE_URL", "");
 
 // Recent Node versions define a global `localStorage` that shadows jsdom's and is unusable without a
 // flag. Install a small in-memory Storage so tests behave like a browser.

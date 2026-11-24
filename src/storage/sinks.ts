@@ -1,4 +1,5 @@
-// Where responses go. v0.1 keeps everything on the device (localStorage); the remote sink is a stub.
+// Full responses stay on the device. Consented completion metrics have a separate delivery queue.
+import { queueCompletion } from "./metrics.ts";
 import type { SessionState } from "../engine/session.ts";
 import type { ResponseRecord } from "../engine/types.ts";
 
@@ -28,6 +29,7 @@ export class LocalSink implements ResponseSink {
   }
 
   save(state: SessionState, record: ResponseRecord): void {
+    if (state.completed) queueCompletion(state, record);
     try {
       localStorage.setItem(this.key, JSON.stringify({ state, record }));
     } catch {

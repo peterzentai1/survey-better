@@ -1,4 +1,4 @@
-# Kérdésbank v0.1: háztartási áramfelhasználás, rugalmasság és méltányosság.
+# Kérdésbank v0.2: háztartási áramfelhasználás, rugalmasság és méltányosság.
 #
 # Séma: lásd content/sample.yaml (a fájl végén a feltételnyelv).
 # Tételenkénti források és a változtatások indoka: content/KERDESBANK_v0.1.md.
@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.1.0"
+version: "0.2.0"
 locale: hu
 
 defaults:
@@ -19,6 +19,11 @@ defaults:
     left: "Egyáltalán nem"
     right: "Teljes mértékben"
     labels: ["Egyáltalán nem", "Nagyrészt nem", "Inkább nem", "Inkább igen", "Nagyrészt igen", "Teljes mértékben"]
+
+effortLevels:
+  - { id: rovid,   label: "Rövid · kb. [5] perc",    moduleCaps: { tierCaps: { A: 1, B: 1, C: 0 }, globalModuleCap: 3 } }
+  - { id: kozepes, label: "Közepes · kb. [8] perc", moduleCaps: { tierCaps: { A: 2, B: 1, C: 1 }, globalModuleCap: 6 } }
+  - { id: alapos,  label: "Alapos · kb. [12] perc", moduleCaps: { tierCaps: { A: 3, B: 2, C: 1 }, globalModuleCap: 9 } }
 
 blocks:
   - { id: nyitas,       title: "Kezdés" }
@@ -44,9 +49,10 @@ cards:
     text: |
       Ez a kérdőív arról szól, mennyire tudnák és akarnák a háztartások máskor használni az áramot, például ha este kevés, délben pedig sok és olcsó van belőle, és mi lenne ebben igazságos azoknak is, akiknek nincs erre alkalmas eszközük.
 
-      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak, ezért a kitöltés kb. 10 perc. Ha egy kérdésre nincs kialakult válasza, válassza a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti, ami Önnek a legfontosabb.
+      Minden kérdés csak egyszer szerepel, és a kérdések az Ön háztartásához igazodnak. A kérdőív hosszát Ön választja meg lent: a rövid változat a legfontosabb kérdéseket tartalmazza, a hosszabbak részletesebben rákérdeznek az Ön eszközeire és véleményére is. Ha egy kérdésre nincs kialakult válasza, válassza a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti, ami Önnek a legfontosabb.
 
       Nincs jó vagy rossz válasz. A kérdésekben szereplő ajánlatok elképzeltek, a bennük lévő összegek csak példák.
+    effortLabel: "Mennyi ideje van a kitöltésre?"
     cta: "Kezdjük"
     source: "Saját. A nyitószöveg a jóváhagyott terv szerinti."
 
@@ -63,6 +69,18 @@ cards:
     participationLabel: "Elolvastam, és részt veszek a kérdőívben."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait is rögzítsék (pl. kártyánként eltöltött idő, koppintás vagy billentyű). Ez segít a kérdőív javításában; nélküle is kitölthető."
     source: "Saját; a helyőrzők a konzulensi válasz után tölthetők ki (adatkezelő, jogalap, megőrzés)."
+
+  - id: N03
+    block: nyitas
+    type: yesno
+    skip: false
+    text: |
+      A kutatás eredménye azon múlik, mennyire pontosak a válaszok. Kérjük, olvasson el figyelmesen minden kérdést, és a lehető legpontosabban válaszoljon. Ha valamire nincs válasza, a „Nem tudom / kihagyom” gomb erre való, ez is hasznos információ.
+      Vállalja ezt?
+    help: "Ha nem vállalja, a kérdőívet akkor is kitöltheti."
+    yesLabel: "Igen, vállalom"
+    noLabel: "Nem vállalom"
+    source: "Elköteleződési kérés (commitment request): Cannell, Miller & Oksenberg 1981; online kérdőívben Cibelli Hibben 2017. Hivatkozás ellenőrizendő."
 
   # ════════════════════════════════════════════════════════════════════════
   # 1. ALAPOK
@@ -81,6 +99,7 @@ cards:
 
   - id: A02
     block: alapok
+    effort: 2
     type: single
     text: "Milyen lakásban él?"
     options:
@@ -105,6 +124,7 @@ cards:
 
   - id: A04
     block: alapok
+    effort: 2
     type: single
     layout: chips
     text: "Hányan élnek a háztartásban, Önnel együtt?"
@@ -118,6 +138,7 @@ cards:
 
   - id: A05
     block: alapok
+    effort: 2
     type: single
     text: "Hétköznap napközben jellemzően van otthon valaki?"
     options:
@@ -214,6 +235,7 @@ cards:
 
   - id: T02
     block: tarifa
+    effort: 2
     type: single
     text: "Van külön, vezérelt („éjszakai”) áramköre vagy mérője, például a bojlerhez vagy a hőszivattyúhoz?"
     options:
@@ -225,6 +247,7 @@ cards:
 
   - id: T03
     block: tarifa
+    effort: 2
     type: single
     text: "Okos, távolról leolvasható villanyórája van?"
     options:
@@ -236,6 +259,7 @@ cards:
 
   - id: T04
     block: tarifa
+    effort: 2
     type: single
     text: "A kedvezményes árú sáv évi 2523 kWh, ez havonta kb. 210 kWh. A háztartása ehhez képest mennyit fogyaszt?"
     options:
@@ -324,6 +348,7 @@ cards:
   # Ellentétes irányú helyzet: napközbeni napenergia-többlet, a fogyasztás ELŐREHOZÁSA (kritika L114–119).
   - id: I08
     block: indokok
+    effort: 2
     type: scale6
     lead: "Most egy másik helyzet: előző nap jelzést kap, hogy holnap délben sok lesz a napenergia, és bőséges, olcsó lesz az áram."
     text: "Mennyire valószínű, hogy egy halasztható dolgot (pl. mosást, mosogatást) délre hozna előre?"
@@ -333,6 +358,7 @@ cards:
   # Közös ajánlat mindenkinek, eszköztől függetlenül (K1).
   - id: I09
     block: indokok
+    effort: 2
     type: yesno
     lead: "Elképzelt ajánlat (a számok csak példák):"
     text: |
@@ -342,6 +368,36 @@ cards:
     yesLabel: "Részt vennék"
     noLabel: "Nem vennék részt"
     source: "K1 helyzetkártya; Aug. kontrollvignetta 1 (önkéntes értesítés, kézi reagálás)"
+
+  - id: I10
+    block: indokok
+    type: scale6
+    lead: &homerseklet "Képzelje el, hogy Ön állíthatja a fűtést. Egy téli napon arra kérik, hogy az esti csúcsidőben két órára egy fokkal vegye lejjebb a lakás beállított hőmérsékletét."
+    text: "Milyen érzést kelt Önben a gondolat, hogy teljesítse ezt a kérést?"
+    scale:
+      left: "Nagyon kellemetlen"
+      right: "Nagyon kellemes"
+      labels: ["Nagyon kellemetlen", "Kellemetlen", "Inkább kellemetlen", "Inkább kellemes", "Kellemes", "Nagyon kellemes"]
+    source: "Saját. Első reakció, véletlenszerűen kiosztott koppintós vagy húzós válaszfelülettel."
+
+  - id: I11
+    block: indokok
+    type: scale6
+    lead: *homerseklet
+    text: "Mennyire valószínű, hogy ilyen kérésre tényleg lejjebb venné a lakás hőmérsékletét?"
+    scale: *valoszinu
+    source: "Saját. Vállalási szándék, mindkét csoportban azonos hatfokú skálán."
+
+  - id: I12
+    block: indokok
+    type: scale6
+    showIf: { answer: I10, answered: true }
+    text: "Mennyire szívesen használná újra azt a válaszadási módot, amellyel a hőmérséklet csökkentésével kapcsolatos első érzését jelezte?"
+    scale:
+      left: "Egyáltalán nem szívesen"
+      right: "Nagyon szívesen"
+      labels: ["Egyáltalán nem szívesen", "Nem szívesen", "Inkább nem szívesen", "Inkább szívesen", "Szívesen", "Nagyon szívesen"]
+    source: "Saját. A felület újrahasználati szándéka az A/B összehasonlításhoz."
 
   # ════════════════════════════════════════════════════════════════════════
   # 5. ESZKÖZMODULOK (kapuzva, a keretet az eszkozok.yaml osztja ki)
@@ -651,6 +707,7 @@ cards:
   # ════════════════════════════════════════════════════════════════════════
   - id: J01
     block: tervek
+    effort: 2
     type: multi_tiles
     showIf:
       not: { all: [ { owns: hoszivattyu }, { owns: klima }, { owns: villanyauto }, { owns: napelem }, { owns: akkumulator } ] }
@@ -673,18 +730,54 @@ cards:
     text: "Mi az oka, hogy nincs a háztartásban hőszivattyú, villanyautó vagy otthoni akkumulátor? Legfeljebb hármat jelöljön."
     max: 3
     options:
-      - { value: draga,       label: "Túl drága",                       icon: penz }
+      - { value: elozetes,    label: "Megérné, de nem tudom előre kifizetni", icon: persely }
       - { value: nem_dontok,  label: "Bérlő vagyok, vagy nem én döntök", icon: berlet }
       - { value: tarsashaz,   label: "A lakás vagy a ház nem alkalmas rá", icon: epulet }
-      - { value: nem_eri_meg, label: "Nem érné meg",                    icon: penz }
+      - { value: nem_eri_meg, label: "Nem térülne meg",                       icon: penz }
       - { value: nincs_szukseg, label: "Nincs rá szükségem",            icon: nincs }
       - { value: bizalom,     label: "Nem bízom bennük",                icon: pajzs }
       - { value: info,        label: "Nincs elég információm",          icon: nemtudom }
       - { value: egyeb,       label: "Egyéb",                           icon: egyeb }
     source: "Saját; méltányossági blokk: kizáródás okai (tananyag L724–734; forgatókönyv H06)"
 
+  - id: J04
+    block: tervek
+    type: yesno
+    lead: "Elképzelt ajánlat:"
+    text: |
+      Egy állami program kölcsönt ad egy energetikai beruházásra (például napelemre, hőszivattyúra vagy szigetelésre), így Önnek nem kell előre fizetnie. A törlesztés a villanyszámlán jelenik meg, és úgy van méretezve, hogy amíg a kölcsön tart, a havi rezsije összesen nagyjából ugyanannyi legyen, mint most. A kölcsön visszafizetése után a rezsije a megtakarítással csökken.
+      Élne vele?
+    textVariants:
+      - when: { answer: A03, in: [sajat_mas, berelt_berbeado] }
+        text: |
+          Tegyük fel, hogy Ön dönthetne róla. Egy állami program kölcsönt ad egy energetikai beruházásra (például napelemre, hőszivattyúra vagy szigetelésre), így Önnek nem kell előre fizetnie. A törlesztés a villanyszámlán jelenik meg, és úgy van méretezve, hogy amíg a kölcsön tart, a havi rezsije összesen nagyjából ugyanannyi legyen, mint most. A kölcsön visszafizetése után a rezsije a megtakarítással csökken.
+          Élne vele?
+    help: "Ha elköltözik, a törlesztés a lakáshoz (a mérőhöz) kötődik, és a következő lakóra száll át."
+    yesLabel: "Élnék vele"
+    noLabel: "Nem élnék vele"
+    source: "Saját. On-bill financing/repayment, bill-neutral Pay As You Save modell (US EPA on-bill programs guide; ACEEE; EESI OBF FAQ). Magyar működő program nem található, csak javaslat (Polgári Szemle-tanulmány, polgariszemle.hu PSZ_191227; évszám ellenőrizendő). A mérőhöz kötés (help) a PAYS jellemzője; pretesztben ellenőrizendő, hogy érthető-e."
+
+  - id: J05
+    block: tervek
+    type: multi_tiles
+    effort: 2
+    showIf: { answer: J04, in: [nem] }
+    text: "Mi tartaná vissza leginkább? Legfeljebb kettőt jelöljön."
+    max: 2
+    options:
+      - { value: nem_hiszem,    label: "Nem hiszem, hogy tényleg nem nőne a rezsim", icon: penz }
+      - { value: nem_kolcson,   label: "Nem akarok kölcsönt, akkor sem, ha a számlán van", icon: lakat }
+      - { value: koltozes,      label: "Lehet, hogy elköltözöm",                   icon: haz }
+      - { value: nem_alkalmas,  label: "A lakás vagy a ház nem alkalmas rá",       icon: epulet }
+      - { value: nem_dontok,    label: "Nem én döntök róla",                       icon: berlet }
+      - { value: bizalom,       label: "Nem bízom a programban",                    icon: pajzs }
+      - { value: nincs_szukseg, label: "Nincs rá szükségem",                       icon: nincs }
+      - { value: egyeb,         label: "Egyéb",                                    icon: egyeb }
+    source: "Saját; J04 szonda, az F02 mintájára."
+
   - id: J03
     block: tervek
+    effort: 2
     type: scale6
     showIf: { not: { owns: napelem } }
     text: "Érdekelné egy közösségi napelempark vagy közös akkumulátor részesedése, amelynek a haszna a saját villanyszámláján jelenne meg?"
@@ -712,6 +805,7 @@ cards:
 
   - id: F02
     block: meltanyossag
+    effort: 2
     type: multi_tiles
     showIf: { answer: F01, in: [nem] }
     text: "Mi tartaná vissza leginkább? Legfeljebb kettőt jelöljön."
@@ -738,6 +832,7 @@ cards:
 
   - id: F04
     block: meltanyossag
+    effort: 2
     type: scale6
     reversed: true
     text: "Rendben van, hogy akinek napeleme, akkumulátora vagy villanyautója van, többet nyerhet az ilyen programokon."
@@ -746,6 +841,7 @@ cards:
 
   - id: F05
     block: meltanyossag
+    effort: 2
     type: scale6
     text: "Fontos, hogy az ilyen programokhoz okostelefon nélkül, például telefonon vagy levélben is csatlakozni lehessen."
     scale: *egyetert
@@ -765,6 +861,7 @@ cards:
       - { value: onkormanyzat, label: "Az önkormányzatra",                  icon: haz }
       - { value: kozosseg,     label: "Egy helyi energiaközösségre vagy szövetkezetre", icon: kozosseg }
       - { value: gyarto,       label: "Az eszköz gyártójára",               icon: egyeb }
+      - { value: onkent_magam, label: "Magamra is: néha önként, kedvem szerint igazodnék", icon: ember }
       - { value: senki,        label: "Senkire, csak magam időzítenék",     icon: lakat }
     exclusive: [senki]
     source: "Aug. bizalmi blokk (szereplőnként); NLM Q3.3 kettős állításának szétbontása"
@@ -781,6 +878,7 @@ cards:
 
   - id: B03
     block: bizalom
+    effort: 2
     type: scale6
     text: "Aggódom, hogy egy távolról vezérelhető eszközt illetéktelenek (pl. hackerek) is irányíthatnak."
     scale: *egyetert
@@ -788,6 +886,7 @@ cards:
 
   - id: B04
     block: bizalom
+    effort: 3
     type: scale6
     text: "Jobban megbíznék egy ilyen programban, ha egy független szervezet rendszeresen ellenőrizné, és nyilvánosan beszámolna róla."
     scale: *egyetert

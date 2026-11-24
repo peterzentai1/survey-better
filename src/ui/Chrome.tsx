@@ -2,6 +2,7 @@
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { buildRecord, currentId } from "../engine/session.ts";
+import { metricsEnabled } from "../storage/metrics.ts";
 import type { Issue } from "../engine/validate.ts";
 import { KeyHint, splitScenario } from "./CardShell.tsx";
 import { cardText, useSel, useSessionStore } from "./session.tsx";
@@ -9,7 +10,8 @@ import { cardText, useSel, useSessionStore } from "./session.tsx";
 export function Banner() {
   return (
     <div className="sticky top-0 z-50 bg-[var(--banner-bg)] px-3 py-1 text-center text-sm font-medium text-[var(--banner-fg)]" role="note">
-      PROTOTÍPUS – nem gyűjt adatot; a válaszok csak ezen az eszközön maradnak.
+      {metricsEnabled ? "Próbakérdőív · Az időmérés és a válaszfelület értékelésének megosztása önkéntes." :
+        "PROTOTÍPUS – nem gyűjt adatot; a válaszok csak ezen az eszközön maradnak."}
     </div>
   );
 }
@@ -214,7 +216,7 @@ export function ThankYou({ download, onRestart }: { download: boolean; onRestart
       <h1 className="text-xl font-bold" tabIndex={-1} ref={(el) => el?.focus()}>
         Köszönjük a kitöltést!
       </h1>
-      <p className="mt-2">A válaszait rögzítettük ezen az eszközön. Ez egy prototípus, ezért az adatok nem kerültek sehová máshová.</p>
+      <p className="mt-2">A kitöltés befejeződött. Köszönjük, hogy megosztotta a véleményét.</p>
       <div className="mt-4 flex flex-col gap-2">
         {download && <DownloadButton />}
         <button type="button" className="btn" onClick={onRestart}>

@@ -4,6 +4,7 @@ import { parse } from "yaml";
 import { z } from "zod";
 import { checkConditionShape, collectRefs } from "./conditions.ts";
 import { buildDeck } from "./deck.ts";
+import { EFFORT_LEVEL_IDS } from "./effort.ts";
 import { bankSchema, devicesSchema, resolveBank, isAnswerable, type Bank, type Card, type Devices } from "./schema.ts";
 import type { Condition } from "./types.ts";
 
@@ -117,9 +118,15 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
   const cardById = new Map(bank.cards.map((c) => [c.id, c]));
   const applianceIds = new Set(devices.appliances.map((a) => a.id));
   const moduleIds = new Set(devices.modules.map((m) => m.id));
+  bank.effortLevels?.forEach((level, i) => {
+    if (level.id !== EFFORT_LEVEL_IDS[i])
+      add(`effortLevels[${i}].id`, `A kitöltési hossz azonosítója itt „${EFFORT_LEVEL_IDS[i]}” kell legyen.`);
+  });
 
   // Positions in the deck. A card in a randomizeGroup may land anywhere between the group's first and last slot.
   const deck = buildDeck(bank, devices, "validate").order;
+  if (bank.effortLevels && cardById.get(deck[0])?.type !== "info")
+    add("effortLevels", "A kitöltési hossz kiválasztásához az első kártya típusa legyen info.");
   const pos = new Map(deck.map((id, i) => [id, i]));
   const span = new Map<string, [number, number]>();
   const groupSpan = new Map<string, [number, number]>();
@@ -134,19 +141,27 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
     const p = pos.get(c.id) ?? -1;
     span.set(c.id, c.randomizeGroup ? (groupSpan.get(`${c.block}|${c.randomizeGroup}`) ?? [p, p]) : [p, p]);
   }
-  const groupBlocks = new Map<string, Set<string>>();
+  const randomGroups = new Map<string, Card[]>();
   bank.cards.forEach((c) => {
-    if (c.randomizeGroup) groupBlocks.set(c.randomizeGroup, (groupBlocks.get(c.randomizeGroup) ?? new Set()).add(c.block));
+    if (c.randomizeGroup) randomGroups.set(c.randomizeGroup, [...(randomGroups.get(c.randomizeGroup) ?? []), c]);
   });
-  for (const [g, blocks] of groupBlocks)
+  for (const [g, cards] of randomGroups) {
+    const blocks = new Set(cards.map((c) => c.block));
     if (blocks.size > 1) add(`randomizeGroup „${g}”`, `A csoport több blokkban szerepel (${[...blocks].join(", ")}); egy csoport egy blokkon belül lehet.`);
+    if (cards.some((c) => c.effort !== cards[0].effort))
+      add(`randomizeGroup „${g}”`, "A csoport minden kártyájának azonos effort értéket kell megadni.");
+  }
 
   const pickers = bank.cards.filter((c) => c.type === "multi_tiles" && c.devicePicker);
   if (pickers.length > 1) add("devicePicker", `Legfeljebb egy kártyán lehet devicePicker: true (most: ${pickers.map((c) => c.id).join(", ")}).`);
   const picker = pickers[0];
 
-  /** Check one condition. `before` = the card position it is evaluated at (undefined: no position rule). */
-  const checkCondition = (cond: Condition | undefined, path: string, before: string | undefined) => {
+  function checkEffort(target: Card, dependent: Card, report: (message: string) => void) {
+    if (target.effort > dependent.effort)
+      report(`A hivatkozott „${target.id}” kártya effort értéke (${target.effort}) nagyobb, mint a(z) „${dependent.id}” kártyáé (${dependent.effort}).`);
+  }
+
+  const checkCondition = (cond: Condition | undefined, path: string, dependent: Card) => {
     if (cond === undefined) return;
     const shape = checkConditionShape(cond, path);
     shape.forEach((x) => add(x.path, x.message));
@@ -159,16 +174,18 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
         continue;
       }
       if (!isAnswerable(target)) add(path, `A(z) „${ref}” kártyának nincs válasza (${target.type}), nem hivatkozható.`);
-      if (before !== undefined) {
-        const late = span.get(ref)![1];
-        const early = span.get(before)![0];
-        if (late >= early) add(path, `A feltétel a(z) „${ref}” kártyára hivatkozik, de az nem előzi meg biztosan a kártyát (sorrend vagy véletlenített csoport miatt).`);
-      }
+      const late = span.get(ref)![1];
+      const early = span.get(dependent.id)![0];
+      if (late >= early) add(path, `A feltétel a(z) „${ref}” kártyára hivatkozik, de az nem előzi meg biztosan a kártyát (sorrend vagy véletlenített csoport miatt).`);
+      checkEffort(target, dependent, (message) => add(path, message));
     }
     if (refs.owns.length > 0) {
       if (!picker) add(path, "Az „owns”/„ownsAny” feltételhez kell egy kártya devicePicker: true jelöléssel.");
-      else if (before !== undefined && span.get(picker.id)![1] >= span.get(before)![0])
-        add(path, `Az eszközválasztó kártya (${picker.id}) nem előzi meg a feltételt tartalmazó kártyát.`);
+      else {
+        if (span.get(picker.id)![1] >= span.get(dependent.id)![0])
+          add(path, `Az eszközválasztó kártya (${picker.id}) nem előzi meg a feltételt tartalmazó kártyát.`);
+        checkEffort(picker, dependent, (message) => add(path, message));
+      }
     }
     for (const o of refs.owns)
       if (!applianceIds.has(o)) add(path, `Ismeretlen eszköz-azonosító az eszkozok.yaml-ban: „${o}”.`);
@@ -176,8 +193,10 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
 
   bank.cards.forEach((c, i) => {
     const w = where(c, i);
-    checkCondition(c.showIf, `${w}.showIf`, c.id);
-    c.textVariants?.forEach((v, k) => checkCondition(v.when, `${w}.textVariants[${k}].when`, c.id));
+    if (c.effort !== 1 && (!isAnswerable(c) || c.id === "N03"))
+      add(`${w}.effort`, "Ezen a kártyán az effort kötelező értéke 1.");
+    checkCondition(c.showIf, `${w}.showIf`, c);
+    c.textVariants?.forEach((v, k) => checkCondition(v.when, `${w}.textVariants[${k}].when`, c));
     if (c.module !== undefined) {
       if (!moduleIds.has(c.module)) add(`${w}.module`, `Ismeretlen modul az eszkozok.yaml-ban: „${c.module}”.`);
       if (!isAnswerable(c)) add(`${w}.module`, "Info, consent és összegző kártya nem lehet modulkártya.");
@@ -188,9 +207,9 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
         const op = `${w}.options[${k}]`;
         if (seen.has(o.value)) add(`${op}.value`, `Az opció értéke nem egyedi: „${o.value}”.`);
         seen.add(o.value);
-        checkCondition(o.showIf, `${op}.showIf`, c.id);
+        checkCondition(o.showIf, `${op}.showIf`, c);
         if (o.impliedBy !== undefined && c.type !== "multi_tiles") add(`${op}.impliedBy`, "Az impliedBy csak multi_tiles kártyán használható.");
-        else checkCondition(o.impliedBy, `${op}.impliedBy`, c.id);
+        else checkCondition(o.impliedBy, `${op}.impliedBy`, c);
         if (knownIcons && o.icon && !knownIcons.includes(o.icon)) warn(`${op}.icon`, `Ismeretlen ikonkulcs: „${o.icon}” (általános ikon jelenik meg).`);
       });
     }
@@ -228,25 +247,29 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], knownIcons?:
   devices.modules.forEach((m, i) => {
     if (!m.tierUpgrade) return;
     const path = `modules[${i}] (${m.id}).tierUpgrade.when`;
-    const first = deck.find((id) => cardById.get(id)?.module === m.id);
-    // Same checks as for a card condition, positioned at the module's first card (if it has any).
-    checkConditionForModule(m.tierUpgrade.when as Condition, path, first);
+    const cards = deck.map((id) => cardById.get(id)!).filter((c) => c.module === m.id);
+    checkConditionForModule(m.tierUpgrade.when, path, cards);
   });
   return out;
 
-  function checkConditionForModule(cond: Condition, path: string, first: string | undefined) {
+  function checkConditionForModule(cond: Condition, path: string, cards: Card[]) {
     const shape = checkConditionShape(cond, path);
     shape.forEach((x) => out.push({ file: "eszkozok.yaml", path: x.path, message: x.message }));
     if (shape.length) return;
     const refs = collectRefs(cond);
     const push = (message: string) => out.push({ file: "eszkozok.yaml", path, message });
+    const first = cards[0]?.id;
     for (const ref of refs.answers) {
       const target = cardById.get(ref);
       if (!target) push(`A feltétel nem létező kártyára hivatkozik: „${ref}”.`);
       else if (!isAnswerable(target)) push(`A(z) „${ref}” kártyának nincs válasza, nem hivatkozható.`);
-      else if (first !== undefined && span.get(ref)![1] >= span.get(first)![0])
-        push(`A(z) „${ref}” kártya nem előzi meg a modul első kártyáját (${first}), ezért a szint nem dönthető el időben.`);
+      else {
+        if (first !== undefined && span.get(ref)![1] >= span.get(first)![0])
+          push(`A(z) „${ref}” kártya nem előzi meg a modul első kártyáját (${first}), ezért a szint nem dönthető el időben.`);
+        cards.forEach((card) => checkEffort(target, card, push));
+      }
     }
+    if (refs.owns.length && picker) cards.forEach((card) => checkEffort(picker, card, push));
     for (const o of refs.owns) if (!applianceIds.has(o)) push(`Ismeretlen eszköz-azonosító: „${o}”.`);
   }
 }

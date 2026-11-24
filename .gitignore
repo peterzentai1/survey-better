@@ -17,3 +17,6 @@ coverage/
 # Kitöltésekből exportált válaszok: valódi adat sosem kerülhet a repóba
 exports/
 *.response.json
+
+# Supabase CLI cache
+supabase/.temp/

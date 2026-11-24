@@ -1,6 +1,7 @@
 // summary_highlight: counts per block, jump back to skipped cards, highlight up to `max` topics, submit.
 import { IconStar, IconStarFilled } from "@tabler/icons-react";
 import { useState } from "react";
+import { nextEffortLevel } from "../../engine/effort.ts";
 import { summaryStats } from "../../engine/session.ts";
 import type { Card } from "../../engine/schema.ts";
 import type { Highlight } from "../../engine/types.ts";
@@ -67,6 +68,12 @@ export function SummaryCard({ card }: { card: Extract<Card, { type: "summary_hig
           </li>
         ))}
       </ul>
+
+      {nextEffortLevel(state.effortLevel) !== undefined && (
+        <button type="button" className="btn btn-quiet mt-3 w-full" onClick={() => api.store.getState().extendEffort()}>
+          Van még néhány perce? További kérdések
+        </button>
+      )}
 
       {stats.skippedIds.length > 0 && (
         <div className="mt-4">

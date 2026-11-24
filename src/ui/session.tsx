@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useStore } from "zustand";
 import type { Card } from "../engine/schema.ts";
+import type { InputMethod } from "../engine/temperature.ts";
 import type { ItemValue } from "../engine/types.ts";
 import type { SessionStore, StoreState } from "../state/store.ts";
 
@@ -23,6 +24,8 @@ export function useSel<T>(selector: (s: StoreState) => T): T {
 export interface KeyHandlers {
   yes?: () => void;
   no?: () => void;
+  arrowRight?: () => void;
+  arrowLeft?: () => void;
   digit?: (n: number) => void;
   confirm?: () => void;
   skip?: () => void;
@@ -54,7 +57,7 @@ export interface CardApi {
   text: string;
   /** True while editing a card reached from the summary. */
   inJump: boolean;
-  commit(value: ItemValue): void;
+  commit(value: ItemValue, input?: InputMethod): void;
   /** Record the skip; moves on unless editing from the summary. */
   skip(): void;
   next(): void;
@@ -67,27 +70,31 @@ export function cardText(card: Card, variant?: number): string {
   return (variant === undefined ? undefined : card.textVariants?.[variant]?.text) ?? card.text;
 }
 
+function editingSkippedCard(state: StoreState["state"]): boolean {
+  return state.extensionFrom === undefined && state.jumpFrom !== null && state.history.at(-1) !== state.jumpFrom;
+}
+
 export function useCardApi(card: Card): CardApi {
   const store = useSessionStore();
   const item = useSel((s) => s.state.items[card.id]);
   const analysis = useSel((s) => s.analysis);
-  const inJump = useSel((s) => s.state.jumpFrom !== null && s.state.history[s.state.history.length - 1] !== s.state.jumpFrom);
+  const inJump = useSel((s) => editingSkippedCard(s.state));
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const text = cardText(card, item?.variant);
 
-  const commit = useCallback((value: ItemValue) => store.getState().commit(card.id, value), [store, card.id]);
+  const commit = useCallback((value: ItemValue, input?: InputMethod) => store.getState().commit(card.id, value, input), [store, card.id]);
   const next = useCallback(() => store.getState().next(), [store]);
   const autoAdvance = useCallback(() => {
-    if (store.getState().state.jumpFrom !== null) return;
+    if (editingSkippedCard(store.getState().state)) return;
     window.clearTimeout(timer.current);
     // Only advance if this card is still the current one when the timer fires.
     timer.current = window.setTimeout(() => store.getState().nextFrom(card.id), AUTO_ADVANCE_MS);
   }, [store, card.id]);
   const skip = useCallback(() => {
     store.getState().skipCard(card.id);
-    if (store.getState().state.jumpFrom === null) store.getState().next();
+    if (!editingSkippedCard(store.getState().state)) store.getState().next();
   }, [store, card.id]);
 
   return useMemo(

@@ -1,8 +1,10 @@
 // zustand store around the pure engine: holds the session state, derived path analysis and the undo toast.
 import { createStore, type StoreApi } from "zustand/vanilla";
+import type { EffortLevelId } from "../engine/effort.ts";
 import { analyze, type Analysis, type Ctx } from "../engine/path.ts";
 import * as engine from "../engine/session.ts";
 import type { SessionState } from "../engine/session.ts";
+import { REACTION_CARD, type InputMethod } from "../engine/temperature.ts";
 import type { Highlight, ItemValue } from "../engine/types.ts";
 import type { ResponseSink } from "../storage/sinks.ts";
 
@@ -24,10 +26,13 @@ export interface StoreState {
   /** Bumps whenever a card is entered or left by navigation (used to reset per-card UI such as focus). */
   navCount: number;
   // actions
-  commit(id: string, value: ItemValue): void;
+  commit(id: string, value: ItemValue, input?: InputMethod): void;
+  setTimingVisible(visible: boolean): void;
   skipCard(id: string): void;
   /** Record consent and advance in one transition. */
   acceptConsent(id: string, consent: { participation: boolean; paradata: boolean }): void;
+  setEffortLevel(level: EffortLevelId): void;
+  extendEffort(): void;
   setHighlights(highlights: Highlight[]): void;
   /** Continue from the current card (in jump mode: back to the summary or the next new card). */
   next(): void;
@@ -54,9 +59,18 @@ export function createSessionStore(opts: {
   const { ctx, sink, appVersion } = opts;
   // Wall-clock-free dwell timing: a monotonic in-memory mark, never stored or exported as such.
   let shownMark = performance.now();
+  let visible = typeof document === "undefined" || !document.hidden;
+  function checkpoint(s: SessionState): SessionState {
+    const now = performance.now();
+    const elapsed = visible ? now - shownMark : 0;
+    shownMark = now;
+    const id = engine.currentId(s);
+    return id && elapsed > 0 && !s.completed ? engine.addParadata(s, id, { dwellMs: elapsed }) : s;
+  }
   let toastSeq = 0;
 
   const persist = (s: SessionState) => {
+    if (!s.consent.participation) return;
     try {
       sink.save(s, engine.buildRecord(ctx, s, appVersion));
     } catch {
@@ -67,17 +81,13 @@ export function createSessionStore(opts: {
   return createStore<StoreState>((set, get) => {
     /** Replace the state, refresh the analysis and persist. */
     const apply = (state: SessionState, extra: Partial<StoreState> = {}) => {
-      set({ state, analysis: analyze(ctx, state.items), ...extra });
+      set({ state, analysis: analyze(ctx, state.items, state.effortLevel), ...extra });
       persist(state);
     };
     /** Navigation: add dwell time for the card being left, then apply the transition. */
     const navigate = (fn: (s: SessionState) => SessionState, extra: Partial<StoreState> = {}) => {
       const s = get().state;
-      const left = engine.currentId(s);
-      const now = performance.now();
-      const withDwell = left ? engine.addParadata(s, left, { dwellMs: now - shownMark }) : s;
-      const next = fn(withDwell);
-      shownMark = now;
+      const next = fn(checkpoint(s));
       apply(next, { navCount: get().navCount + 1, ...extra });
     };
 
@@ -85,16 +95,37 @@ export function createSessionStore(opts: {
       ctx,
       appVersion,
       state: opts.initial,
-      analysis: analyze(ctx, opts.initial.items),
+      analysis: analyze(ctx, opts.initial.items, opts.initial.effortLevel),
       toast: null,
       navCount: 0,
 
-      commit: (id, value) => apply(engine.answer(ctx, get().state, id, value)),
+      setTimingVisible: (nextVisible) => {
+        if (visible === nextVisible) return;
+        const previous = get().state;
+        const state = checkpoint(previous);
+        visible = nextVisible;
+        if (state !== previous) apply(state);
+      },
+      commit: (id, value, input) => {
+        const s = checkpoint(get().state);
+        const entry = s.paradata?.[id];
+        const first = id === REACTION_CARD && input && entry && !entry.firstAnswer
+          && s.items[id]?.status === "shown";
+        const timed = first ? { ...s, paradata: { ...s.paradata, [id]: {
+          ...entry, firstAnswer: { input, ms: Math.round(entry.dwellMs / 100) * 100 },
+        } } } : s;
+        apply(engine.answer(ctx, timed, id, value));
+      },
       skipCard: (id) => apply(engine.skip(ctx, get().state, id)),
       acceptConsent: (id, consent) => {
         if (!consent.participation) return;
         // Measure time on the consent card using the consent in effect while it was open.
         navigate((s) => engine.advance(ctx, engine.acceptConsent(ctx, s, id, consent)), { toast: null });
+      },
+      setEffortLevel: (level) => {
+        const s = get().state;
+        const next = engine.setEffortLevel(ctx, s, level);
+        if (next !== s) apply(next);
       },
       setHighlights: (h) => apply(engine.setHighlights(get().state, h)),
 
@@ -102,13 +133,14 @@ export function createSessionStore(opts: {
       nextFrom: (id) => {
         if (engine.currentId(get().state) === id) get().next();
       },
-      back: () => navigate((s) => engine.goBack(s), { toast: null }),
+      back: () => navigate((s) => engine.goBack(ctx, s), { toast: null }),
       jumpTo: (id) => navigate((s) => engine.jumpTo(ctx, s, id), { toast: null }),
+      extendEffort: () => navigate((s) => engine.extendEffort(ctx, s), { toast: null }),
 
       answerAndAdvanceWithUndo: (id, value, message) => {
-        const before = get().state;
+        const before = checkpoint(get().state);
         const answered = engine.answer(ctx, before, id, value);
-        const advanced = engine.advance(ctx, engine.addParadata(answered, id, { dwellMs: performance.now() - shownMark }));
+        const advanced = engine.advance(ctx, answered);
         shownMark = performance.now();
         const expectId = engine.currentId(advanced);
         apply(advanced, {
@@ -122,8 +154,10 @@ export function createSessionStore(opts: {
           set({ toast: null });
           return;
         }
-        shownMark = performance.now();
-        apply(t.snapshot, { toast: null, navCount: get().navCount + 1 });
+        // Undo the answer and the navigation while retaining time actually spent on both cards.
+        const { paradata } = checkpoint(get().state);
+        const restored = paradata && t.snapshot.consent.paradata ? { ...t.snapshot, paradata } : t.snapshot;
+        apply(restored, { toast: null, navCount: get().navCount + 1 });
       },
       dismissToast: () => set({ toast: null }),
 
