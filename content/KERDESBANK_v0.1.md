@@ -2,6 +2,24 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.5.0 változások (2026-11-25)
+
+A szerző utolsó javítási köre a konzulensi előnézet előtt (`utolsó javítás.rtfd`).
+
+- **N01.** Az első bekezdés a szerző új szövege („A hálózat terheltsége mellett a kiugró esti áramár is közrejátszott…”), a többi változatlan.
+- **N02.** Új cím és rövid bemutatkozó bevezető (a szerző szövege); a korábbi adatkezelési bekezdések változatlanul, kisebb, halvány betűvel (`details`). A „Nincs jó vagy rossz válasz” bekezdés a bevezetőbe került.
+- **A03.** „villanyszerződés” helyett „az áramszolgáltatóval kötött szerződés”.
+- **„Egyéb” szövegmező (A02, A03, A05, A06).** Az Egyéb opció koppintásra rövid szövegmezővé nyílik (legfeljebb 200 karakter, `otherText`). Az A05B külön szabad szöveges kártya kikerült. Új adat: a tájékoztató adatlistája kiegészült.
+- **A04.** A háztartáslétszám a kitöltő A/B felületén jelenik meg: koppintós csoportban 8 gomb (1–7, 8+), húzós csoportban a húzós felület. A felület az I10 előtt van, így mindkét csoport egyszer már használta a saját felületét, mire az I10-hez ér; az I10 első reakciójának mért ideje ezért nem vethető össze közvetlenül a 0.4.0 előtti adatokkal. Mérési adat továbbra is csak az I10-ről megy.
+- **A06.** Piktogramos csempék; a „Gázzal” helyett gázkonvektor, hagyományos gázkazán és kondenzációs gázkazán. **A régi `gaz` válasz nem vonható össze az újakkal.**
+- **E01.** Kérdés: „Milyen elektromos eszközökkel rendelkezik?” Új piktogramok (elektromos fűtés: tekercs; szárító: saját rajz). Az „Elektromos főzőlap vagy sütő” két csempe lett (`fozolap`, `suto`), a „Medence- vagy öntözőszivattyú” is (`medence`, `ontozo`). **A régi `elektromos_fozes` és `szivattyu` nem vonható össze az újakkal.**
+- **Medence és öntözés.** A szivattyú modulja (M_SZ_1, M_SZ_2) a medencére szűkült. Az öntözőhöz új kapukérdés került (E05: növénytermesztés / kert / mindkettő), ajánlatkártya nélkül: az öntözés időzítése (hajnal, párolgás) külön vizsgálatot kér.
+- **T04.** Az éves kWh helyett az átlagos havi villanyszámla forintban (csúszka 0–60 000 Ft és közvetlen bevitel, „Nem tudom”), mert a számlán az energiadíj mellett más tételek is vannak. **A 0.3.3–0.4.0 T04 válaszai nem vonhatók össze vele.**
+- **I01–I08, I10–I11.** Az új helyzetet bevezető sor (lead) első megjelenésekor a kérdéssel azonos betűstílusú; ismétléskor szürke, a korábbinál 2 ponttal nagyobb. Az „Elképzelt ajánlat” sor nem változott.
+- **I09.** A csatornák sorrendje: mobil app, SMS, email. **M_HP_1, M_KL_1, M_KL_2, M_EF_1:** hiányzó szóköz („ki), előtte”).
+- **Felület.** A csempés kérdések rövidebb utolsó sora középre igazodik. Az igen/nem gombok billentyűtippje nem tördelődik. A lábléc linkjei (adatkezelési tájékoztató, forráskód) csak a nyitókártyán és a köszönőképernyőn látszanak, kitöltés közben nem; az N02 saját tájékoztató-linkje megmarad.
+- **Köszönőképernyő.** A „Kérjük, mentse el” és az „Ezen az eszközön is megmarad” mondat kikerült. A szerver visszaigazolása után a kitöltés automatikusan törlődik az eszközről, az azonosító csak a képernyőn marad. A tájékoztató ehhez igazodik.
+
 ## v0.4.0 változások (2026-11-25)
 
 - **N02: áramár-grafikon** (a szerző kérése). A bevezető szöveg után a havi átlagos nagykereskedelmi áramár vonaldiagramja áll (Ft/kWh, 2015–2026), koppintásra nagyban nyílik. Adat: HUPX másnapi zónaár havi átlaga (Energy-Charts / SMARD.de, CC BY 4.0), ECB havi EUR/HUF árfolyam; a kép a repón kívüli `havi-atlagar-chart/build.py` és `render.swift` kimenete, a repóban `public/kepek/havi-atlagar-2015-2026.jpg`. A 2010–2014 adat hiányzik. A korábban tervezett külön F00 kártya nem került be.

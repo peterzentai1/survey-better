@@ -122,7 +122,7 @@ describe("effort selector", () => {
   });
 });
 
-it("enlarges the first shared lead in presentation order and keeps keyboard focus on the current card", async () => {
+it("shows the first scenario lead in the question style, shrinks repeats and keeps keyboard focus on the current card", async () => {
   const example = question("I01");
   if (example.type !== "scale6" || !example.lead) throw new Error("Missing shared lead");
   const lead = example.lead;
@@ -149,17 +149,19 @@ it("enlarges the first shared lead in presentation order and keeps keyboard focu
     return within(section).getAllByText(lead).find((node) => !node.hasAttribute("aria-hidden"))?.classList;
   };
   const firstHeading = await expectCard(firstText);
-  expect(leadSize(firstHeading)?.contains("text-base")).toBe(true);
+  expect(leadSize(firstHeading)?.contains("text-xl")).toBe(true);
+  expect(leadSize(firstHeading)?.contains("font-semibold")).toBe(true);
   expect(document.activeElement).toBe(firstHeading);
   await user.tab();
   expect(document.activeElement).toBe(screen.getAllByRole("radio")[0]);
   await user.keyboard("4");
 
   const secondHeading = await expectCard(secondText);
-  expect(leadSize(secondHeading)?.contains("text-sm")).toBe(true);
+  expect(leadSize(secondHeading)?.contains("text-base")).toBe(true);
+  expect(leadSize(secondHeading)?.contains("text-muted")).toBe(true);
   expect(document.activeElement).toBe(secondHeading);
   await user.keyboard("{Backspace}");
-  expect(leadSize(await expectCard(firstText))?.contains("text-base")).toBe(true);
+  expect(leadSize(await expectCard(firstText))?.contains("text-xl")).toBe(true);
 });
 
 describe("B01 exclusive section", () => {
@@ -174,7 +176,7 @@ describe("B01 exclusive section", () => {
     const actor = screen.getByRole("checkbox", { name: /^A helyi áramhálózat/ });
 
     const divider = screen.getByRole("separator");
-    expect(divider.classList.contains("col-span-full")).toBe(true);
+    expect(divider.classList.contains("w-full")).toBe(true);
     expect(divider.previousElementSibling).toBe(two);
     expect(divider.nextElementSibling).toBe(none);
     await user.click(two);

@@ -128,22 +128,27 @@ function ensureItem(s: SessionState, id: string): ItemRecord {
   return s.items[id] ?? { status: "shown", changes: 0 };
 }
 
-export function answer(ctx: Ctx, s: SessionState, id: string, value: ItemValue): SessionState {
+export function answer(ctx: Ctx, s: SessionState, id: string, value: ItemValue, otherText?: string): SessionState {
   const prev = ensureItem(s, id);
   const had = prev.status === "answered" || prev.status === "skipped";
   const same = prev.status === "answered" && sameValue(prev.value, value);
-  const { inactive: _i, ...rest } = prev;
+  const { inactive: _i, otherText: _t, ...rest } = prev;
   void _i;
-  const item: ItemRecord = { ...rest, status: "answered", value, changes: prev.changes + (had && !same ? 1 : 0) };
+  void _t;
+  const text = otherText?.trim();
+  const item: ItemRecord = {
+    ...rest, status: "answered", value, ...(text ? { otherText: text } : {}), changes: prev.changes + (had && !same ? 1 : 0),
+  };
   return reconcile(ctx, { ...s, items: { ...s.items, [id]: item } });
 }
 
 export function skip(ctx: Ctx, s: SessionState, id: string): SessionState {
   const prev = ensureItem(s, id);
   const had = prev.status === "answered" || prev.status === "skipped";
-  const { inactive: _i, value: _v, ...rest } = prev;
+  const { inactive: _i, value: _v, otherText: _t, ...rest } = prev;
   void _i;
   void _v;
+  void _t;
   const item: ItemRecord = { ...rest, status: "skipped", changes: prev.changes + (had && prev.status !== "skipped" ? 1 : 0) };
   return reconcile(ctx, { ...s, items: { ...s.items, [id]: item } });
 }
@@ -340,7 +345,7 @@ export function validateSnapshot(ctx: Ctx, raw: unknown): SessionState | null {
   if (s.extensionFrom !== undefined &&
       (s.jumpFrom !== ctx.summaryId || s.effortLevel === undefined ||
         !ctx.bank.effortLevels?.some((e) => e.id === s.extensionFrom) ||
-        nextEffortLevel(s.extensionFrom) !== s.effortLevel)) return null;
+        nextEffortLevel(s.extensionFrom, ctx.bank.effortLevels.map((e) => e.id)) !== s.effortLevel)) return null;
   const effortLevel = s.effortLevel ?? (ctx.bank.effortLevels ? ctx.settings.display.defaultEffort : undefined);
   const restored = { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null, effortLevel };
   if (restored.completed && currentId(restored) !== ctx.summaryId &&

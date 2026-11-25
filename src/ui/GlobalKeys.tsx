@@ -1,5 +1,5 @@
 // Global keyboard shortcuts. They only accelerate: every action also exists as a button.
-//   I / ArrowRight = igen, N / ArrowLeft = nem (yesno cards), 1-6 (scale cards), K or 0 = skip,
+//   I / ArrowRight = igen, N / ArrowLeft = nem (yesno cards), 1-9 (scale and count cards), K or 0 = skip,
 //   Enter = continue/confirm, Backspace = previous card.
 import { useContext, useEffect } from "react";
 import { KeyRegistry, useSessionStore } from "./session.tsx";
@@ -53,7 +53,7 @@ export function GlobalKeys() {
           act(h.skip);
           break;
         default:
-          if (/^[1-6]$/.test(e.key) && h.digit) act(() => h.digit?.(Number(e.key)));
+          if (/^[1-9]$/.test(e.key) && h.digit) act(() => h.digit?.(Number(e.key)));
       }
     };
     window.addEventListener("keydown", onKey);

@@ -5,6 +5,9 @@ import { rpc, supabaseConfigured, supabaseScope } from "./supabase.ts";
 
 type Payload = Omit<ResponseRecord, "sessionId">;
 
+/** Window event fired when the server has accepted a completed response; `detail` is its receipt (session ID). */
+export const DELIVERED_EVENT = "kartya-kerdoiv:delivered";
+
 export function responseOutbox(slug: string, settings: StorageSettings) {
   const enabled = settings.mode === "supabase" && supabaseConfigured;
   function payloadFor(record: Payload): Payload {
@@ -16,7 +19,7 @@ export function responseOutbox(slug: string, settings: StorageSettings) {
   const queue = deliveryQueue<Payload & { sessionId: string }>("kartya-kerdoiv:responses:" + supabaseScope + ":" + slug + ":", (record) => {
     const { sessionId: receipt, ...payload } = record;
     return rpc("submit_response", { slug, receipt, payload: payloadFor(payload) });
-  });
+  }, undefined, (receipt) => window.dispatchEvent(new CustomEvent(DELIVERED_EVENT, { detail: receipt })));
 
   return {
     submit(record: ResponseRecord) {
