@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.5.0"
+version: "0.5.1"
 locale: hu
 
 defaults:
@@ -71,8 +71,6 @@ cards:
 
       Nincs jó vagy rossz válasz. Választhatja a „Nem tudom / kihagyom” gombot: ez is hasznos információ. A végén visszanézheti és pótolhatja a kihagyott kérdéseket, és kiemelheti a legfontosabbat is!
     details: |
-      A kérdőívet Zentai Péter mórahalmi lakos készítette a szakdolgozati kutatásához. A válaszok adatkezelője ő. A részvétel önkéntes, és az Ön hozzájárulásán alapul.
-
       Nem kérek nevet, címet vagy elérhetőséget. A válaszokat 2027. december 1-ig őrzöm egy európai (frankfurti) szerveren, majd törlöm. Az eredményeket csak összesítve közlöm, olyan bontásban, amelyből senki sem azonosítható. Bármelyik kérdést kihagyhatja, és bármikor abbahagyhatja: csak a befejezett kitöltés kerül a szerverre. A végén kap egy kitöltési azonosítót. Ha ezt elküldi nekem, kérésére törlöm a kitöltését, vagy másolatot küldök róla.
 
       A kérdőív 18 éven felülieknek szól. Kérdés esetén: peterzentai1@gmail.com

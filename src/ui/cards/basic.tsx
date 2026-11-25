@@ -92,7 +92,6 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
       {card.figure && (
         <a className="mt-3 block" href={card.figure.src} target="_blank" rel="noopener">
           <img className="w-full rounded-lg border border-soft" src={card.figure.src} alt={card.figure.alt} width={1800} height={1000} loading="lazy" />
-          <span className="mt-1 block text-sm text-muted">Nagyobb méretben (új lapon nyílik)</span>
         </a>
       )}
       {card.details && <p className="mt-4 whitespace-pre-line text-sm text-muted">{card.details}</p>}
