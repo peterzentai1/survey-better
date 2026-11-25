@@ -30,6 +30,7 @@ export function CountCard({ card }: { card: Extract<Card, { type: "single" }> })
         dragPad={dragPad}
         trackPointer={!experimental || dragPad}
         experimental={experimental}
+        neutral
       />
     </CardShell>
   );

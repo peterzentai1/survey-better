@@ -193,7 +193,7 @@ export function SingleCard({ card }: { card: Of<"single"> }) {
         key={o.value}
         type="button"
         className={tiles ? TILE_CLASS : `opt ${chips ? "!w-auto min-w-14 justify-center" : ""}`}
-        aria-pressed={selected === o.value && !(o.other && otherOpen)}
+        aria-pressed={selected === o.value}
         onClick={() => (o.other ? setOtherOpen(true) : choose(o.value))}
       >
         {Icon && <Icon size={32} stroke={1.6} aria-hidden="true" />}
@@ -205,8 +205,7 @@ export function SingleCard({ card }: { card: Of<"single"> }) {
   return (
     <CardShell api={api}>
       <div className={tiles ? TILE_GRID : chips ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
-        {options.map((o) => (o === open && !tiles ? otherField(o) : optionButton(o)))}
-        {open && tiles && otherField(open)}
+        {options.map((o) => (o === open ? otherField(o) : optionButton(o)))}
       </div>
       {otherOpen && (
         <>

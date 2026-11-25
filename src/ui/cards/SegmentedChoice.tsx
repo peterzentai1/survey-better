@@ -22,9 +22,11 @@ export interface SegmentedProps {
   experimental: boolean;
   left?: string;
   right?: string;
+  /** Plain background instead of the agree–disagree colour gradient. */
+  neutral?: boolean;
 }
 
-export function SegmentedChoice({ api, marks, names, stored, onSelect, dragPad, trackPointer, experimental, left, right }: SegmentedProps) {
+export function SegmentedChoice({ api, marks, names, stored, onSelect, dragPad, trackPointer, experimental, left, right, neutral }: SegmentedProps) {
   const N = marks.length;
   const card = api.card;
   // `draft` is a selection that has not been confirmed yet (arrow keys, press-and-slide preview).
@@ -158,7 +160,7 @@ export function SegmentedChoice({ api, marks, names, stored, onSelect, dragPad, 
         ref={bar}
         role="radiogroup"
         aria-label={api.text}
-        className={dragPad ? "scale-control" : "relative flex gap-1.5 select-none"}
+        className={dragPad ? `scale-control${neutral ? " scale-neutral" : ""}` : "relative flex gap-1.5 select-none"}
         style={{ touchAction: experimental || dragPad ? "pan-y pinch-zoom" : "none" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

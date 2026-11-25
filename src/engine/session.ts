@@ -345,7 +345,7 @@ export function validateSnapshot(ctx: Ctx, raw: unknown): SessionState | null {
   if (s.extensionFrom !== undefined &&
       (s.jumpFrom !== ctx.summaryId || s.effortLevel === undefined ||
         !ctx.bank.effortLevels?.some((e) => e.id === s.extensionFrom) ||
-        nextEffortLevel(s.extensionFrom) !== s.effortLevel)) return null;
+        nextEffortLevel(s.extensionFrom, ctx.bank.effortLevels.map((e) => e.id)) !== s.effortLevel)) return null;
   const effortLevel = s.effortLevel ?? (ctx.bank.effortLevels ? ctx.settings.display.defaultEffort : undefined);
   const restored = { ...(s as SessionState), jumpFrom: s.jumpFrom ?? null, effortLevel };
   if (restored.completed && currentId(restored) !== ctx.summaryId &&

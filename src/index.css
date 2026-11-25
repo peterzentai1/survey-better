@@ -136,6 +136,10 @@ h2:focus {
     touch-action: pan-y pinch-zoom;
     user-select: none;
   }
+  /* Counts (e.g. household size) are not good or bad: no red-to-green gradient. */
+  .scale-control.scale-neutral {
+    background: var(--surface);
+  }
   .scale-pad {
     position: relative;
     display: grid;
