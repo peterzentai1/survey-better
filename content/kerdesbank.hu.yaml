@@ -554,11 +554,11 @@ cards:
     lead: *ajanlat
     text: |
       Hazaérve bedugja az autót, és megadja, mikorra és mennyire kell feltöltve lennie (pl. reggel 7-re 80%). A töltés idejét egy rendszer intézi, a hálózat terheléséhez igazítva. A kért időre a kért töltöttség megvan, és egy „Azonnal töltsd” gombbal bármikor felülbírálhatja.
-      Ezért a töltési áram 10%-kal olcsóbb.
+      A napi áraktól függően így a töltés kb. 5–45%-kal olcsóbb, mint ha azonnal töltene, átlagosan kb. 25%-kal.
       Elfogadná?
     yesLabel: "Elfogadnám"
     noLabel: "Nem fogadnám el"
-    source: "K4 helyzetkártya; forgatókönyv EV01"
+    source: "K4 helyzetkártya; forgatókönyv EV01; megtakarítás: HUPX DAM, 20 nap 2025-12..2026-11, 10 kWh 18–07 óra, lakossági nézet (platform-terv/ev-okostoltes-arkulonbseg)"
 
   - id: M_EV_2
     block: modulok

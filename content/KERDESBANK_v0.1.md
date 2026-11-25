@@ -6,6 +6,7 @@ A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICE
 
 - **Két kitöltési hossz** (a szerző döntése): „Rövidített · kb. 5 perc” és „Alap · kb. 9 perc”. A korábbi Közepes és Alapos összevonva, az Alap a teljes (korábbi alapos) tartalmat és modulkeretet kapja; kezdő beállítás az Alap. A belső azonosítók `rovid` és `alapos` maradtak, így a mérési tábla és a korábbi bankverziók adatai változatlanul értelmezhetők. Az Alap 42–51 képernyő; a 9 perc továbbra is becslés, előteszttel nincs mérve.
 - Következmény az elemzéshez: a hosszválasztás most kétszintű. A Rövidített választóknál az effort 2–3 tételek hiánya továbbra sem véletlenszerű.
+- **M_EV_1.** A rögzített „10%-kal olcsóbb” helyett a másnapi tőzsdei árakból számolt sáv: „kb. 5–45%-kal olcsóbb, mint ha azonnal töltene, átlagosan kb. 25%-kal” (a szerző döntése). Számítás: HUPX DAM negyedórás árak, 20 nap 2025-12-01 és 2026-11-08 között, 10 kWh 3,7 kW-tal, bedugás 18:00, kész 07:00; az azonnali töltést vetettük össze a legolcsóbb negyedórákkal. A százalék egy spotáras lakossági tarifára vonatkozik (energia + 23,40 Ft/kWh hálózati díj + árrés, 27% áfa); mért értékek: 6,9–46,0%, medián 24,9%. A mostani szabályozott lakossági árhoz nem viszonyít. Az adat a WebFetch-átiraton alapul, néhány nap kézi ellenőrzése még hátravan. Részletek: `platform-terv/ev-okostoltes-arkulonbseg/README.md`.
 
 ## v0.3.4 változások (2026-11-25)
 
