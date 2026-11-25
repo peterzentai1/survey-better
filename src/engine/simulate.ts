@@ -35,7 +35,7 @@ function defaultValue(card: Card, state: SessionState, ctx: ReturnType<typeof ma
     case "single":
       return visibleOptions(card, view)[0]?.value ?? SKIP;
     case "consumption":
-      return card.tariff.thresholdKwh;
+      return card.tariff?.thresholdKwh ?? Math.round(card.sliderMax / 2);
     case "percent_split": {
       const options = splitOptions(ctx.byId.get(card.optionsFrom), view);
       return Object.fromEntries(options.map(({ value }, index) => [value, index === 0 ? 100 : 0]));

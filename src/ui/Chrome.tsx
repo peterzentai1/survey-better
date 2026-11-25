@@ -209,7 +209,7 @@ export function ResumePrompt({ onResume, onRestart }: { onResume: () => void; on
   );
 }
 
-export function ThankYou({ download, onRestart }: { download: boolean; onRestart: () => void }) {
+export function ThankYou({ download, onRestart, forgotten = false }: { download: boolean; onRestart: () => void; forgotten?: boolean }) {
   const sessionId = useSel((s) => s.state.sessionId);
   const heading = useRef<HTMLHeadingElement>(null);
   const [copied, setCopied] = useState(false);
@@ -237,11 +237,12 @@ export function ThankYou({ download, onRestart }: { download: boolean; onRestart
         <code className="block select-text rounded-lg border border-soft p-2 font-mono wrap-anywhere">{sessionId}</code>
         <button type="button" className="btn" onClick={copyId}>Azonosító másolása</button>
         <p role="status" className="text-sm">{copied && "Kimásolva."}</p>
-        <p>Ezzel az azonosítóval kérheti a kitöltése törlését vagy a válaszai másolatát. Nevet és elérhetőséget nem kérünk, ezért az azonosító nélkül a kitöltését nem tudjuk Önhöz kötni. Kérjük, mentse el. Ezen az eszközön is megmarad, amíg nem kezd új kitöltést, vagy nem törli a böngésző adatait.</p>
+        <p>Ezzel az azonosítóval kérheti a kitöltése törlését vagy a válaszai másolatát. Nevet és elérhetőséget nem kérünk, ezért az azonosító nélkül a kitöltését nem tudjuk Önhöz kötni.</p>
+        {forgotten && <p role="status">A válaszait erről az eszközről töröltük. Az azonosító csak ezen a képernyőn látható.</p>}
       </div>
       <div className="mt-4 flex flex-col gap-2">
         {download && <DownloadButton />}
-        <p>Új kitöltés előtt mentse el az azonosítót: az új kitöltés törli ezt az eszközről.</p>
+        {!forgotten && <p>Új kitöltés előtt mentse el az azonosítót: az új kitöltés törli ezt az eszközről.</p>}
         <button type="button" className="btn" onClick={onRestart}>
           Új kitöltés kezdése
         </button>

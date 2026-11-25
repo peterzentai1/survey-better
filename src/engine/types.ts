@@ -39,6 +39,8 @@ export interface ItemRecord {
   changes: number;
   /** Stored value kept, but the card is no longer on the respondent's path. */
   inactive?: true;
+  /** Free text typed for an `other` option (single-choice cards). */
+  otherText?: string;
 }
 
 export interface Highlight {

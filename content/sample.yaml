@@ -69,8 +69,14 @@ cards:
     participationLabel: "Elolvastam, és részt veszek a kérdőívben."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait (pl. kártyánként eltöltött idő) is rögzítsék."
     # figure: { src: /kepek/abra.jpg, alt: "Az ábra tartalma szövegben" }   # opcionális kép a szöveg után (public/ alól)
+    # details: | …   # opcionális apró betűs rész (pl. adatkezelési részletek) a fő szöveg után
 
   # ── single: egy választás. layout: list (alapértelmezett) | chips (rövid opciók) | pager (lapozható)
+  #    | tiles (piktogramos csempék, az opciók icon mezőjével) | count (rendezett számok; ab_test esetén a kitöltő
+  #    A/B felülete: koppintós gombsor vagy húzós felület).
+  #    Egy opció kaphat other: true jelzőt (listás vagy csempés kártyán, egy darab): választáskor rövid
+  #    szövegmező nyílik, a szöveg az otherText mezőbe kerül.
+  #    Bármely kártya: leadStyle: scenario → a lead első megjelenése a kérdés stílusában, ismétléskor kisebb, szürke.
   - id: A01
     block: alapok
     type: single
@@ -146,7 +152,8 @@ cards:
     optionsFrom: E04
     text: "Milyen arányban oszlik meg a töltés a megjelölt helyek között?"
 
-  # ── consumption: éves kWh és két ársáv. A számmezővel a csúszka határa fölé is lehet menni.
+  # ── consumption: éves kWh és két ársáv (tariff), vagy unit: Ft (pl. havi számla; ekkor nincs tariff,
+  #    fieldLabel a mező felirata, sliderStep a csúszka lépésköze). A számmezővel a csúszka határa fölé is lehet menni.
   - id: T04
     block: alapok
     effort: 2

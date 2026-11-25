@@ -12,9 +12,10 @@ export function ConsumptionCard({ card }: { card: Extract<Card, { type: "consump
   const [draft, setDraft] = useState(typeof stored === "number" ? String(stored) : "");
   const kwh = Number(draft);
   const ready = draft !== "" && Number.isSafeInteger(kwh) && kwh >= 0;
-  const { thresholdKwh, withinFtPerKwh, aboveFtPerKwh, label } = card.tariff;
-  const within = Math.min(kwh, thresholdKwh) * withinFtPerKwh;
-  const above = Math.max(0, kwh - thresholdKwh) * aboveFtPerKwh;
+  const unit = card.unit ?? "kWh";
+  const tariff = unit === "kWh" ? card.tariff : undefined;
+  const within = tariff ? Math.min(kwh, tariff.thresholdKwh) * tariff.withinFtPerKwh : 0;
+  const above = tariff ? Math.max(0, kwh - tariff.thresholdKwh) * tariff.aboveFtPerKwh : 0;
   const proceed = () => {
     if (!ready) return;
     api.commit(kwh);
@@ -34,23 +35,26 @@ export function ConsumptionCard({ card }: { card: Extract<Card, { type: "consump
           type="range"
           min={0}
           max={card.sliderMax}
+          step={card.sliderStep ?? 1}
           value={ready ? Math.min(kwh, card.sliderMax) : 0}
           onChange={(event) => setDraft(event.target.value)}
-          aria-label="Becsült éves fogyasztás"
+          aria-label={card.fieldLabel ?? "Becsült éves fogyasztás"}
         />
         <div
           className="relative mb-4 h-12 border-t border-line text-sm text-muted"
           aria-hidden="true"
         >
           <span className="absolute left-0 top-1">0</span>
-          <span className="absolute right-0 top-1">{number.format(card.sliderMax)} kWh</span>
-          <span className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${100 * thresholdKwh / card.sliderMax}%` }}>
-            <span className="mx-auto block h-2 w-px bg-muted" />
-            {number.format(thresholdKwh)} kWh
-          </span>
+          <span className="absolute right-0 top-1">{number.format(card.sliderMax)} {unit}{unit === "Ft" ? " vagy több" : ""}</span>
+          {tariff && (
+            <span className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${100 * tariff.thresholdKwh / card.sliderMax}%` }}>
+              <span className="mx-auto block h-2 w-px bg-muted" />
+              {number.format(tariff.thresholdKwh)} kWh
+            </span>
+          )}
         </div>
         <label className="flex items-center justify-between gap-3">
-          <span>Éves fogyasztás (kWh)</span>
+          <span>{card.fieldLabel ?? "Éves fogyasztás (kWh)"}</span>
           <input
             className="min-h-12 w-28 shrink-0 rounded-lg border border-line bg-surface px-2 text-right"
             type="number"
@@ -61,12 +65,16 @@ export function ConsumptionCard({ card }: { card: Extract<Card, { type: "consump
             onChange={(event) => setDraft(event.target.value)}
           />
         </label>
-        <output className="mt-3 block min-h-12">
-          {ready && (kwh >= thresholdKwh ? (
-            <>Rezsicsökkentett keret ({forint.format(within)}) + {forint.format(above)} a keret felett évente</>
-          ) : <>Becsült éves fogyasztási díj: {forint.format(within)}</>)}
-        </output>
-        <p className="text-sm text-muted">{label}</p>
+        {tariff && (
+          <>
+            <output className="mt-3 block min-h-12">
+              {ready && (kwh >= tariff.thresholdKwh ? (
+                <>Rezsicsökkentett keret ({forint.format(within)}) + {forint.format(above)} a keret felett évente</>
+              ) : <>Becsült éves fogyasztási díj: {forint.format(within)}</>)}
+            </output>
+            <p className="text-sm text-muted">{tariff.label}</p>
+          </>
+        )}
         <button type="submit" className="btn btn-primary mt-3 w-full" disabled={!ready}>
           Tovább <KeyHint>Enter</KeyHint>
         </button>

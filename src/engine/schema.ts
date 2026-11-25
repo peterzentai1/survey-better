@@ -20,6 +20,8 @@ const option = z.strictObject({
   icon: z.string().optional(),
   impliedBy: condition.optional(),
   showIf: condition.optional(),
+  /** Single-choice only: choosing this option opens a short free-text field (stored as `otherText`). */
+  other: z.literal(true).optional(),
 });
 
 const scalePart = z.strictObject({
@@ -32,6 +34,8 @@ const common = {
   id: text,
   block: text,
   lead: z.string().optional(),
+  /** "scenario": the lead introduces a new situation, so its first showing matches the question style. */
+  leadStyle: z.literal("scenario").optional(),
   help: z.string().optional(),
   skip: z.boolean().optional(),
   skipLabel: z.string().optional(),
@@ -56,6 +60,8 @@ export const cardSchema = z.discriminatedUnion("type", [
     text,
     participationLabel: text,
     paradataLabel: text,
+    /** Fine print after the main text (legal details), in the small muted style. */
+    details: text.optional(),
     /** Static image shown after the text (a file under public/). Collects no data. */
     figure: z.strictObject({ src: z.string().regex(/^\/[^/]/), alt: text }).optional(),
   }),
@@ -63,7 +69,8 @@ export const cardSchema = z.discriminatedUnion("type", [
     ...common,
     type: z.literal("single"),
     text,
-    layout: z.enum(["list", "chips", "pager"]).optional(),
+    /** tiles: pictogram grid; count: ordered numbers, tap buttons or drag slider by the A/B input arm. */
+    layout: z.enum(["list", "chips", "pager", "tiles", "count"]).optional(),
     options: z.array(option).min(2),
   }),
   z.strictObject({
@@ -81,13 +88,18 @@ export const cardSchema = z.discriminatedUnion("type", [
     type: z.literal("consumption"),
     text,
     sliderMax: z.number().int().positive(),
+    /** Unit of the answer (default kWh) and the label of the number field. */
+    unit: z.enum(["kWh", "Ft"]).optional(),
+    fieldLabel: text.optional(),
+    sliderStep: z.number().int().positive().optional(),
     unknownLabel: text,
+    /** kWh only: illustrates the yearly energy charge under a two-band tariff. */
     tariff: z.strictObject({
       thresholdKwh: z.number().int().positive(),
       withinFtPerKwh: z.number().positive(),
       aboveFtPerKwh: z.number().positive(),
       label: text,
-    }),
+    }).optional(),
   }),
   z.strictObject({
     ...common,

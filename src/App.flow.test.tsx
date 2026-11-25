@@ -115,7 +115,7 @@ describe("complete the questionnaire with clicks only", () => {
     expect(sink.record?.sessionId).toBe(sessionId);
     expect(screen.getByText(sessionId, { selector: "code" })).toBeTruthy();
     expect(screen.getByText("Az Ön kitöltési azonosítója:")).toBeTruthy();
-    expect(screen.getByText("Ezzel az azonosítóval kérheti a kitöltése törlését vagy a válaszai másolatát. Nevet és elérhetőséget nem kérünk, ezért az azonosító nélkül a kitöltését nem tudjuk Önhöz kötni. Kérjük, mentse el. Ezen az eszközön is megmarad, amíg nem kezd új kitöltést, vagy nem törli a böngésző adatait.")).toBeTruthy();
+    expect(screen.getByText("Ezzel az azonosítóval kérheti a kitöltése törlését vagy a válaszai másolatát. Nevet és elérhetőséget nem kérünk, ezért az azonosító nélkül a kitöltését nem tudjuk Önhöz kötni.")).toBeTruthy();
     expect(screen.getByText("Új kitöltés előtt mentse el az azonosítót: az új kitöltés törli ezt az eszközről.")).toBeTruthy();
 
     const writeText = vi.spyOn(navigator.clipboard, "writeText");

@@ -49,6 +49,7 @@ export function CardShell({
     window.scrollTo?.(0, 0);
   }, []);
   const lead = "lead" in card ? card.lead : undefined;
+  const scenario = "leadStyle" in card && card.leadStyle === "scenario";
   const firstLead = useSel(({ ctx, state }) => !!lead && state.order.find((id) => {
     const shown = ctx.byId.get(id);
     return shown && "lead" in shown && shown.lead === lead;
@@ -63,7 +64,11 @@ export function CardShell({
     <section aria-labelledby={`h-${card.id}`} data-card={card.id}>
       {api.inJump && <ReturnToSummary api={api} />}
       <div className="card-panel">
-        {lead && (
+        {lead && scenario && (
+          // A new situation reads like the question on its first showing; repeats shrink to a reminder.
+          <p className={`mb-2 whitespace-pre-line ${firstLead ? "text-xl font-semibold leading-snug" : "text-base text-muted"}`}>{lead}</p>
+        )}
+        {lead && !scenario && (
           <p className="mb-2 grid items-start text-muted whitespace-pre-line">
             <span className={`col-start-1 row-start-1 ${firstLead ? "text-base" : "text-sm"}`}>{lead}</span>
             {/* Reserve the first lead's height on repeats, including at narrow widths. */}

@@ -6,6 +6,11 @@ import { CardShell, KeyHint } from "../CardShell.tsx";
 import { iconFor } from "../icons.ts";
 import { useCardApi, useKeyHandlers } from "../session.tsx";
 
+/** Tile grid whose last, shorter row is centred: 2 / 3 / 4 tiles per row by width. */
+export const TILE_GRID = "flex flex-wrap justify-center gap-3";
+export const TILE_WIDTH = "w-[calc(50%-0.375rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc(25%-0.5625rem)]";
+export const TILE_CLASS = `opt ${TILE_WIDTH} !flex-col !justify-start gap-2 !px-2 !py-3 text-center`;
+
 export function MultiTilesCard({ card }: { card: Extract<Card, { type: "multi_tiles" }> }) {
   const api = useCardApi(card);
   const options = visibleOptions(card, api.analysis.view);
@@ -39,7 +44,7 @@ export function MultiTilesCard({ card }: { card: Extract<Card, { type: "multi_ti
         type="button"
         role="checkbox"
         aria-checked={on}
-        className="opt !flex-col !justify-start gap-2 !px-2 !py-3 text-center"
+        className={TILE_CLASS}
         onClick={() => toggle(o.value)}
         onKeyDown={(e) => {
           // Enter continues (Space toggles natively).
@@ -60,9 +65,9 @@ export function MultiTilesCard({ card }: { card: Extract<Card, { type: "multi_ti
 
   return (
     <CardShell api={api}>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <div className={TILE_GRID}>
         {combinable.map(renderTile)}
-        {combinable.length > 0 && exclusive.length > 0 && <hr className="col-span-full h-px rounded-full border-0 bg-soft" />}
+        {combinable.length > 0 && exclusive.length > 0 && <hr className="h-px w-full rounded-full border-0 bg-soft" />}
         {exclusive.map(renderTile)}
       </div>
       <p role="status" className="mt-2 min-h-5 text-sm text-danger">

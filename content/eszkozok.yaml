@@ -3,7 +3,8 @@
 # A szintek (A/B/C) SAJÁT, SORRENDI FELTEVÉSEK. Nem mért adatok.
 # Alapjuk egy EU-s éves kWh-tábla (MI-írta kutatási jegyzet, elsődleges forrás helyben nincs)
 # és egy minőségi prioritási sorrend: nagy, időben eltolható fogyasztók (hőszivattyú, villanyautó,
-# villanybojler, akkumulátor) > klíma, napelem, szivattyú > mosó- és mosogatógép.
+# villanybojler, akkumulátor) > klíma, napelem, medenceszivattyú > mosó- és mosogatógép.
+# Az öntözőszivattyúnak (0.5.0) még nincs modulja: az öntözés időzítése (hajnal, párolgás) külön vizsgálatot kér.
 # Készülékenként áthelyezhető kWh-ra elsődleges forrást nem találtunk.
 #
 # Csak arra valók, hogy egy eszközről hány kérdés jöhessen. A kitöltő nem látja őket,
@@ -20,15 +21,17 @@ appliances:
   - { id: hoszivattyu,      label: "Hőszivattyú (fűtés)",                       icon: hoszivattyu }
   - { id: klima,            label: "Klíma",                                     icon: klima }
   - { id: villanybojler,    label: "Villanybojler",                             icon: bojler }
-  - { id: elektromos_futes, label: "Elektromos fűtés (panel, hőtárolós kályha)", icon: futes }
+  - { id: elektromos_futes, label: "Elektromos fűtés (panel, hőtárolós kályha)", icon: tekercs }
   - { id: villanyauto,      label: "Villanyautó vagy konnektoros hibrid",       icon: auto }
   - { id: napelem,          label: "Napelem",                                   icon: napelem }
   - { id: akkumulator,      label: "Otthoni akkumulátor",                       icon: akkumulator }
   - { id: mosogep,          label: "Mosógép",                                   icon: mosogep }
   - { id: mosogatogep,      label: "Mosogatógép",                               icon: mosogatogep }
   - { id: szarito,          label: "Szárítógép",                                icon: szarito }
-  - { id: elektromos_fozes, label: "Elektromos főzőlap vagy sütő",              icon: fozes }
-  - { id: szivattyu,        label: "Medence- vagy öntözőszivattyú",             icon: szivattyu }
+  - { id: fozolap,          label: "Elektromos főzőlap",                        icon: fozolap }
+  - { id: suto,             label: "Elektromos sütő",                           icon: suto }
+  - { id: medence,          label: "Medence (szivattyúval)",                    icon: medence }
+  - { id: ontozo,           label: "Öntözőszivattyú",                           icon: ontozes }
 
 # Modulok: a modul aktív, ha a kitöltő a felsorolt eszközök bármelyikével rendelkezik.
 # A sorrend számít: a modulkártyák ebben a sorrendben jönnek, és csökkentéskor egy szinten belül,
@@ -48,5 +51,5 @@ modules:
   - { id: akkumulator,      tier: A, appliances: [akkumulator] }
   - { id: elektromos_futes, tier: A, appliances: [elektromos_futes] }
   - { id: napelem,          tier: B, appliances: [napelem] }
-  - { id: szivattyu,        tier: B, appliances: [szivattyu] }
+  - { id: medence,          tier: B, appliances: [medence] }
   - { id: haztartasi_gepek, tier: C, appliances: [mosogep, mosogatogep, szarito] }

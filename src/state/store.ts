@@ -26,7 +26,7 @@ export interface StoreState {
   /** Bumps whenever a card is entered or left by navigation (used to reset per-card UI such as focus). */
   navCount: number;
   // actions
-  commit(id: string, value: ItemValue, input?: InputMethod): void;
+  commit(id: string, value: ItemValue, input?: InputMethod, otherText?: string): void;
   setTimingVisible(visible: boolean): void;
   skipCard(id: string): void;
   /** Record consent and advance in one transition. */
@@ -110,7 +110,7 @@ export function createSessionStore(opts: {
         visible = nextVisible;
         if (state !== previous) apply(state);
       },
-      commit: (id, value, input) => {
+      commit: (id, value, input, otherText) => {
         const s = checkpoint(get().state);
         const entry = s.paradata?.[id];
         const first = ctx.settings.display.scaleInput === "ab_test" && id === REACTION_CARD && input && entry && !entry.firstAnswer
@@ -118,7 +118,7 @@ export function createSessionStore(opts: {
         const timed = first ? { ...s, paradata: { ...s.paradata, [id]: {
           ...entry, firstAnswer: { input, ms: Math.round(entry.dwellMs / 100) * 100 },
         } } } : s;
-        apply(engine.answer(ctx, timed, id, value));
+        apply(engine.answer(ctx, timed, id, value, otherText));
       },
       skipCard: (id) => apply(engine.skip(ctx, get().state, id)),
       acceptConsent: (id, consent) => {

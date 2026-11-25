@@ -9,6 +9,8 @@ export interface ResponseSink {
   save(state: SessionState, record: ResponseRecord): void;
   /** Forget the stored session. */
   clear(): void;
+  /** Delete this session from the device and ignore any later save of it (after the server accepted it). */
+  forget?(sessionId: string): void;
 }
 
 /** localStorage sink. Every access is wrapped: the app must work with storage unavailable. */
@@ -28,11 +30,25 @@ export class LocalSink implements ResponseSink {
     }
   }
 
+  private forgotten?: string;
+
   save(state: SessionState, record: ResponseRecord): void {
+    if (state.sessionId === this.forgotten) return;
     try {
       localStorage.setItem(this.key, JSON.stringify({ state, record }));
     } catch {
       /* storage full, blocked or unavailable: the questionnaire keeps working in memory */
+    }
+  }
+
+  forget(sessionId: string): void {
+    this.forgotten = sessionId;
+    try {
+      const raw = localStorage.getItem(this.key);
+      const stored = raw ? (JSON.parse(raw) as { state?: { sessionId?: unknown } }).state?.sessionId : undefined;
+      if (stored === undefined || stored === sessionId) localStorage.removeItem(this.key);
+    } catch {
+      /* ignore */
     }
   }
 

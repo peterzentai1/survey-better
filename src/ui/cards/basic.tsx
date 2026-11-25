@@ -1,12 +1,14 @@
 // info, consent, single and free_text cards.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DEFAULT_EFFORT_LEVEL } from "../../engine/effort.ts";
 import { visibleOptions } from "../../engine/inputs.ts";
-import type { Card } from "../../engine/schema.ts";
+import type { Card, CardOption } from "../../engine/schema.ts";
 import { metricsEnabled } from "../../storage/metrics.ts";
 import { CardShell, KeyHint } from "../CardShell.tsx";
 import { EffortMedian } from "../EffortMedian.tsx";
+import { iconFor } from "../icons.ts";
 import { useCardApi, useKeyHandlers, useSel } from "../session.tsx";
+import { TILE_CLASS, TILE_GRID } from "./MultiTilesCard.tsx";
 
 type Of<T extends Card["type"]> = Extract<Card, { type: T }>;
 
@@ -93,6 +95,7 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
           <span className="mt-1 block text-sm text-muted">Nagyobb méretben (új lapon nyílik)</span>
         </a>
       )}
+      {card.details && <p className="mt-4 whitespace-pre-line text-sm text-muted">{card.details}</p>}
       {ctx.settings.display.privacyNotice && (
         <p className="mt-2">
           <a className="text-primary underline" href={ctx.settings.display.privacyNotice} target="_blank" rel="noopener">
@@ -131,31 +134,91 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
   );
 }
 
+/** Longest text accepted in an "Egyéb" field. */
+export const OTHER_MAX = 200;
+
 export function SingleCard({ card }: { card: Of<"single"> }) {
   const api = useCardApi(card);
   const options = visibleOptions(card, api.analysis.view);
   const selected = api.item?.status === "answered" ? api.item.value : undefined;
+  const otherOption = options.find((o) => o.other);
+  const [otherOpen, setOtherOpen] = useState(selected !== undefined && selected === otherOption?.value);
+  const [otherText, setOtherText] = useState(api.item?.otherText ?? "");
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (otherOpen) input.current?.focus();
+  }, [otherOpen]);
   useKeyHandlers({ skip: card.skip ? api.skip : undefined });
   const choose = (value: string) => {
+    setOtherOpen(false);
     api.commit(value);
     api.autoAdvance();
   };
+  const saveOther = () => {
+    if (!otherOption) return;
+    api.commit(otherOption.value, undefined, otherText);
+    api.next();
+  };
   const chips = card.layout === "chips";
+  const tiles = card.layout === "tiles";
+  const otherField = (o: CardOption) => (
+    <fieldset key={o.value} className={`opt opt-other ${tiles ? "w-full" : ""}`}>
+      <legend className="px-1 text-sm text-muted">{o.label}</legend>
+      <label className="sr-only" htmlFor={`o-${card.id}`}>
+        {o.label}: írja le röviden
+      </label>
+      <input
+        id={`o-${card.id}`}
+        ref={input}
+        type="text"
+        className="w-full bg-transparent py-1 outline-none"
+        value={otherText}
+        maxLength={OTHER_MAX}
+        autoComplete="off"
+        aria-describedby={`on-${card.id}`}
+        onChange={(e) => setOtherText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            saveOther();
+          }
+        }}
+      />
+    </fieldset>
+  );
+  const optionButton = (o: CardOption) => {
+    const Icon = tiles ? iconFor(o.icon) : null;
+    return (
+      <button
+        key={o.value}
+        type="button"
+        className={tiles ? TILE_CLASS : `opt ${chips ? "!w-auto min-w-14 justify-center" : ""}`}
+        aria-pressed={selected === o.value && !(o.other && otherOpen)}
+        onClick={() => (o.other ? setOtherOpen(true) : choose(o.value))}
+      >
+        {Icon && <Icon size={32} stroke={1.6} aria-hidden="true" />}
+        {tiles ? <span className="text-sm leading-tight">{o.label}</span> : o.label}
+      </button>
+    );
+  };
+  const open = otherOpen ? otherOption : undefined;
   return (
     <CardShell api={api}>
-      <div className={chips ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
-        {options.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            className={`opt ${chips ? "!w-auto min-w-14 justify-center" : ""}`}
-            aria-pressed={selected === o.value}
-            onClick={() => choose(o.value)}
-          >
-            {o.label}
-          </button>
-        ))}
+      <div className={tiles ? TILE_GRID : chips ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
+        {options.map((o) => (o === open && !tiles ? otherField(o) : optionButton(o)))}
+        {open && tiles && otherField(open)}
       </div>
+      {otherOpen && (
+        <>
+          <p id={`on-${card.id}`} className="mt-2 text-sm text-muted">
+            Kérjük, ne írjon nevet, címet, telefonszámot vagy más azonosító adatot.
+          </p>
+          <button type="button" className="btn btn-primary mt-3 w-full" onClick={saveOther}>
+            Tovább
+            <KeyHint>Enter</KeyHint>
+          </button>
+        </>
+      )}
     </CardShell>
   );
 }

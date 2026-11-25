@@ -1,5 +1,14 @@
 # Kártyaséma változásai
 
+## v0.5.0
+
+- `single` kártya: `layout: tiles` (piktogramos csempék, az opciók `icon` mezőjével) és `layout: count` (rendezett számok; a koppintós vagy húzós felület a kitöltő A/B csoportját követi, ha `scaleInput: ab_test`).
+- Opció: `other: true` (csak listás vagy csempés `single` kártyán, kártyánként egy). Választáskor szövegmező nyílik; a szöveg az elemrekord `otherText` mezőjébe kerül (legfeljebb 200 karakter), és más opció választásakor törlődik.
+- `consent` kártya: opcionális `details` (az adatkezelési részletek kisebb, halvány betűvel a fő szöveg után).
+- Minden kártya: opcionális `leadStyle: scenario` (a lead első megjelenése a kérdés stílusában).
+- `consumption` kártya: `unit` (`kWh` vagy `Ft`), `fieldLabel`, `sliderStep`; a `tariff` opcionális, és csak kWh-nál használható.
+- A számbillentyűk 1–9 között működnek (eddig 1–6), a kártya maga ellenőrzi a tartományt.
+
 ## v0.4.0
 
 - A `consent` kártya opcionális `figure: { src, alt }` mezője egy statikus képet jelenít meg a szöveg után (`src`: a `public/` alatti, `/`-rel kezdődő útvonal; `alt`: a kép tartalmát leíró szöveg). Nem gyűjt adatot, külső forrást nem tölt be.

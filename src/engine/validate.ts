@@ -115,6 +115,12 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], file: string
     if (ids.has(c.id)) add(where(c, i), `A kártya azonosítója nem egyedi (először a cards[${ids.get(c.id)}] használja).`);
     else ids.set(c.id, i);
     if (!blockIds.has(c.block)) add(`${where(c, i)}.block`, `Ismeretlen blokk: „${c.block}”.`);
+    if ("options" in c && c.options) {
+      const others = c.options.filter((o) => o.other).length;
+      if (others && (c.type !== "single" || (c.layout !== undefined && c.layout !== "list" && c.layout !== "tiles")))
+        add(`${where(c, i)}.options`, "Az „other: true” csak listás vagy csempés single kártyán használható.");
+      if (others > 1) add(`${where(c, i)}.options`, "Egy kártyán legfeljebb egy „other: true” opció lehet.");
+    }
   });
   const cardById = new Map(bank.cards.map((c) => [c.id, c]));
   const applianceIds = new Set(devices.appliances.map((a) => a.id));
@@ -202,8 +208,10 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], file: string
       if (bank.cards.find((source) => source.id === c.optionsFrom)?.type !== "multi_tiles")
         add(`${w}.optionsFrom`, "Az optionsFrom értéke egy multi_tiles kártya azonosítója legyen.");
     }
-    if (c.type === "consumption" && c.sliderMax <= c.tariff.thresholdKwh)
+    if (c.type === "consumption" && c.tariff && c.sliderMax <= c.tariff.thresholdKwh)
       add(`${w}.sliderMax`, "A csúszka felső határa legyen a kedvezményes keret fölött.");
+    if (c.type === "consumption" && c.tariff && c.unit === "Ft")
+      add(`${w}.tariff`, "Tarifaszemléltetés csak kWh-ban megadott fogyasztásnál lehet.");
     c.textVariants?.forEach((v, k) => checkCondition(v.when, `${w}.textVariants[${k}].when`, c));
     if (c.module !== undefined) {
       if (!moduleIds.has(c.module)) add(`${w}.module`, `Ismeretlen modul az eszkozok.yaml-ban: „${c.module}”.`);

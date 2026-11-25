@@ -7,7 +7,7 @@ import { createSession, currentId, localDate, validateSnapshot, type SessionStat
 import type { ContentResult } from "./engine/validate.ts";
 import { createSessionStore, type SessionStore } from "./state/store.ts";
 import { queueCompletion, retryCompletions } from "./storage/metrics.ts";
-import { responseOutbox } from "./storage/responses.ts";
+import { responseOutbox, DELIVERED_EVENT } from "./storage/responses.ts";
 import { LocalSink, type ResponseSink } from "./storage/sinks.ts";
 import { supabaseConfigured } from "./storage/supabase.ts";
 import { Admin } from "./ui/Admin.tsx";
@@ -128,6 +128,19 @@ function SurveySession({ bank, devices, slug, settings, sink: sinkProp, debug, o
     return saved.completed ? makeStore(saved.sessionId, saved) : null;
   });
 
+  // Once the server has accepted this completion, nothing of it stays on the device.
+  const [forgotten, setForgotten] = useState<string | null>(null);
+  useEffect(() => {
+    const onDelivered = (e: Event) => {
+      const receipt = (e as CustomEvent<string>).detail;
+      if (!sink.forget || receipt !== store?.getState().state.sessionId) return;
+      sink.forget(receipt);
+      setForgotten(receipt);
+    };
+    window.addEventListener(DELIVERED_EVENT, onDelivered);
+    return () => window.removeEventListener(DELIVERED_EVENT, onDelivered);
+  }, [sink, store]);
+
   const restart = () => {
     sink.clear();
     setStore(makeStore(newSessionId()));
@@ -146,12 +159,12 @@ function SurveySession({ bank, devices, slug, settings, sink: sinkProp, debug, o
   }
   return (
     <StoreContext.Provider value={store}>
-      <SessionScreen debug={debug} onRestart={restart} />
+      <SessionScreen debug={debug} onRestart={restart} forgotten={forgotten !== null && forgotten === store.getState().state.sessionId} />
     </StoreContext.Provider>
   );
 }
 
-function SessionScreen({ debug, onRestart }: { debug: DebugFlags; onRestart: () => void }) {
+function SessionScreen({ debug, onRestart, forgotten }: { debug: DebugFlags; onRestart: () => void; forgotten: boolean }) {
   const store = useSessionStore();
   const registry = useRef<KeyHandlers | null>(null);
   const completed = useSel((s) => s.state.completed);
@@ -175,7 +188,7 @@ function SessionScreen({ debug, onRestart }: { debug: DebugFlags; onRestart: () 
   if (completed) {
     return (
       <>
-        <ThankYou download={debug.download} onRestart={onRestart} />
+        <ThankYou download={debug.download} onRestart={onRestart} forgotten={forgotten} />
         {debug.panel && <DebugPanel download={debug.download} />}
       </>
     );

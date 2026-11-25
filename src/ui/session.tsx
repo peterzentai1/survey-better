@@ -57,7 +57,7 @@ export interface CardApi {
   text: string;
   /** True while editing a card reached from the summary. */
   inJump: boolean;
-  commit(value: ItemValue, input?: InputMethod): void;
+  commit(value: ItemValue, input?: InputMethod, otherText?: string): void;
   /** Record the skip; moves on unless editing from the summary. */
   skip(): void;
   next(): void;
@@ -84,7 +84,10 @@ export function useCardApi(card: Card): CardApi {
 
   const text = cardText(card, item?.variant);
 
-  const commit = useCallback((value: ItemValue, input?: InputMethod) => store.getState().commit(card.id, value, input), [store, card.id]);
+  const commit = useCallback(
+    (value: ItemValue, input?: InputMethod, otherText?: string) => store.getState().commit(card.id, value, input, otherText),
+    [store, card.id],
+  );
   const next = useCallback(() => store.getState().next(), [store]);
   const autoAdvance = useCallback(() => {
     if (editingSkippedCard(store.getState().state)) return;

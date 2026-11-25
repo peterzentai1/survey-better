@@ -1,5 +1,11 @@
 // The local outbox survives reloads. The server's receipt constraint handles cross-tab retries.
-export function deliveryQueue<T>(prefix: string, deliver: (entry: T) => Promise<unknown>, legacyPrefix?: string) {
+export function deliveryQueue<T>(
+  prefix: string,
+  deliver: (entry: T) => Promise<unknown>,
+  legacyPrefix?: string,
+  /** Called with the receipt (the key without the prefix) once the server has accepted an entry. */
+  onDelivered?: (receipt: string) => void,
+) {
   const pending = new Map<string, T>();
   const sending = new Set<string>();
 
@@ -14,6 +20,7 @@ export function deliveryQueue<T>(prefix: string, deliver: (entry: T) => Promise<
     try {
       await deliver(entry);
       forget(id);
+      if (id.startsWith(prefix)) onDelivered?.(id.slice(prefix.length));
     } catch { /* Retry on the next visit or online event. */ }
     finally { sending.delete(id); }
   }
