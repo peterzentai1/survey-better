@@ -33,8 +33,8 @@ describe("survey metrics UI", () => {
     const sink = new MemSink(state);
     const { user } = renderApp({ content, sink });
     await user.click(screen.getByRole("button", { name: "Folytatom" }));
-    const start = screen.getByRole("radio", { name: "1 – Nagyon kellemetlen" });
-    const end = screen.getByRole("radio", { name: "6 – Nagyon kellemes" });
+    const start = screen.getByRole("radio", { name: "1 – Egyáltalán nem kellemetlen" });
+    const end = screen.getByRole("radio", { name: "6 – Rendkívül kellemetlen" });
     if (arm === "drag") {
       expect(screen.getByText("Húzza oldalra vagy koppintson")).toBeTruthy();
       const pointer = { pointerType: "touch", pointerId: 2, isPrimary: true, button: 0 };

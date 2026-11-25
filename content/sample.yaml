@@ -67,7 +67,7 @@ cards:
     participationLabel: "Elolvastam, és részt veszek a kérdőívben."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait (pl. kártyánként eltöltött idő) is rögzítsék."
 
-  # ── single: egy választás. layout: list (alapértelmezett) | chips (rövid, számszerű opciók)
+  # ── single: egy választás. layout: list (alapértelmezett) | chips (rövid opciók) | pager (lapozható)
   - id: A01
     block: alapok
     type: single
@@ -125,6 +125,38 @@ cards:
       - { value: mosogep, label: "Mosógép", icon: mosogep }
       - { value: egyik_sem, label: "Egyik sem", icon: nincs }
     exclusive: [egyik_sem]
+
+  - id: E04
+    block: eszkozok
+    type: multi_tiles
+    showIf: { owns: villanyauto }
+    text: "Hol szokták tölteni az autót?"
+    options:
+      - { value: otthon, label: "Otthon" }
+      - { value: nyilvanos, label: "Nyilvános töltőn" }
+
+  # ── percent_split: legalább két jelölt opció esetén jelenik meg. A megadott értékek összege 100.
+  - id: E04B
+    block: eszkozok
+    effort: 3
+    type: percent_split
+    optionsFrom: E04
+    text: "Milyen arányban oszlik meg a töltés a megjelölt helyek között?"
+
+  # ── consumption: éves kWh és két ársáv. A számmezővel a csúszka határa fölé is lehet menni.
+  - id: T04
+    block: alapok
+    effort: 2
+    type: consumption
+    text: "Nagyjából mennyi a háztartás éves áramfogyasztása?"
+    sliderMax: 12000
+    unknownLabel: "Nem tudom"
+    tariff:
+      thresholdKwh: 2523
+      withinFtPerKwh: 36.386
+      aboveFtPerKwh: 70.104
+      label: "Példaszámítás az MVM Démász nappali (A1) árával, alapdíj nélkül."
+    skip: false
 
   # ── yesno: Igen / Nem (+ kihagyás). Érintésen húzással is: jobbra = igen, balra = nem.
   #    yesLabel / noLabel: opcionális felirat-felülírás. Az érték mindig "igen" vagy "nem".

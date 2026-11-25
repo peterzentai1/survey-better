@@ -61,7 +61,7 @@ export const cardSchema = z.discriminatedUnion("type", [
     ...common,
     type: z.literal("single"),
     text,
-    layout: z.enum(["list", "chips"]).optional(),
+    layout: z.enum(["list", "chips", "pager"]).optional(),
     options: z.array(option).min(2),
   }),
   z.strictObject({
@@ -72,6 +72,20 @@ export const cardSchema = z.discriminatedUnion("type", [
     devicePicker: z.boolean().optional(),
     exclusive: z.array(z.string()).optional(),
     max: z.number().int().positive().optional(),
+  }),
+  z.strictObject({ ...common, type: z.literal("percent_split"), text, optionsFrom: text }),
+  z.strictObject({
+    ...common,
+    type: z.literal("consumption"),
+    text,
+    sliderMax: z.number().int().positive(),
+    unknownLabel: text,
+    tariff: z.strictObject({
+      thresholdKwh: z.number().int().positive(),
+      withinFtPerKwh: z.number().positive(),
+      aboveFtPerKwh: z.number().positive(),
+      label: text,
+    }),
   }),
   z.strictObject({
     ...common,

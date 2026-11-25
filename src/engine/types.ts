@@ -23,8 +23,10 @@ export type Condition =
 
 export type ItemStatus = "not_shown" | "shown" | "answered" | "skipped";
 
-/** A stored answer: single/yesno = string, scale6 = number, multi_tiles = string[], timeline = hours (number[]), free_text = string, consent = true. */
-export type ItemValue = string | number | boolean | string[] | number[];
+export type PercentSplit = Record<string, number>;
+
+/** Stored answers. A percent split maps option IDs to integer percentages. */
+export type ItemValue = string | number | boolean | string[] | number[] | PercentSplit;
 
 export interface ItemRecord {
   status: ItemStatus;

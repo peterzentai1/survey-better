@@ -36,7 +36,7 @@ function zodIssues(file: string, error: z.ZodError, data: unknown): Issue[] {
       file,
       path: formatPath(i.path, data),
       message: isType
-        ? "Ismeretlen kártyatípus. Lehetséges: info, consent, single, multi_tiles, yesno, scale6, timeline, free_text, summary_highlight."
+        ? "Ismeretlen kártyatípus. Lehetséges: info, consent, single, multi_tiles, percent_split, consumption, yesno, scale6, timeline, free_text, summary_highlight."
         : i.message,
     };
   });
@@ -197,6 +197,13 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], file: string
     if (c.effort !== 1 && !isAnswerable(c))
       add(`${w}.effort`, "Ezen a kártyán az effort kötelező értéke 1.");
     checkCondition(c.showIf, `${w}.showIf`, c);
+    if (c.type === "percent_split") {
+      checkCondition({ answer: c.optionsFrom, answered: true }, `${w}.optionsFrom`, c);
+      if (bank.cards.find((source) => source.id === c.optionsFrom)?.type !== "multi_tiles")
+        add(`${w}.optionsFrom`, "Az optionsFrom értéke egy multi_tiles kártya azonosítója legyen.");
+    }
+    if (c.type === "consumption" && c.sliderMax <= c.tariff.thresholdKwh)
+      add(`${w}.sliderMax`, "A csúszka felső határa legyen a kedvezményes keret fölött.");
     c.textVariants?.forEach((v, k) => checkCondition(v.when, `${w}.textVariants[${k}].when`, c));
     if (c.module !== undefined) {
       if (!moduleIds.has(c.module)) add(`${w}.module`, `Ismeretlen modul az eszkozok.yaml-ban: „${c.module}”.`);

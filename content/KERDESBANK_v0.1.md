@@ -2,6 +2,24 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.3.4 változások (2026-11-25)
+
+- **I10.** A kétórás, egyfokos esti visszavétel elképzelt kellemetlenségét hat fokozat méri, az „Egyáltalán nem kellemetlen” és a „Rendkívül kellemetlen” között. Mindkét A/B csoport ugyanazt a címkesort kapja. A címkék ehhez a kérdőívhez készült adaptációk. Az elemzésben az I10 pontszámát bankverzió szerint kell értelmezni. [ISO 10551:2019](https://www.iso.org/standard/67186.html), [Cakó, 2022, 3.5.2](https://pea.lib.pte.hu/server/api/core/bitstreams/576acf6b-9236-49cc-8d32-5b8c03aefd0b/content).
+- **M_PV_1 → M_PV_3.** A fizetett betáplálás-korlátozás helyére a tervezett esti klímás hűtés kézi előrehozása került egy napelemes többletet adó délutánra. A tételhez napelemet és klímát is jelölni kell. A visszatáplálás helyben korlátozható megfelelő méréssel és invertervezérléssel. Az elosztó által távolról állított, időben változó limithez további kompatibilis eszköz és adatkapcsolat kell. Az előhűtés műszaki lehetőségére van mérési példa, az összes áramfogyasztás az épülettől és az időzítéstől függően változhat. [MVM Hálózat](https://mvmhalozat.hu/attachments/30852), [SA Power Networks](https://www.sapowernetworks.com.au/industry/flexible-exports/), [Lakóépületi kísérlet, 2019](https://doi.org/10.3130/aije.84.73).
+
+## v0.3.3 változások (2026-11-25)
+
+- **N01.** Az egyeztetés javítva a „napelemek csúcstermelése … ért fel” mondatban.
+- **A04.** A háztartáslétszám lapozható választóban jelenik meg.
+- **E04B.** Az alapos változatban legalább két megjelölt hely esetén rákérdez az autóba töltött áram százalékos megoszlására.
+- **T04.** Éves kWh-becslés csúszkával és közvetlen bevitellel, az A1 fogyasztási díj szemléltetésével. A 0.3.2-ben szereplő „nagyjából annyit” válasznak nincs meghatározott sávja, ezért az összevont elemzéshez először közös kategóriahatárok kellenek.
+
+### Mérési előzmények
+
+- **I10.** A termikus környezet szubjektív értékelésénél a kellemetlenség és a személyes elfogadhatóság külön vizsgált dimenzió. A PTE magyar alkalmazása egypólusú hőkomfortskálát ismertet a tényleges környezet értékelésére. Az I10 elképzelt kérésre adott reakciójához ez módszertani előzmény. Közvetlenül átvehető, validált hatfokú magyar címkesort ehhez a tételhez nem találtunk. Javasolt kérdés az I10 közös bevezetője után a „Mennyire érezné kellemetlennek, ha teljesítené ezt a kérést?” [ISO 10551:2019](https://www.iso.org/standard/67186.html), [Cakó, 2022, 3.5.2](https://pea.lib.pte.hu/server/api/core/bitstreams/576acf6b-9236-49cc-8d32-5b8c03aefd0b/content).
+- **M_BO_2.** A „zuhanyzásnyi” válasz a háztartás saját minimumigényének feltáró becslése a K3 helyzetkártya alapján. A zuhanyzáshoz igényelt víz és energia függ az időtartamtól, a vízhozamtól és a hőmérséklettől. A vízmelegítők műszaki összehasonlításához létezik 40 °C-os, literben kifejezett mutató (V40). A jelenlegi kérdőívtételhez közvetlen validálást nem találtunk. [Marszal-Pomianowska és mtsai, 2021](https://doi.org/10.3390/en14113314), [EU mérési módszer, V40](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=uriserv%3AOJ.C_.2014.207.01.0022.01.ENG).
+- **M_HP_2.** A szokásos téli esti szobahőmérséklet segít értelmezni a megengedett lehűlést. A terepkutatásban az időtartam, a beltéri hőmérséklet és a beavatkozás késleltetett hatása is számított. Ebből a konkrét kérdőívtétel válaszaira gyakorolt hatás nagysága nem becsülhető. Kiegészítő kérdésként a szokásos esti hőmérsékletet kérdeznénk abban a szobában, ahol a kitöltő a legtöbb időt tölti. [Nambiar és mtsai, 2025](https://escholarship.org/content/qt22b1302f/qt22b1302f.pdf).
+
 ## v0.3.2 változások (a kitöltő 1. körös jegyzetei alapján, 2026-11-25)
 
 | Kártya | Változás |
