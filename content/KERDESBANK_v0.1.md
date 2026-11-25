@@ -17,7 +17,7 @@ A szerző utolsó javítási köre a konzulensi előnézet előtt (`utolsó jav�
 - **T04.** Az éves kWh helyett az átlagos havi villanyszámla forintban (csúszka 0–60 000 Ft és közvetlen bevitel, „Nem tudom”), mert a számlán az energiadíj mellett más tételek is vannak. **A 0.3.3–0.4.0 T04 válaszai nem vonhatók össze vele.**
 - **I01–I08, I10–I11.** Az új helyzetet bevezető sor (lead) első megjelenésekor a kérdéssel azonos betűstílusú; ismétléskor szürke, a korábbinál 2 ponttal nagyobb. Az „Elképzelt ajánlat” sor nem változott.
 - **I09.** A csatornák sorrendje: mobil app, SMS, email. **M_HP_1, M_KL_1, M_KL_2, M_EF_1:** hiányzó szóköz („ki), előtte”).
-- **Felület.** A csempés kérdések rövidebb utolsó sora középre igazodik. Az igen/nem gombok billentyűtippje nem tördelődik.
+- **Felület.** A csempés kérdések rövidebb utolsó sora középre igazodik. Az igen/nem gombok billentyűtippje nem tördelődik. A lábléc linkjei (adatkezelési tájékoztató, forráskód) csak a nyitókártyán és a köszönőképernyőn látszanak, kitöltés közben nem; az N02 saját tájékoztató-linkje megmarad.
 - **Köszönőképernyő.** A „Kérjük, mentse el” és az „Ezen az eszközön is megmarad” mondat kikerült. A szerver visszaigazolása után a kitöltés automatikusan törlődik az eszközről, az azonosító csak a képernyőn marad. A tájékoztató ehhez igazodik.
 
 ## v0.4.0 változások (2026-11-25)

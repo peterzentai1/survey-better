@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { loadContent } from "./content/load.ts";
 import { acceptingResponses, DEFAULT_SURVEY, defaultSettings, type SurveySettings } from "./content/survey.ts";
 import { makeCtx } from "./engine/path.ts";
@@ -49,6 +49,8 @@ function newSessionId(): string {
 
 export function App({ content, sink, debug }: AppProps) {
   const [parsed] = useState(() => content ?? loadContent());
+  // The footer links show before and after the questionnaire, not while the respondent is answering.
+  const [filling, setFilling] = useState(false);
   if (!parsed.ok) {
     return <main className="mx-auto max-w-[560px] px-4 pt-3"><ErrorScreen issues={parsed.issues} /></main>;
   }
@@ -62,17 +64,19 @@ export function App({ content, sink, debug }: AppProps) {
         <>
           <Banner text={settings.display.banner} />
           <main className="mx-auto w-full max-w-[560px] px-4 pb-12 pt-3">
-            <Questionnaire bank={bank} devices={devices} slug={slug} settings={settings} sink={sink} debug={debug ?? defaultDebug()} />
+            <FillingContext.Provider value={setFilling}>
+              <Questionnaire bank={bank} devices={devices} slug={slug} settings={settings} sink={sink} debug={debug ?? defaultDebug()} />
+            </FillingContext.Provider>
           </main>
         </>
       )}
-      <footer className="mx-auto max-w-[560px] px-4 pb-8 text-center text-sm">
+      {!(filling && !isAdmin) && <footer className="mx-auto max-w-[560px] px-4 pb-8 text-center text-sm">
         {settings.display.privacyNotice && <>
           <a className="text-primary underline" href={settings.display.privacyNotice} target="_blank" rel="noopener">Adatkezelési tájékoztató</a>
           {" · "}
         </>}
         <a className="text-primary underline" href={settings.display.sourceLink}>Forráskód (AGPL-3.0)</a>
-      </footer>
+      </footer>}
     </>
   );
 }
@@ -164,11 +168,19 @@ function SurveySession({ bank, devices, slug, settings, sink: sinkProp, debug, o
   );
 }
 
+const FillingContext = createContext<(filling: boolean) => void>(() => {});
+
 function SessionScreen({ debug, onRestart, forgotten }: { debug: DebugFlags; onRestart: () => void; forgotten: boolean }) {
   const store = useSessionStore();
   const registry = useRef<KeyHandlers | null>(null);
   const completed = useSel((s) => s.state.completed);
   const cur = useSel((s) => currentId(s.state));
+  const setFilling = useContext(FillingContext);
+  const first = store.getState().ctx.deck.order[0];
+  useEffect(() => {
+    setFilling(!completed && cur !== undefined && cur !== first);
+    return () => setFilling(false);
+  }, [setFilling, completed, cur, first]);
   useBrowserHistory(store);
   useEffect(() => {
     const visibility = () => store.getState().setTimingVisible(!document.hidden);

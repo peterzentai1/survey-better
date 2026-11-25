@@ -26,6 +26,7 @@ describe("after the server accepts a completion", () => {
     renderApp({ content, sink });
     expect(await screen.findByTestId("thank-you")).toBeTruthy();
     expect(screen.getByText(/Új kitöltés előtt mentse el/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Forráskód (AGPL-3.0)" })).toBeTruthy();
 
     act(() => {
       window.dispatchEvent(new CustomEvent(DELIVERED_EVENT, { detail: "someone-else" }));
@@ -56,5 +57,16 @@ describe("snapshots", () => {
     const { state } = simulatePath(bank, devices, {}, "other");
     const withText = { ...state, items: { ...state.items, A03: { ...state.items.A03, status: "answered" as const, value: "egyeb", otherText: "közös" } } };
     expect(validateSnapshot(ctx, JSON.parse(JSON.stringify(withText)))?.items.A03.otherText).toBe("közös");
+  });
+});
+
+describe("footer links", () => {
+  it("show on the opening card and hide once answering starts", async () => {
+    const { user } = renderApp({ content });
+    expect(screen.getByRole("link", { name: "Adatkezelési tájékoztató" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: /^Mehet/ }));
+    expect(screen.queryByRole("link", { name: "Forráskód (AGPL-3.0)" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Vissza" }));
+    expect(await screen.findByRole("link", { name: "Forráskód (AGPL-3.0)" })).toBeTruthy();
   });
 });
