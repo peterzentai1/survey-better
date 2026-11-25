@@ -197,3 +197,22 @@ describe("B01 exclusive section", () => {
     expect(sink.record?.items.B01.value).toEqual(["onkent_magam", "eloszto"]);
   });
 });
+
+it("shows the live bank's two lengths, starts on Alap and selects them with keys 1 and 2", async () => {
+  const { user, sink } = renderApp({ content: loaded });
+  const group = screen.getByRole("radiogroup", { name: "Mennyi ideje van a kitöltésre?" });
+  expect(within(group).getAllByRole("radio").map((r) => squash(r.textContent ?? ""))).toEqual([
+    expect.stringMatching(/^Rövidített/), expect.stringMatching(/^Alap/),
+  ]);
+  expect(group.className).toContain("grid-cols-2");
+  expect(radio(/^Alap/)).toHaveProperty("ariaChecked", "true");
+  await user.keyboard("1");
+  expect(radio(/^Rövidített/)).toHaveProperty("ariaChecked", "true");
+  await user.keyboard("2");
+  expect(radio(/^Alap/)).toHaveProperty("ariaChecked", "true");
+  await user.click(start());
+  await user.click(consent());
+  await user.click(next());
+  await expectCard(question("A01").text);
+  expect(sink.record).toHaveProperty("effortLevel", "alapos");
+});

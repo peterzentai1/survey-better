@@ -43,7 +43,7 @@ export function InfoCard({ card }: { card: Of<"info"> }) {
           <p id={`effort-${card.id}`} className="mb-2 font-semibold">
             {card.effortLabel ?? "Mennyi ideje van a kitöltésre?"}
           </p>
-          <div role="radiogroup" aria-labelledby={`effort-${card.id}`} className="grid grid-cols-3 gap-2">
+          <div role="radiogroup" aria-labelledby={`effort-${card.id}`} className={`grid gap-2 ${["grid-cols-1", "grid-cols-2", "grid-cols-3"][levels.length - 1] ?? "grid-cols-3"}`}>
             {levels.map((level, index) => (
               <button
                 key={level.id}
