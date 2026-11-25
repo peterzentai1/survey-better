@@ -1,12 +1,15 @@
 import { within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { loadContent } from "./content/load.ts";
+import { withThreeLevelContent } from "./engine/__fixtures__/threeLevels.ts";
 import { SKIP, simulatePath } from "./engine/simulate.ts";
 import { expectCard, MemSink, renderApp, screen, waitFor } from "./test-utils.tsx";
 import { cardText as displayedText } from "./ui/session.tsx";
 
-const content = loadContent();
-if (!content.ok) throw new Error(JSON.stringify(content.issues));
+const loaded = loadContent();
+if (!loaded.ok) throw new Error(JSON.stringify(loaded.issues));
+// These tests exercise the three-level engine; the live bank's two levels are tested in effort.test.ts.
+const content = withThreeLevelContent(loaded);
 // Wording comes from the bank so that text edits do not break these tests.
 const squash = (s: string) => s.replace(/\s+/g, " ").trim();
 const cardText = (id: string, key: "title" | "cta") =>
@@ -193,4 +196,23 @@ describe("B01 exclusive section", () => {
     await user.click(next());
     expect(sink.record?.items.B01.value).toEqual(["onkent_magam", "eloszto"]);
   });
+});
+
+it("shows the live bank's two lengths, starts on Alap and selects them with keys 1 and 2", async () => {
+  const { user, sink } = renderApp({ content: loaded });
+  const group = screen.getByRole("radiogroup", { name: "Mennyi ideje van a kitöltésre?" });
+  expect(within(group).getAllByRole("radio").map((r) => squash(r.textContent ?? ""))).toEqual([
+    expect.stringMatching(/^Rövidített/), expect.stringMatching(/^Alap/),
+  ]);
+  expect(group.className).toContain("grid-cols-2");
+  expect(radio(/^Alap/)).toHaveProperty("ariaChecked", "true");
+  await user.keyboard("1");
+  expect(radio(/^Rövidített/)).toHaveProperty("ariaChecked", "true");
+  await user.keyboard("2");
+  expect(radio(/^Alap/)).toHaveProperty("ariaChecked", "true");
+  await user.click(start());
+  await user.click(consent());
+  await user.click(next());
+  await expectCard(question("A01").text);
+  expect(sink.record).toHaveProperty("effortLevel", "alapos");
 });

@@ -2,6 +2,12 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.3.5 változások (2026-11-25)
+
+- **Két kitöltési hossz** (a szerző döntése): „Rövidített · kb. 5 perc” és „Alap · kb. 9 perc”. A korábbi Közepes és Alapos összevonva, az Alap a teljes (korábbi alapos) tartalmat és modulkeretet kapja; kezdő beállítás az Alap. A belső azonosítók `rovid` és `alapos` maradtak, így a mérési tábla és a korábbi bankverziók adatai változatlanul értelmezhetők. Az Alap 42–51 képernyő; a 9 perc továbbra is becslés, előteszttel nincs mérve.
+- Következmény az elemzéshez: a hosszválasztás most kétszintű. A Rövidített választóknál az effort 2–3 tételek hiánya továbbra sem véletlenszerű.
+- **M_EV_1.** A rögzített „10%-kal olcsóbb” helyett a másnapi tőzsdei árakból számolt sáv: „kb. 5–45%-kal olcsóbb, mint ha azonnal töltene, átlagosan kb. 25%-kal” (a szerző döntése). Számítás: HUPX DAM negyedórás árak, 20 nap 2025-12-01 és 2026-11-08 között, 10 kWh 3,7 kW-tal, bedugás 18:00, kész 07:00; az azonnali töltést vetettük össze a legolcsóbb negyedórákkal. A százalék egy spotáras lakossági tarifára vonatkozik (energia + 23,40 Ft/kWh hálózati díj + árrés, 27% áfa); mért értékek: 6,9–46,0%, medián 24,9%. A mostani szabályozott lakossági árhoz nem viszonyít. Az adat a WebFetch-átiraton alapul, néhány nap kézi ellenőrzése még hátravan. Részletek: `platform-terv/ev-okostoltes-arkulonbseg/README.md`.
+
 ## v0.3.4 változások (2026-11-25)
 
 - **I10.** A kétórás, egyfokos esti visszavétel elképzelt kellemetlenségét hat fokozat méri, az „Egyáltalán nem kellemetlen” és a „Rendkívül kellemetlen” között. Mindkét A/B csoport ugyanazt a címkesort kapja. A címkék ehhez a kérdőívhez készült adaptációk. Az elemzésben az I10 pontszámát bankverzió szerint kell értelmezni. [ISO 10551:2019](https://www.iso.org/standard/67186.html), [Cakó, 2022, 3.5.2](https://pea.lib.pte.hu/server/api/core/bitstreams/576acf6b-9236-49cc-8d32-5b8c03aefd0b/content).

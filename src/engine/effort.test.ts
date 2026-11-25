@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import bankText from "../../content/kerdesbank.hu.yaml?raw";
 import devicesText from "../../content/eszkozok.yaml?raw";
+import { defaultSettings } from "../content/survey.ts";
+import { withThreeLevels } from "./__fixtures__/threeLevels.ts";
 import { makeCtx } from "./path.ts";
 import { acceptConsent, advance, answer, buildRecord, createSession, currentId, extendEffort, goBack, setEffortLevel, validateSnapshot } from "./session.ts";
 import { simulatePath } from "./simulate.ts";
@@ -8,7 +10,31 @@ import { parseContent } from "./validate.ts";
 
 const content = parseContent(bankText, devicesText);
 if (!content.ok) throw new Error(JSON.stringify(content.issues));
-const { bank, devices } = content;
+const { devices } = content;
+const live = content.bank;
+// Engine mechanics are tested on the three-level setup; the live bank's two levels are tested below.
+const bank = withThreeLevels(live);
+
+describe("live bank: Rövidített and Alap", () => {
+  const alapSettings = { ...defaultSettings(), display: { ...defaultSettings().display, defaultEffort: "alapos" as const } };
+
+  it("offers two levels, starts on Alap with every card and extends Rövidített straight to Alap", () => {
+    expect(live.effortLevels?.map((level) => level.id)).toEqual(["rovid", "alapos"]);
+    const ctx = makeCtx(live, devices, "live", alapSettings);
+    const initial = createSession(ctx, { sessionId: "live", startedDate: "2000-01-01" });
+    expect(initial.effortLevel).toBe("alapos");
+    expect(simulatePath(live, devices, { effortLevel: "alapos" }).path).toContain("B04");
+    expect(simulatePath(live, devices, { effortLevel: "rovid" }).path).not.toContain("B04");
+    const { state } = simulatePath(live, devices, { effortLevel: "rovid" });
+    expect(extendEffort(makeCtx(live, devices, state.sessionId, alapSettings), state).effortLevel).toBe("alapos");
+  });
+
+  it("falls back from a default the bank does not offer to the next longer level", () => {
+    const ctx = makeCtx(live, devices, "fallback");
+    expect(ctx.settings.display.defaultEffort).toBe("alapos");
+    expect(createSession(ctx, { sessionId: "fallback", startedDate: "2000-01-01" }).effortLevel).toBe("alapos");
+  });
+});
 
 describe("effort levels", () => {
   it("shows every card, including effort 3, in a bank without effortLevels", () => {

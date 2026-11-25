@@ -23,11 +23,22 @@ export interface Ctx {
   summaryId: string | undefined;
 }
 
+/** The configured default level if the bank offers it, else the nearest longer one (or the longest). */
+function offeredDefault(bank: Bank, wanted: EffortLevelId): EffortLevelId {
+  const offered = bank.effortLevels?.map((e) => e.id);
+  if (!offered?.length || offered.includes(wanted)) return wanted;
+  const rank = EFFORT_LEVEL_IDS.indexOf(wanted);
+  return offered.find((id) => EFFORT_LEVEL_IDS.indexOf(id) > rank) ?? offered[offered.length - 1];
+}
+
 export function makeCtx(bank: Bank, devices: Devices, sessionId: string, settings = defaultSettings(), slug = DEFAULT_SURVEY): Ctx {
+  const defaultEffort = offeredDefault(bank, settings.display.defaultEffort);
   return {
     bank,
     devices,
-    settings,
+    settings: defaultEffort === settings.display.defaultEffort
+      ? settings
+      : { ...settings, display: { ...settings.display, defaultEffort } },
     slug,
     deck: buildDeck(bank, devices, sessionId),
     byId: new Map(bank.cards.map((c) => [c.id, c])),

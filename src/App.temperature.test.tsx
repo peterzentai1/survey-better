@@ -1,6 +1,7 @@
 import { fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { loadContent } from "./content/load.ts";
+import { withThreeLevelContent } from "./engine/__fixtures__/threeLevels.ts";
 import { simulatePath } from "./engine/simulate.ts";
 import { temperatureArm } from "./engine/temperature.ts";
 import { MemSink, renderApp, screen } from "./test-utils.tsx";
@@ -11,8 +12,9 @@ vi.mock("./storage/metrics.ts", async (original) => ({
   effortMedians: async () => new Map([["kozepes", 10.5]]),
 }));
 
-const content = loadContent();
-if (!content.ok) throw new Error("Invalid test bank");
+const loaded = loadContent();
+if (!loaded.ok) throw new Error("Invalid test bank");
+const content = withThreeLevelContent(loaded);
 
 describe("survey metrics UI", () => {
   it("shows an existing median without requiring new metrics uploads", async () => {

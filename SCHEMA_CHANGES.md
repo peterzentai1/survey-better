@@ -1,5 +1,10 @@
 # Kártyaséma változásai
 
+## v0.3.5
+
+- Az `effortLevels` lista a `rovid`, `kozepes`, `alapos` szintek bármely részhalmaza lehet (1–3 szint, mindegyik legfeljebb egyszer, ebben a sorrendben). A kártyák `effort` értéke továbbra is a teljes háromszintes sorhoz igazodik: `effort: 2` a `kozepes` szinttől, `effort: 3` az `alapos` szinttől jelenik meg.
+- A kérdőív `display.defaultEffort` értéke a bankban szereplő szint kell legyen, különben a build hibát jelez. A „További kérdések” a következő felkínált szintre lép.
+
 ## v0.3.3
 
 - A `single` kártya `layout: pager` elrendezése egyenként lapozza az opciókat. A mentett válaszformátum változatlan.

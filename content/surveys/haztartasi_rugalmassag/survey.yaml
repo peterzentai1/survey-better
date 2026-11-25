@@ -7,6 +7,7 @@ devices: ../../eszkozok.yaml
 settings:
   display:
     scaleInput: ab_test
+    defaultEffort: alapos
     banner: "Előnézet, jóváhagyásra vár · A válaszok nem kerülnek szerverre, csak ezen az eszközön maradnak."
     privacyNotice: /adatkezeles.html
   storage:

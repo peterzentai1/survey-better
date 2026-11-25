@@ -119,9 +119,9 @@ function checkBank(bank: Bank, devices: Devices, warnings: Issue[], file: string
   const cardById = new Map(bank.cards.map((c) => [c.id, c]));
   const applianceIds = new Set(devices.appliances.map((a) => a.id));
   const moduleIds = new Set(devices.modules.map((m) => m.id));
-  bank.effortLevels?.forEach((level, i) => {
-    if (level.id !== EFFORT_LEVEL_IDS[i])
-      add(`effortLevels[${i}].id`, `A kitöltési hossz azonosítója itt „${EFFORT_LEVEL_IDS[i]}” kell legyen.`);
+  bank.effortLevels?.forEach((level, i, levels) => {
+    if (i > 0 && EFFORT_LEVEL_IDS.indexOf(level.id) <= EFFORT_LEVEL_IDS.indexOf(levels[i - 1].id))
+      add(`effortLevels[${i}].id`, `A kitöltési hosszak sorrendje: ${EFFORT_LEVEL_IDS.join(", ")}; mindegyik legfeljebb egyszer szerepelhet.`);
   });
 
   // Positions in the deck. A card in a randomizeGroup may land anywhere between the group's first and last slot.

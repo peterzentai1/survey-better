@@ -60,7 +60,7 @@ it("updates the estimate across the A1 threshold and saves the entered kWh", asy
 });
 
 it("only asks for a split in the longest path and clears it when the chosen locations change", async () => {
-  expect(simulatePath(bank, devices, { ...charging, effortLevel: "kozepes" }).path).not.toContain("E04B");
+  expect(simulatePath(bank, devices, { ...charging, effortLevel: "rovid" }).path).not.toContain("E04B");
   expect(simulatePath(bank, devices, { ...charging, answers: { E04: ["otthon"] } }).path).not.toContain("E04B");
   expect(simulatePath(bank, devices, { ...charging, answers: { E04: ["munkahely", "nyilvanos"] } }).path).not.toContain("M_EV_1");
 
