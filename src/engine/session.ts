@@ -197,7 +197,7 @@ function additionalQuestion(ctx: Ctx, s: SessionState, previousLevel: EffortLeve
 /** Move up one level from the summary and open the first unanswered addition in deck order. */
 export function extendEffort(ctx: Ctx, s: SessionState): SessionState {
   const current = s.effortLevel;
-  const next = nextEffortLevel(current);
+  const next = nextEffortLevel(current, ctx.bank.effortLevels?.map((e) => e.id));
   if (current === undefined || next === undefined || ctx.summaryId === undefined || currentId(s) !== ctx.summaryId) return s;
   const raised = reconcile(ctx, { ...s, effortLevel: next });
   const first = additionalQuestion(ctx, raised, current, analyze(ctx, raised.items, next).path);

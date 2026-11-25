@@ -51,7 +51,7 @@ describe("temperature experiment", () => {
     const done = submit(ctx, partial, "Z01");
     const rec = buildRecord(ctx, done, "test");
     expect(completionMetrics(done, rec)).toEqual({
-      token: state.sessionId, bank_version: ctx.bank.version, effort: "kozepes", active_seconds: 3,
+      token: state.sessionId, bank_version: ctx.bank.version, effort: "alapos", active_seconds: 3,
       arm: temperatureArm(state.sessionId), reaction_status: "answered", first_input: "drag",
       first_answer_ms: 1300,
     });

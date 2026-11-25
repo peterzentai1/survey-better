@@ -4,7 +4,7 @@ An open-source, card-based web questionnaire about household electricity flexibi
 One card is shown at a time; the questions adapt to the respondent's household (appliances, answers so far).
 It runs on phones, tablets and laptops (touch, mouse, trackpad, keyboard). The respondent-facing UI is in Hungarian.
 
-The default survey offers three lengths and initially selects **Közepes**. It saves responses on the respondent’s device. Each survey has build-time display and storage settings, shown alongside simulated card counts at `/admin`.
+The default survey offers two lengths, **Rövidített** and **Alap**, and initially selects **Alap**. It saves responses on the respondent’s device. Each survey has build-time display and storage settings, shown alongside simulated card counts at `/admin`.
 
 The thank-you screen shows the full kitöltési azonosító in every storage mode and lets respondents copy it. The screen is restored on reload while the completed session is saved in the browser. Starting a new session clears that saved session. Researchers can use the identifier to find or delete a submitted response.
 
@@ -71,7 +71,7 @@ accelerate (WCAG 2.2 AA: 2.5.1 pointer gestures, 2.5.7 dragging, 2.5.8 target si
 | Setting | Default | Effect |
 | --- | --- | --- |
 | `display.effortSelector` | `true` | Shows the length selector and the option to extend a shorter survey. |
-| `display.defaultEffort` | `kozepes` | Starting length, including when the selector is hidden. |
+| `display.defaultEffort` | `kozepes` | Starting length, including when the selector is hidden. The build requires a level the bank offers; the default survey sets `alapos`. |
 | `display.showMedianTimes` | `true` | Shows timing estimates and replaces them with measured medians when available. |
 | `display.banner` | `null` | Hides the banner unless text is provided. The default survey has a prototype banner. |
 | `display.scaleInput` | `buttons` | `drag_reveal` uses a drag pad for every scale. `ab_test` randomizes I10 and uses buttons on the other scales. The default survey uses `ab_test`. |
@@ -201,7 +201,7 @@ Code: AGPL-3.0-only (see `LICENSE`). The question bank and appliance content in 
 Ez egy nyílt forráskódú, kártyaalapú online kérdőív a háztartási villamosenergia-rugalmasságról, egy BSc-szakdolgozathoz.
 Egyszerre egy kártya jelenik meg, és a kérdések az adott háztartáshoz igazodnak.
 
-Az alapértelmezett kérdőív az eszközön tárolja a válaszokat. Kérdőívenként beállítható a megjelenítés és a Supabase-tárolás. Az `/admin` oldalon megtekinthetők a beállítások és az útvonalankénti kártyaszámok. A nyitókártya alapértéke a Közepes.
+Az alapértelmezett kérdőív az eszközön tárolja a válaszokat. Kérdőívenként beállítható a megjelenítés és a Supabase-tárolás. Az `/admin` oldalon megtekinthetők a beállítások és az útvonalankénti kártyaszámok. Két kitöltési hossz van (Rövidített és Alap), a nyitókártya alapértéke az Alap.
 
 **Futtatás:** `npm install`, majd `npm run dev`. Telefonon vagy tábláneten, ugyanazon a helyi hálózaton:
 `npm run dev -- --host`. A tartalom a `content/` mappában van; a kártyaséma leírása a `content/sample.yaml` fájl.

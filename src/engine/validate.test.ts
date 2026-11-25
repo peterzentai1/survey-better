@@ -110,11 +110,15 @@ describe("parseContent", () => {
 });
 
 describe("effort validation", () => {
-  it("requires exactly the three named levels in ascending order", () => {
+  it("accepts any ascending subset of the known levels and rejects repeats or a wrong order", () => {
     const row = /^  - \{ id: rovid,.*\n/m;
-    expect(issuesFor(bankText.replace(row, ""), devicesText).map((issue) => issue.path)).toContain("effortLevels");
+    expect(issuesFor(bankText.replace(row, ""), devicesText)).toEqual([]);
     expect(issuesFor(bankText.replace(row, (line) => line.replace("rovid", "alapos")), devicesText).map((issue) => issue.path))
-      .toContain("effortLevels[0].id");
+      .toContain("effortLevels[1].id");
+    expect(issuesFor(bankText.replace(row, (line) => line.replace("rovid", "kozepes").replace("Rövidített", "Közepes")), devicesText)
+      .map((issue) => issue.path)).toEqual([]);
+    expect(issuesFor(bankText.replace(/^effortLevels:\n/m, "effortLevels: []\n").replace(/^  - \{ id: (rovid|alapos),.*\n/gm, ""), devicesText)
+      .map((issue) => issue.path)).toContain("effortLevels");
   });
 
   it("rejects references to higher-effort cards in card, option, and module conditions", () => {

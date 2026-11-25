@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { checkSurveyConsent, defaultSettings, parseSurveyManifest } from "./survey.ts";
+import { checkDefaultEffort, checkSurveyConsent, defaultSettings, parseSurveyManifest } from "./survey.ts";
 import type { Card } from "../engine/schema.ts";
 
 const files = "bank: bank.yaml\ndevices: devices.yaml";
@@ -56,4 +56,12 @@ it("ships a complete static privacy notice that matches N02", async () => {
   for (const fact of ["Zentai Péter", "2027. december 1", "peterzentai1@gmail.com", "18 éven felülieknek", "Frankfurt"]) {
     expect(html).toContain(fact);
   }
+});
+
+it("requires the configured starting length to be one the bank offers", () => {
+  const levels = [{ id: "rovid" }, { id: "alapos" }];
+  expect(() => checkDefaultEffort(levels, defaultSettings())).toThrow(/defaultEffort.*rovid, alapos/);
+  const alap = { ...defaultSettings(), display: { ...defaultSettings().display, defaultEffort: "alapos" as const } };
+  expect(() => checkDefaultEffort(levels, alap)).not.toThrow();
+  expect(() => checkDefaultEffort(undefined, defaultSettings())).not.toThrow();
 });

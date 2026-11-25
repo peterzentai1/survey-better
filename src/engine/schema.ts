@@ -142,7 +142,7 @@ export const bankSchema = z.strictObject({
     })
     .optional(),
   blocks: z.array(z.strictObject({ id: text, title: text })).min(1),
-  effortLevels: z.array(effortLevel).length(EFFORT_LEVEL_IDS.length).optional(),
+  effortLevels: z.array(effortLevel).min(1).max(EFFORT_LEVEL_IDS.length).optional(),
   cards: z.array(cardSchema).min(1),
 });
 

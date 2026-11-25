@@ -76,6 +76,12 @@ export function checkSurveyConsent(cards: readonly Card[], settings: SurveySetti
   }
 }
 
+export function checkDefaultEffort(levels: readonly { id: string }[] | undefined, settings: SurveySettings) {
+  if (levels && !levels.some(({ id }) => id === settings.display.defaultEffort)) {
+    throw new Error(`A settings.display.defaultEffort értéke a kérdésbank egyik kitöltési hossza legyen: ${levels.map(({ id }) => id).join(", ")}.`);
+  }
+}
+
 export function acceptingResponses(storage: StorageSettings, now = new Date()) {
   return storage.acceptingResponses &&
     (storage.retentionUntil === null || now.toISOString().slice(0, 10) <= storage.retentionUntil);

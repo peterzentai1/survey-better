@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.3.4"
+version: "0.3.5"
 locale: hu
 
 defaults:
@@ -20,12 +20,13 @@ defaults:
     right: "Teljes mértékben"
     labels: ["Egyáltalán nem", "Nagyrészt nem", "Inkább nem", "Inkább igen", "Nagyrészt igen", "Teljes mértékben"]
 
-# A percek saját becslések (0.3.0): kártyánként kb. 10–12 másodperc a /admin kártyaszámai alapján
-# (rövid 27–32, közepes 40–46, alapos 41–50 kártya). Élesben a mért mediánok váltják fel őket.
+# A percek saját becslések (0.3.0): kártyánként kb. 10–12 másodperc a /admin kártyaszámai alapján.
+# Élesben a mért mediánok váltják fel őket.
+# 0.3.5: két hossz. A korábbi közepes és alapos összevonva „Alap” néven, a teljes (alapos) tartalommal;
+# a belső azonosító `alapos` maradt, hogy a mérési tábla és a korábbi adatok értelmezése ne változzon.
 effortLevels:
-  - { id: rovid,   label: "Rövid · kb. 5 perc",    moduleCaps: { tierCaps: { A: 1, B: 1, C: 0 }, globalModuleCap: 3 } }
-  - { id: kozepes, label: "Közepes · kb. 8 perc", moduleCaps: { tierCaps: { A: 2, B: 1, C: 1 }, globalModuleCap: 6 } }
-  - { id: alapos,  label: "Alapos · kb. 9 perc", moduleCaps: { tierCaps: { A: 3, B: 2, C: 1 }, globalModuleCap: 9 } }
+  - { id: rovid,  label: "Rövidített · kb. 5 perc", moduleCaps: { tierCaps: { A: 1, B: 1, C: 0 }, globalModuleCap: 3 } }
+  - { id: alapos, label: "Alap · kb. 9 perc",       moduleCaps: { tierCaps: { A: 3, B: 2, C: 1 }, globalModuleCap: 9 } }
 
 blocks:
   - { id: nyitas,       title: "Kezdés" }

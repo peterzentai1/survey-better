@@ -1,7 +1,7 @@
 import { readFileSync, realpathSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseSurveyManifest, checkSurveyConsent, defaultSettings, SURVEY_SLUG, type SurveyContent } from "../src/content/survey.ts";
+import { parseSurveyManifest, checkDefaultEffort, checkSurveyConsent,defaultSettings, SURVEY_SLUG, type SurveyContent } from "../src/content/survey.ts";
 import { parseContent } from "../src/engine/validate.ts";
 import { ICON_KEYS } from "../src/ui/iconKeys.ts";
 
@@ -36,6 +36,8 @@ export function readSurvey(slug: string, watch: (path: string) => void = () => {
     if (parsed.ok) {
       location = { file: manifest.bank, path: "N02" };
       checkSurveyConsent(parsed.bank.cards, manifest.settings);
+      location = { file: manifest.bank, path: "effortLevels" };
+      checkDefaultEffort(parsed.bank.effortLevels, manifest.settings);
     }
     return { ...parsed, slug, settings: manifest.settings };
   } catch (error) {
