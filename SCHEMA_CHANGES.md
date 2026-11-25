@@ -1,5 +1,9 @@
 # Kártyaséma változásai
 
+## v0.4.0
+
+- A `consent` kártya opcionális `figure: { src, alt }` mezője egy statikus képet jelenít meg a szöveg után (`src`: a `public/` alatti, `/`-rel kezdődő útvonal; `alt`: a kép tartalmát leíró szöveg). Nem gyűjt adatot, külső forrást nem tölt be.
+
 ## v0.3.5
 
 - Az `effortLevels` lista a `rovid`, `kozepes`, `alapos` szintek bármely részhalmaza lehet (1–3 szint, mindegyik legfeljebb egyszer, ebben a sorrendben). A kártyák `effort` értéke továbbra is a teljes háromszintes sorhoz igazodik: `effort: 2` a `kozepes` szinttől, `effort: 3` az `alapos` szinttől jelenik meg.

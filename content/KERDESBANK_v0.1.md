@@ -2,6 +2,11 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.4.0 változások (2026-11-25)
+
+- **N02: áramár-grafikon** (a szerző kérése). A bevezető szöveg után a havi átlagos nagykereskedelmi áramár vonaldiagramja áll (Ft/kWh, 2015–2026), koppintásra nagyban nyílik. Adat: HUPX másnapi zónaár havi átlaga (Energy-Charts / SMARD.de, CC BY 4.0), ECB havi EUR/HUF árfolyam; a kép a repón kívüli `havi-atlagar-chart/build.py` és `render.swift` kimenete, a repóban `public/kepek/havi-atlagar-2015-2026.jpg`. A 2010–2014 adat hiányzik. A korábban tervezett külön F00 kártya nem került be.
+- Nem skálaváltozás: a válaszok összevonhatók a 0.3.5-tel.
+
 ## v0.3.5 változások (2026-11-25)
 
 - **Két kitöltési hossz** (a szerző döntése): „Rövidített · kb. 5 perc” és „Alap · kb. 9 perc”. A korábbi Közepes és Alapos összevonva, az Alap a teljes (korábbi alapos) tartalmat és modulkeretet kapja; kezdő beállítás az Alap. A belső azonosítók `rovid` és `alapos` maradtak, így a mérési tábla és a korábbi bankverziók adatai változatlanul értelmezhetők. Az Alap 42–51 képernyő; a 9 perc továbbra is becslés, előteszttel nincs mérve.
