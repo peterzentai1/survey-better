@@ -87,6 +87,12 @@ export function ConsentCard({ card }: { card: Of<"consent"> }) {
   return (
     <CardShell api={api} heading={card.title}>
       <p className="whitespace-pre-line">{card.text}</p>
+      {card.figure && (
+        <a className="mt-3 block" href={card.figure.src} target="_blank" rel="noopener">
+          <img className="w-full rounded-lg border border-soft" src={card.figure.src} alt={card.figure.alt} width={1800} height={1000} loading="lazy" />
+          <span className="mt-1 block text-sm text-muted">Nagyobb méretben (új lapon nyílik)</span>
+        </a>
+      )}
       {ctx.settings.display.privacyNotice && (
         <p className="mt-2">
           <a className="text-primary underline" href={ctx.settings.display.privacyNotice} target="_blank" rel="noopener">

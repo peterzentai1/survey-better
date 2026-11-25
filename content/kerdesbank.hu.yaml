@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.3.5"
+version: "0.4.0"
 locale: hu
 
 defaults:
@@ -73,6 +73,9 @@ cards:
 
       A kérdőív 18 éven felülieknek szól. Kérdés esetén: peterzentai1@gmail.com
     participationLabel: "Elolvastam a tájékoztatót, elmúltam 18 éves, és részt veszek a kérdőívben."
+    figure:
+      src: /kepek/havi-atlagar-2015-2026.jpg
+      alt: "Vonaldiagram: a havi átlagos nagykereskedelmi áramár Magyarországon 2015 és 2026 között, forint per kilowattóra. 2021-ig 10–25 Ft körül mozog, 2022 augusztusában 199 Ft-tal tetőzik, 2023 óta 25–65 Ft között ingadozik; 2026 szeptemberében 65 Ft."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatai (pl. kártyánként eltöltött idő, koppintás, húzás vagy billentyű) is a szerverre kerüljenek. Ez segít a kérdőív javításában; nélküle is kitölthető."
     source: "Saját. 0.3.0: a végleges rövid tájékoztató (platform-terv/2026-11-24_adatkezelesi-tajekoztato.md, A rész), intézményi megnevezés nélkül: az adatkezelő Zentai Péter magánszemélyként (D1). A teljes tájékoztató: public/adatkezeles.html."
 

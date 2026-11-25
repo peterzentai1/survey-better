@@ -68,6 +68,7 @@ cards:
       Adatkezelő: [ADATKEZELŐ]. … (helyőrző szöveg)
     participationLabel: "Elolvastam, és részt veszek a kérdőívben."
     paradataLabel: "Hozzájárulok, hogy a kitöltés technikai adatait (pl. kártyánként eltöltött idő) is rögzítsék."
+    # figure: { src: /kepek/abra.jpg, alt: "Az ábra tartalma szövegben" }   # opcionális kép a szöveg után (public/ alól)
 
   # ── single: egy választás. layout: list (alapértelmezett) | chips (rövid opciók) | pager (lapozható)
   - id: A01

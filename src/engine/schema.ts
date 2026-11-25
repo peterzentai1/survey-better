@@ -56,6 +56,8 @@ export const cardSchema = z.discriminatedUnion("type", [
     text,
     participationLabel: text,
     paradataLabel: text,
+    /** Static image shown after the text (a file under public/). Collects no data. */
+    figure: z.strictObject({ src: z.string().regex(/^\/[^/]/), alt: text }).optional(),
   }),
   z.strictObject({
     ...common,
