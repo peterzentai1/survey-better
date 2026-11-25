@@ -1,13 +1,12 @@
 import { fireEvent } from "@testing-library/react";
 import { expect, it } from "vitest";
-import { loadContent } from "./content/load.ts";
 import { makeCtx } from "./engine/path.ts";
 import { answer } from "./engine/session.ts";
 import { simulatePath, type Strategy } from "./engine/simulate.ts";
 import { temperatureArm } from "./engine/temperature.ts";
-import { MemSink, renderApp, screen, waitFor } from "./test-utils.tsx";
+import { MemSink, renderApp, screen, waitFor, loadDeviceContent } from "./test-utils.tsx";
 
-const content = loadContent();
+const content = loadDeviceContent();
 if (!content.ok) throw new Error("Invalid test bank");
 const { bank, devices, settings } = content;
 const charging = {

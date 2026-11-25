@@ -1,15 +1,15 @@
 bank: ../../kerdesbank.hu.yaml
 devices: ../../eszkozok.yaml
 
-# Előnézeti (jóváhagyásra váró) változat: a válaszok csak a kitöltő eszközén maradnak.
-# Élesítés: platform-terv/2026-11-25_elesitesi-lista.md (storage.mode: supabase,
-# retentionUntil: 2027-12-01, metrics: true, a banner törlése).
+# Éles adatgyűjtés 2026-11-25 óta (a szerző döntése). A Supabase-oldalon a survey_admin.surveys
+# sora: accepting_responses = true, retention_until = 2027-12-01, paradata = true.
+# Lezárás: accepting_responses = false (és itt a storage.acceptingResponses: false).
 settings:
   display:
     scaleInput: ab_test
     defaultEffort: alapos
-    banner: "Előnézet, jóváhagyásra vár · A válaszok nem kerülnek szerverre, csak ezen az eszközön maradnak."
     privacyNotice: /adatkezeles.html
   storage:
-    mode: device
-    metrics: false
+    mode: supabase
+    metrics: true
+    retentionUntil: 2027-12-01
