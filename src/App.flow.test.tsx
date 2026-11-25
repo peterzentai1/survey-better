@@ -8,7 +8,7 @@ import { SKIP, simulatePath } from "./engine/simulate.ts";
 import { parseContent } from "./engine/validate.ts";
 import { MINI_BANK_YAML, MINI_DEVICES_YAML } from "./engine/__fixtures__/mini.ts";
 import { LocalSink } from "./storage/sinks.ts";
-import { clickIntro, clickToYesNo, expectCard, MemSink, miniContent, renderApp, screen, wait, waitFor } from "./test-utils.tsx";
+import { clickIntro, clickToYesNo, expectCard, MemSink, miniContent, renderApp, screen, wait, waitFor, loadDeviceContent } from "./test-utils.tsx";
 
 const SCALE_HEADINGS = /^(Általános szöveg 1|Városi szöveg 1|Szöveg 2|Szöveg 3|Szöveg 4)$/;
 
@@ -432,10 +432,18 @@ describe("start-up, resume and errors", () => {
 
 describe("real content", () => {
   it("the app loads content/*.yaml without errors and shows the first card", async () => {
-    const { loadContent } = await import("./content/load.ts");
-    renderApp({ content: loadContent() });
+    renderApp({ content: loadDeviceContent() });
     expect(screen.queryByRole("alert")).toBeNull();
     expect(await screen.findByRole("heading", { level: 2 })).toBeTruthy();
+  });
+
+  it("is configured for live collection: Supabase storage, retention date, no preview banner", async () => {
+    const { loadContent } = await import("./content/load.ts");
+    const live = loadContent();
+    if (!live.ok) throw new Error("Invalid content");
+    expect(live.settings.storage).toMatchObject({ mode: "supabase", metrics: true, retentionUntil: "2027-12-01" });
+    expect(live.settings.display.banner).toBeNull();
+    expect(live.settings.display.privacyNotice).toBe("/adatkezeles.html");
   });
 });
 

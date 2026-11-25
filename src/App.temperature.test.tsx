@@ -1,10 +1,9 @@
 import { fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { loadContent } from "./content/load.ts";
 import { withThreeLevelContent } from "./engine/__fixtures__/threeLevels.ts";
 import { simulatePath } from "./engine/simulate.ts";
 import { temperatureArm } from "./engine/temperature.ts";
-import { MemSink, renderApp, screen } from "./test-utils.tsx";
+import { MemSink, renderApp, screen, loadDeviceContent } from "./test-utils.tsx";
 
 vi.mock("./storage/metrics.ts", async (original) => ({
   ...await original<typeof import("./storage/metrics.ts")>(),
@@ -12,7 +11,7 @@ vi.mock("./storage/metrics.ts", async (original) => ({
   effortMedians: async () => new Map([["kozepes", 10.5]]),
 }));
 
-const loaded = loadContent();
+const loaded = loadDeviceContent();
 if (!loaded.ok) throw new Error("Invalid test bank");
 const content = withThreeLevelContent(loaded);
 

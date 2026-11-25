@@ -1,6 +1,7 @@
 // Shared helpers for component tests.
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { loadContent } from "./content/load.ts";
 import { loadMini } from "./engine/__fixtures__/mini.ts";
 import type { SessionState } from "./engine/session.ts";
 import { parseContent, type ContentResult } from "./engine/validate.ts";
@@ -71,3 +72,13 @@ export async function clickToYesNo(user: ReturnType<typeof userEvent.setup>, par
 }
 
 export { screen, waitFor };
+
+/**
+ * The real survey content, but stored on the device: the live settings send answers to Supabase,
+ * which the test environment has no keys for (the app would show "not available").
+ */
+export function loadDeviceContent(): ReturnType<typeof loadContent> {
+  const content = loadContent();
+  if (!content.ok) return content;
+  return { ...content, settings: { ...content.settings, storage: { ...content.settings.storage, mode: "device" } } };
+}

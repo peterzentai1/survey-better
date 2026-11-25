@@ -1,14 +1,13 @@
 import { act } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { loadContent } from "./content/load.ts";
 import { makeCtx } from "./engine/path.ts";
 import { buildRecord, extendEffort, submit, validateSnapshot } from "./engine/session.ts";
 import { simulatePath } from "./engine/simulate.ts";
 import { DELIVERED_EVENT } from "./storage/responses.ts";
 import { LocalSink } from "./storage/sinks.ts";
-import { renderApp, screen } from "./test-utils.tsx";
+import { renderApp, screen, loadDeviceContent } from "./test-utils.tsx";
 
-const content = loadContent();
+const content = loadDeviceContent();
 if (!content.ok) throw new Error("Invalid test bank");
 const { bank, devices, settings } = content;
 
