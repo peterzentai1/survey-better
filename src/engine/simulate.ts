@@ -1,7 +1,7 @@
 // Scripted respondent: which cards would be shown for a given set of answers.
 // Used by validate-content and by the content author.
 import type { EffortLevelId } from "./effort.ts";
-import { visibleOptions } from "./inputs.ts";
+import { splitOptions, visibleOptions } from "./inputs.ts";
 import { analyze, makeCtx } from "./path.ts";
 import type { Bank, Card, Devices } from "./schema.ts";
 import { acceptConsent, advance, answer, createSession, currentId, setEffortLevel, skip, type SessionState } from "./session.ts";
@@ -34,6 +34,12 @@ function defaultValue(card: Card, state: SessionState, ctx: ReturnType<typeof ma
   switch (card.type) {
     case "single":
       return visibleOptions(card, view)[0]?.value ?? SKIP;
+    case "consumption":
+      return card.tariff.thresholdKwh;
+    case "percent_split": {
+      const options = splitOptions(ctx.byId.get(card.optionsFrom), view);
+      return Object.fromEntries(options.map(({ value }, index) => [value, index === 0 ? 100 : 0]));
+    }
     case "multi_tiles": {
       const offered = visibleOptions(card, view).map((o) => o.value);
       if (card.devicePicker) {

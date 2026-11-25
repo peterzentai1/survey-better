@@ -1,5 +1,11 @@
 # Kártyaséma változásai
 
+## v0.3.3
+
+- A `single` kártya `layout: pager` elrendezése egyenként lapozza az opciókat. A mentett válaszformátum változatlan.
+- A `percent_split` kártya az `optionsFrom` mezőben megadott korábbi `multi_tiles` kártyán jelölt opciók százalékos megoszlását menti (`{opció: egész százalék}`, összesen 100). Legalább két kijelölt opció esetén jelenik meg.
+- A `consumption` kártya becsült éves kWh-t ment, vagy `nem_tudom` értéket az `unknownLabel` gombbal. A `tariff` mező az éves sávhatárt és a két bruttó egységárat, a `sliderMax` a csúszka felső határát adja meg.
+
 ## v0.3.1 (beállítások)
 
 - Új `display.privacyNotice` beállítás: a teljes adatkezelési tájékoztató azonos oldali útvonala vagy `https` címe. A hozzájárulási kártya és a lábléc új lapon nyíló linkkel mutat rá. Supabase-tároláshoz és mérésküldéshez kötelező.

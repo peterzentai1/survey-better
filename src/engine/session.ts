@@ -2,7 +2,7 @@
 import { REACTION_CARD, temperatureArm } from "./temperature.ts";
 import { evaluate } from "./conditions.ts";
 import { nextEffortLevel, type EffortLevelId } from "./effort.ts";
-import { impliedValues } from "./inputs.ts";
+import { impliedValues, splitOptions, validSplit } from "./inputs.ts";
 import { analyze, type Ctx } from "./path.ts";
 import { isAnswerable } from "./schema.ts";
 import type { Highlight, ItemRecord, ItemValue, ParadataEntry, ResponseRecord } from "./types.ts";
@@ -45,13 +45,20 @@ export function localDate(d = new Date()): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-/** Mark stored-but-off-path items `inactive`; clear the mark on items back on the path. */
+/** Mark off-path items inactive and clear splits whose source options have changed. */
 export function reconcile(ctx: Ctx, s: SessionState): SessionState {
-  const { pathSet } = analyze(ctx, s.items, s.effortLevel);
+  const { pathSet, view } = analyze(ctx, s.items, s.effortLevel);
   let changed = false;
   const items: Record<string, ItemRecord> = {};
   for (const [id, it] of Object.entries(s.items)) {
     const shouldBeInactive = !pathSet.has(id);
+    const card = ctx.byId.get(id);
+    if (!shouldBeInactive && card?.type === "percent_split" && it.status === "answered" &&
+        !validSplit(it.value, splitOptions(ctx.byId.get(card.optionsFrom), view))) {
+      items[id] = { status: "shown", position: it.position, changes: it.changes + 1 };
+      changed = true;
+      continue;
+    }
     if (shouldBeInactive && !it.inactive) {
       items[id] = { ...it, inactive: true };
       changed = true;
@@ -205,7 +212,9 @@ export function advance(ctx: Ctx, s: SessionState): SessionState {
   const after = path.slice(path.indexOf(cur) + 1);
   if (s.jumpFrom !== null && cur !== s.jumpFrom) {
     const unseen = s.extensionFrom === undefined
-      ? after.find((id) => !s.items[id] && id !== s.jumpFrom)
+      ? after.find((id) => id !== s.jumpFrom && (
+        !s.items[id] || (ctx.byId.get(id)?.type === "percent_split" && s.items[id].status === "shown")
+      ))
       : additionalQuestion(ctx, s, s.extensionFrom, after);
     if (unseen !== undefined) return show(ctx, { ...s, history: [...s.history, unseen] }, unseen);
     const at = s.history.indexOf(s.jumpFrom);

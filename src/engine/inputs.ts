@@ -1,6 +1,7 @@
 // Pure helpers for the selection rules of multi_tiles and timeline cards.
 import { evaluate, type AnswerView } from "./conditions.ts";
 import type { Card, CardOption } from "./schema.ts";
+import type { ItemValue, PercentSplit } from "./types.ts";
 
 type MultiCard = Extract<Card, { type: "multi_tiles" }>;
 
@@ -8,6 +9,28 @@ type MultiCard = Extract<Card, { type: "multi_tiles" }>;
 export function visibleOptions(card: Card, view: AnswerView): CardOption[] {
   if (card.type !== "single" && card.type !== "multi_tiles") return [];
   return card.options.filter((o) => evaluate(o.showIf, view));
+}
+
+export function splitOptions(source: Card | undefined, view: AnswerView): CardOption[] {
+  if (source?.type !== "multi_tiles") return [];
+  const item = view.item(source.id);
+  if (item?.status !== "answered" || !Array.isArray(item.value)) return [];
+  const selected = new Set<string | number>(item.value);
+  return visibleOptions(source, view).filter(
+    (option) => selected.has(option.value) && !source.exclusive?.includes(option.value),
+  );
+}
+
+export function validSplit(value: ItemValue | undefined, options: CardOption[]): value is PercentSplit {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (options.length < 2 || Object.keys(value).length !== options.length) return false;
+  let sum = 0;
+  for (const { value: id } of options) {
+    const percent = value[id];
+    if (!Object.hasOwn(value, id) || !Number.isInteger(percent) || percent < 0 || percent > 100) return false;
+    sum += percent;
+  }
+  return sum === 100;
 }
 
 /** Options pre-selected the first time a multi_tiles card is shown. */

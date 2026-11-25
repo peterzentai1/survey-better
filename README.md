@@ -64,7 +64,7 @@ accelerate (WCAG 2.2 AA: 2.5.1 pointer gestures, 2.5.7 dragging, 2.5.8 target si
 
 ## Temperature experiment and completion times
 
-`display.scaleInput: ab_test` is enabled for the default survey. I10 asks how it feels to lower the heating by one degree for two evening hours. Each new session has an equal chance of receiving six tap targets or a drag surface. The assignment is derived from the random session identifier and is stable on Back and resume. Both arms have the same six response labels, skip action and keyboard support. The drag surface also accepts taps. I11 measures willingness to lower the temperature using the same six buttons for everyone. The I10 experiment uses behavioural outcomes such as answering or skipping, the first input method and the time to first answer.
+`display.scaleInput: ab_test` is enabled for the default survey. I10 asks how uncomfortable it would be to lower the heating by one degree for two evening hours. Each new session has an equal chance of receiving six tap targets or a drag surface. The assignment is derived from the random session identifier and is stable on Back and resume. Both arms have the same six response labels, skip action and keyboard support. The drag surface also accepts taps. I11 measures willingness to lower the temperature using the same six buttons for everyone. The I10 experiment uses behavioural outcomes such as answering or skipping, the first input method and the time to first answer.
 
 ## Survey settings
 

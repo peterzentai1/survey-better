@@ -9,7 +9,7 @@
 # - A [SZÖGLETES ZÁRÓJELES] részek helyőrzők, élesítés előtt kitöltendők.
 # - A `source` mező csak dokumentáció, a kitöltő nem látja.
 
-version: "0.3.2"
+version: "0.3.4"
 locale: hu
 
 defaults:
@@ -51,7 +51,7 @@ cards:
     text: |
       A vezetékek terheltsége számottevő, azonban a magas esti áramár volt a valódi ok. Tudta, hogy az áram ára negyedóránként változik?
 
-      Magyarországon augusztus 13-án a napelemek csúcstermelése majdnem 3,5 Pakssal értek fel (normális paksi termeléshez viszonyítva - 6,9 GW / 2 GW).
+      Magyarországon augusztus 13-án a napelemek csúcstermelése majdnem 3,5 Pakssal ért fel (normális paksi termeléshez viszonyítva - 6,9 GW / 2 GW).
       A nálunk telepített napelemkapacitás világi összehasonlításban is rendkívül magasnak számít. Ez lehetőség és felelősség is egyben.
 
       Ez a kérdőív azt vizsgálja, mennyire áll a háztartások lehetőségében akkor használni az áramot, mikor "sok és olcsó", mennyire tudjuk csökkenteni a használatot akkor, amikor az földgáz elégetésével termelt, sokszor Európából importált drága áram - és hogyan maradhat ez igazságos azoknak is, akik kevesebb erre alkalmas eszközzel rendelkeznek.
@@ -131,7 +131,7 @@ cards:
     block: alapok
     effort: 2
     type: single
-    layout: chips
+    layout: pager
     text: "Hányan élnek a háztartásban, Önnel együtt?"
     options:
       - { value: "1",  label: "1" }
@@ -236,7 +236,15 @@ cards:
       - { value: otthon,    label: "Otthon",             icon: haz }
       - { value: munkahely, label: "A munkahelyen",      icon: epulet }
       - { value: nyilvanos, label: "Nyilvános töltőn",   icon: villam }
-    source: "S11; forgatókönyvek EV01–EV08. Az autós modul csak otthoni töltésnél jön. 0.3.2: többes választás a „jellemzően” helyett (kitöltői jegyzet); az arányok megadása motormunka."
+    source: "S11; forgatókönyvek EV01–EV08. Az autós modul csak otthoni töltésnél jön. 0.3.2: többes választás a „jellemzően” helyett (kitöltői jegyzet)."
+
+  - id: E04B
+    block: eszkozok
+    effort: 3
+    type: percent_split
+    optionsFrom: E04
+    text: "Nagyjából milyen arányban oszlik meg az autóba töltött áram a megjelölt töltési helyek között?"
+    source: "Saját; az E04 helyszíneinek részletezése a szerkesztői jegyzet alapján."
 
   # ════════════════════════════════════════════════════════════════════════
   # 3. SZÁMLA ÉS TARIFA
@@ -281,15 +289,18 @@ cards:
   - id: T04
     block: tarifa
     effort: 2
-    type: single
-    text: "A kedvezményes árú sáv évi 2523 kWh, ez havonta kb. 210 kWh. A háztartása ehhez képest mennyit fogyaszt?"
-    options:
-      - { value: kevesebb,  label: "Kevesebbet" }
-      - { value: annyi,     label: "Nagyjából annyit" }
-      - { value: tobb,      label: "Többet" }
-      - { value: nem_tudom, label: "Nem tudom" }
+    type: consumption
+    lead: "A szokásos nappali (A1) tarifán évi 2523 kWh-ig kedvezményes az ár (havi átlagban kb. 210 kWh). A keret fölött magasabb az egységár."
+    text: "Nagyjából hány kilowattóra áramot vételeznek egy év alatt a nappali mérőn?"
+    sliderMax: 12000
+    unknownLabel: "Nem tudom"
+    tariff:
+      thresholdKwh: 2523
+      withinFtPerKwh: 36.386
+      aboveFtPerKwh: 70.104
+      label: "Példaszámítás az MVM Démász nappali (A1) árával, alapdíj nélkül."
     skip: false
-    source: "Saját. A 2523 kWh az MVM D árszabás oldaláról (mentve 2026-10-25); a D tarifa csak a sáv fölött ad árjelzést."
+    source: "MVM Next, lakossági A1 árszabás az MVM Démász területén: https://www.mvmnext.hu/aram/servlet/download?id=16214&type=file"
 
   # ════════════════════════════════════════════════════════════════════════
   # 4. INDOKMAG: rögzített cselekvés, csak az indok változik (véletlen sorrend)
@@ -394,12 +405,12 @@ cards:
     block: indokok
     type: scale6
     lead: &homerseklet "Tételezzük fel, hogy Ön állítja a fűtést. Egy téli napon arra kérik, hogy az esti csúcsidőben két órára egy fokkal vegye lejjebb a lakás beállított hőmérsékletét."
-    text: "Milyen érzést kelt Önben a gondolat, hogy teljesítse ezt a kérést?"
+    text: "Mennyire érezné kellemetlennek, ha teljesítené ezt a kérést?"
     scale:
-      left: "Nagyon kellemetlen"
-      right: "Nagyon kellemes"
-      labels: ["Nagyon kellemetlen", "Kellemetlen", "Inkább kellemetlen", "Inkább kellemes", "Kellemes", "Nagyon kellemes"]
-    source: "Saját. Első reakció, véletlenszerűen kiosztott koppintós vagy húzós válaszfelülettel."
+      left: "Egyáltalán nem kellemetlen"
+      right: "Rendkívül kellemetlen"
+      labels: ["Egyáltalán nem kellemetlen", "Alig kellemetlen", "Kissé kellemetlen", "Közepesen kellemetlen", "Nagyon kellemetlen", "Rendkívül kellemetlen"]
+    source: "Saját hatfokú adaptáció az ISO 10551 és Cakó (2022, 3.5.2) egypólusú hőkomfortskálája nyomán. Első reakció, véletlenszerűen kiosztott koppintós vagy húzós válaszfelülettel."
 
   - id: I11
     block: indokok
@@ -652,19 +663,17 @@ cards:
     source: "S5; eszközjegyzet: tároló és közvetlen ellenállásfűtés eltérő rugalmassága"
 
   # ── Napelem ──
-  - id: M_PV_1
+  - id: M_PV_3
     block: modulok
-    type: yesno
+    type: scale6
     module: napelem
     priority: 1
-    lead: *ajanlat
+    showIf: { owns: klima }
     text: |
-      Nagy termelésű, napos napokon a hálózat évente legfeljebb 10 alkalommal, néhány órára korlátozhatja, hogy a napeleme áramot tápláljon vissza. A saját fogyasztására termelt áramot ez nem érinti.
-      Ezért évente 5000 Ft-ot kap.
-      Elfogadná?
-    yesLabel: "Elfogadnám"
-    noLabel: "Nem fogadnám el"
-    source: "Saját; forgatókönyv H04, a déli többlet iránya"
+      Tegyük fel, hogy egy nyári napon este klímával hűtené a lakást. Délután a napeleme több áramot termel, mint amennyit a háztartása éppen használ.
+      Mennyire valószínű, hogy délutánra hozná előre a hűtést, hogy több saját termelésű áramot használjon fel?
+    scale: *valoszinu
+    source: "Saját helyzetkártya az előhűtés és a napelemes önfogyasztás kísérleti vizsgálata alapján: https://doi.org/10.3130/aije.84.73"
 
   - id: M_PV_2
     block: modulok

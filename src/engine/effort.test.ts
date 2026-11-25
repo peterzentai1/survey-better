@@ -50,6 +50,15 @@ describe("effort levels", () => {
     expect(all.path.filter((id) => id.startsWith("M_"))).toHaveLength(cap);
   });
 
+  it("asks about using solar surplus for precooling when both devices are selected", () => {
+    const path = (owned: string[]) => simulatePath(bank, devices, { owned }).path;
+    expect(path(["napelem", "klima"])).toContain("M_PV_3");
+    expect(path(["klima"])).not.toContain("M_PV_3");
+    const solarOnly = path(["napelem"]);
+    expect(solarOnly).not.toContain("M_PV_3");
+    expect(solarOnly).toContain("M_PV_2");
+  });
+
   it("exports the level after participation consent and the deviation only with paradata consent", () => {
     const ctx = makeCtx(bank, devices, "effort");
     const initial = createSession(ctx, { sessionId: "effort", startedDate: "2000-01-01" });

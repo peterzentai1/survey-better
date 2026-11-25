@@ -7,6 +7,7 @@ import type { AnswerView } from "./conditions.ts";
 import { evaluate } from "./conditions.ts";
 import { buildDeck, type Deck } from "./deck.ts";
 import { DEFAULT_EFFORT_LEVEL, EFFORT_LEVEL_IDS, type EffortLevelId } from "./effort.ts";
+import { splitOptions } from "./inputs.ts";
 import { computeQuotas } from "./quotas.ts";
 import type { Bank, Card, Devices } from "./schema.ts";
 import type { ItemRecord } from "./types.ts";
@@ -61,6 +62,7 @@ export function analyze(ctx: Ctx, items: Record<string, ItemRecord>, effortLevel
     const card = ctx.byId.get(id);
     if (!card || card.effort > maxEffort) continue;
     if (!evaluate(card.showIf, view)) continue;
+    if (card.type === "percent_split" && splitOptions(ctx.byId.get(card.optionsFrom), view).length < 2) continue;
     if (card.module !== undefined) {
       const quota = computeQuotas(ctx.devices, view, level?.moduleCaps)[card.module];
       if (quota === undefined || (used[card.module] ?? 0) >= quota) continue;
