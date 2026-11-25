@@ -2,6 +2,10 @@
 
 A `kerdesbank.hu.yaml` változásai. A tartalom licence CC BY 4.0 (`content/LICENSE`).
 
+## v0.5.1 változások (2026-11-25)
+
+- **N02.** A szerző kérésére kikerült az apró betűs rész első bekezdése („A kérdőívet Zentai Péter … készítette … hozzájárulásán alapul.”) és a grafikon alatti „Nagyobb méretben” felirat (a kép koppintásra továbbra is nagyban nyílik). Az adatkezelő megnevezése és a jogalap a részletes tájékoztatóban szerepel, amelyre az N02 hivatkozik.
+
 ## v0.5.0 változások (2026-11-25)
 
 A szerző utolsó javítási köre a konzulensi előnézet előtt (`utolsó javítás.rtfd`).
